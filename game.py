@@ -18,11 +18,15 @@ agent = None
 def loadGameModule():
     print("Loading game "+args.game)
     try:
-        mod = importlib.import_module(args.game)
-        if (args.game=='Breakout'):
-            game = mod.Breakout(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename, enableRA = args.enableRA)
         if (args.game=='SimpleGrid'):
+            mod = importlib.import_module(args.game)
             game = mod.SimpleGrid(args.rows, args.cols, trainfilename)
+        elif (args.game=='BreakoutS'):
+            mod = importlib.import_module('Breakout')
+            game = mod.BreakoutS(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='BreakoutN'):
+            mod = importlib.import_module('Breakout')
+            game = mod.BreakoutN(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
     except:
         print "ERROR: game ",args.game," not found."
         raise
@@ -61,7 +65,7 @@ def load(fname, game, agent):
         s = "Data loaded from " + fn + " successfully."
         print(s)
     except IOError:
-        s = "Error: can't find file or read data from file " + fn +" -> initializing a new Q matrix"
+        s = "Error: can't find file or read data from file " + fn +" -> initializing new structures"
         print(s)
 
     if data is not None:
@@ -145,7 +149,7 @@ parser.add_argument('agent', type=str, help='agent (e.g., RL for RLAgent.py)')
 parser.add_argument('trainfile', type=str, help='file for learning strctures')
 parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
 parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
-parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: 0.1]', default=0.1)
+parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
 parser.add_argument('-alpha', type=float, help='alpha factor [default: -1 = based on visits]', default=-1)
 parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
 parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)

@@ -17,25 +17,23 @@ class Agent():
                            # (0: never update)
         self.alpha = 0.5 # not used
         self.gamma = 1.0 
-        self.epsilon = 0.1 
+        self.epsilon = 0.5 
         self.optimal = False
         self.episode = []
         self.iteration = 0
         self.debug = False
         self.debugQ = False
-        self.RAstates = 0
         self.name = 'RLMC'
 
-    def init(self,nstates,nRAstates, nactions):
-        self.Q = np.zeros((nstates,nRAstates,nactions))
+    def init(self, nstates, nactions):
+        self.Q = np.zeros((nstates,nactions))
         # pi(a|x) non-normalized values (to normalize over all actions)
-        self.pi = np.ones((nstates,nRAstates,nactions))
-        self.Rsum = np.zeros((nstates,nRAstates,nactions))
-        self.Rcnt = np.zeros((nstates,nRAstates,nactions))        
-        self.RAStates = nRAstates
+        self.pi = np.ones((nstates,nactions))
+        self.Rsum = np.zeros((nstates,nactions))
+        self.Rcnt = np.zeros((nstates,nactions))        
         self.nactions = nactions
         # temporary
-        self.Rvisit = np.zeros((nstates,nRAstates,nactions))
+        self.Rvisit = np.zeros((nstates,nactions))
         
     def reset(self):
         self.episode = []
@@ -43,41 +41,39 @@ class Agent():
     
         
     def savedata(self):
-         return [self.Q, self.pi, self.Rsum, self.Rcnt, self.RAStates, self.nactions]
+         return [self.Q, self.pi, self.Rsum, self.Rcnt]
          
     def loaddata(self, data):
          self.Q = data[0]
          self.pi = data[1]
          self.Rsum = data[2] 
          self.Rcnt = data[3] 
-         self.RAStates = int(data[4])
-         self.nactions = int(data[5])
 
 
     def getQ(self, x, a):
-        return self.Q[x[0],x[1],a]
+        return self.Q[x,a]
 
     def getQA(self, x):
-        return self.Q[x[0],x[1],:]
+        return self.Q[x,:]
 
     def getpi(self, x, a):
-        return self.pi[x[0],x[1],a]
+        return self.pi[x,a]
 
     def getpiA(self, x):
-        return self.pi[x[0],x[1],:]
+        return self.pi[x,:]
 
     def getRavg(self, x, a):
-        return float(self.Rsum[x[0],x[1],a])/self.Rcnt[x[0],x[1],a]
+        return float(self.Rsum[x,a])/self.Rcnt[x,a]
 
     def addR(self, x, a, r):
-        self.Rsum[x[0],x[1],a] += r
-        self.Rcnt[x[0],x[1],a] += 1
+        self.Rsum[x,a] += r
+        self.Rcnt[x,a] += 1
 
     def firstvisit(self, x, a):
         r = False
-        if (self.Rvisit[x[0],x[1],a]==0):
+        if (self.Rvisit[x,a]==0):
             r = True
-            self.Rvisit[x[0],x[1],a] = 1
+            self.Rvisit[x,a] = 1
         return r
         
 
@@ -151,7 +147,18 @@ class Agent():
     
         if (self.optimal):  # executes best policy, no updates
             return
-            
+        
+        if (self.epsilon < 0):
+            s = self.iteration
+            k = 0.01 # decay weight 
+            deltaS = 5000 # 0.5 value
+            ee = math.exp(-k*(s-deltaS))
+            epsilon = 0.9 * (1.0 - 1.0 / (1.0 + ee)) + 0.05
+            #print "  -- iteration = ",s,"  -- epsilon = ",epsilon
+        else:
+            epsilon = self.epsilon
+
+        
         self.Rvisit.fill(0) 
         # update Q for all state-action pairs in this episode
         k = 0
@@ -161,7 +168,7 @@ class Agent():
             if (self.firstvisit(x,a)):
                 r = self.rreturn(k) # return from this state
                 self.addR(x,a,r)
-                self.Q[x[0],x[1],a] = self.getRavg(x,a)
+                self.Q[x,a] = self.getRavg(x,a)
             k += 1
 
         # update pi for all states in this episode
@@ -176,12 +183,14 @@ class Agent():
                 print "[D] Q(x,:) = ", self.getQA(x)
                 print "[D] best action ", ba
             
+            
+            
             # update pi epsilon-greedy
             for a in range(0,self.nactions):
                 if (a==ba):
-                    self.pi[x[0],x[1],a] = 1 - self.epsilon + self.epsilon / self.nactions
+                    self.pi[x,a] = 1 - epsilon + epsilon / self.nactions
                 else:
-                    self.pi[x[0],x[1],a] = self.epsilon / self.nactions
+                    self.pi[x,a] = epsilon / self.nactions
 
             if (self.debug):
                 print "[D] pi(a,:) = ", self.getpiA(x)

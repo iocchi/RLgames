@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import pygame, sys
 import numpy as np
 import random
@@ -17,20 +15,18 @@ class Agent():
                            # (0: never update)
         self.alpha = 0.5 # -1: adative
         self.gamma = 1.0
-        self.epsilon = 0.1 #  -1: adaptive
+        self.epsilon = -1 #  -1: adaptive
         self.optimal = False
         self.episode = []
         self.iteration = 0
         self.debug = False
         self.debugQ = False
-        self.RAstates = 0
-        self.name = 'RL2'
+        self.name = 'RL'
 
         
-    def init(self, nstates, nRAstates, nactions):
-        self.Q = np.zeros((nstates,nRAstates,nactions))
-        self.Visits = np.zeros((nstates,nRAstates,nactions))
-        self.RAStates = nRAstates
+    def init(self, nstates, nactions):
+        self.Q = np.zeros((nstates,nactions))
+        self.Visits = np.zeros((nstates,nactions))
         self.nactions = nactions
 
     def savedata(self):
@@ -42,36 +38,37 @@ class Agent():
          
         
     def getQ(self, x, a):
-        return self.Q[x[0],x[1],a]
+        return self.Q[x,a]
 
     def getQA(self, x):
-        return self.Q[x[0],x[1],:]
+        return self.Q[x,:]
         
     def setQ(self, x, a, q):
-        self.Q[x[0],x[1],a] = q
+        self.Q[x,a] = q
 
     def incVisits(self, x, a):
-        self.Visits[x[0],x[1],a] += 1
-        # print "Visits ",x," <- ",self.Visits[x,xRA,:]
+        self.Visits[x,a] += 1
+        # print "Visits ",x," <- ",self.Visits[x,:]
 
     def getVisits(self, x, a):
-        return self.Visits[x[0],x[1],a]
+        return self.Visits[x,a]
 
     def getSumVisits(self, x):
-        return np.sum(self.Visits[x[0],x[1],:])
+        return np.sum(self.Visits[x,:])
 
 
     def choose_action(self, x):  # choose action from state x
 
         if (self.epsilon < 0):
-            # TODO: check!!!
-            s = self.getSumVisits(x)
+            s = self.iteration #getSumVisits(x)
             k = 0.01 # decay weight 
-            epsilon = 1 - 0.95 / (1.0 + math.exp(-k*s))
+            deltaS = 5000 # 0.5 value
+            ee = math.exp(-k*(s-deltaS))
+            epsilon = 0.9 * (1.0 - 1.0 / (1.0 + ee)) + 0.05
+            #print "  -- visits = ",s,"  -- epsilon = ",epsilon
         else:
             epsilon = self.epsilon
         
-
         if ((not self.optimal) and random.random()<epsilon):
             # Random action
             com_command = random.randint(0,self.nactions-1)
@@ -98,7 +95,7 @@ class Agent():
         
         a = self.choose_action(x)
         if self.debug:
-            print "Q: ",x," -> ",self.getQ(x,0),self.getQ(x,1),self.getQ(x,2)
+            print "Q: ",x," -> ",self.getQA(x)
             print "Decision: ",x,"  -> ",a
 
         return a
@@ -154,14 +151,6 @@ class Agent():
         q = prev_Q + alpha * (r + self.gamma * vQa - prev_Q)
         self.setQ(x,a,q)
         
-        # Update Q value for next RA states
-        RA = x[1]
-        if (RA<self.RAStates-1 and self.Visits[x[0],RA,a]<self.maxVfu): # update next levels
-            self.incVisits((x[0],RA+1),a)
-            s = self.getVisits((x[0],RA+1),a)
-            beta = 1.0/s
-            self.Q[x[0],RA+1,a] += beta * (self.getQ(x,a)
-                 - self.Q[x[0],RA+1,a])
 
                 
     def updateQ_episode(self):
@@ -177,7 +166,7 @@ class Agent():
         x1 = sa1[0] # current state
         a1 = sa1[1] # current action
         if (self.debugQ):
-            print x1,' ',a1,'    Q: ', self.getQ(x1,a1) # Q[x1[0],x1[1],x1[2],x1[3],x1[4],a1]
+            print x1,' ',a1,'    Q: ', self.getQ(x1,a1) 
         k -= 1
         while (k>=0): # visit states in reverse order
             sa1=self.episode[k]
@@ -191,8 +180,8 @@ class Agent():
             self.updateQ(x1,a1,r1,x2,a2)
             
             if (self.debugQ):
-                print x1,' A: ',a1,' -> r: ',r1,' -> ',x2,'   Q: ', self.getQ(x1,a1) #Q[x1[0],x1[1],x1[2],x1[3],x1[4],a1]
-    
+                print x1,' A: ',a1,' -> r: ',r1,' -> ',x2,'   Q: ', self.getQ(x1,a1) 
+                
             k -= 1
         if (self.debugQ):
             sys.exit(1)            

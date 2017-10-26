@@ -82,7 +82,7 @@ class SimpleGrid():
         self.nactions = 5  # 0: not moving, 1: left, 2: right, 3: up, 4: down        
         ns = self.rows * self.cols
         print('Number of states: %d' %ns)
-        self.agent.init(ns, 1, self.nactions) # 1 for RA not used here
+        self.agent.init(ns, self.nactions) # 1 for RA not used here
 
 
         
@@ -110,7 +110,7 @@ class SimpleGrid():
         
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y        
-        return [x, 0]
+        return x
 
 
     def goal_reached(self):
@@ -285,7 +285,7 @@ class SimpleGrid():
             cmd = '^'
         elif self.command==4:
             cmd = 'v'
-        s = '%d %d %s' %(x[0],x[1],cmd)
+        s = '%d %s' %(x,cmd)
         count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
         self.screen.blit(count_label, (60, 10))
         
