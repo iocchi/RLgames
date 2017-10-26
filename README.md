@@ -1,2 +1,4 @@
 # RLgames
-Examples of use of RL agents for several games
+
+Examples of use of RL agents for different games.
+

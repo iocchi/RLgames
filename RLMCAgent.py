@@ -1,0 +1,187 @@
+#!/usr/bin/python
+
+import pygame, sys
+import numpy as np
+import random
+import time
+import math
+from math import fabs
+
+
+class Agent():
+
+    def __init__(self):
+        
+        self.sarsa = True # sarsa algorithm instead of Q-learning
+        self.maxVfu = 0 # max visits of next level for updates from previous level
+                           # (0: never update)
+        self.alpha = 0.5 # not used
+        self.gamma = 1.0 
+        self.epsilon = 0.1 
+        self.optimal = False
+        self.episode = []
+        self.iteration = 0
+        self.debug = False
+        self.debugQ = False
+        self.RAstates = 0
+        self.name = 'RLMC'
+
+    def init(self,nstates,nRAstates, nactions):
+        self.Q = np.zeros((nstates,nRAstates,nactions))
+        # pi(a|x) non-normalized values (to normalize over all actions)
+        self.pi = np.ones((nstates,nRAstates,nactions))
+        self.Rsum = np.zeros((nstates,nRAstates,nactions))
+        self.Rcnt = np.zeros((nstates,nRAstates,nactions))        
+        self.RAStates = nRAstates
+        self.nactions = nactions
+        # temporary
+        self.Rvisit = np.zeros((nstates,nRAstates,nactions))
+        
+    def reset(self):
+        self.episode = []
+        
+    
+        
+    def savedata(self):
+         return [self.Q, self.pi, self.Rsum, self.Rcnt, self.RAStates, self.nactions]
+         
+    def loaddata(self, data):
+         self.Q = data[0]
+         self.pi = data[1]
+         self.Rsum = data[2] 
+         self.Rcnt = data[3] 
+         self.RAStates = int(data[4])
+         self.nactions = int(data[5])
+
+
+    def getQ(self, x, a):
+        return self.Q[x[0],x[1],a]
+
+    def getQA(self, x):
+        return self.Q[x[0],x[1],:]
+
+    def getpi(self, x, a):
+        return self.pi[x[0],x[1],a]
+
+    def getpiA(self, x):
+        return self.pi[x[0],x[1],:]
+
+    def getRavg(self, x, a):
+        return float(self.Rsum[x[0],x[1],a])/self.Rcnt[x[0],x[1],a]
+
+    def addR(self, x, a, r):
+        self.Rsum[x[0],x[1],a] += r
+        self.Rcnt[x[0],x[1],a] += 1
+
+    def firstvisit(self, x, a):
+        r = False
+        if (self.Rvisit[x[0],x[1],a]==0):
+            r = True
+            self.Rvisit[x[0],x[1],a] = 1
+        return r
+        
+
+
+    def decision(self, x):
+        a = self.choose_action(x)
+        if self.debug:
+            print "Q: ",x," -> ",self.getQA(x)
+            print "Decision: ",x,"  -> ",a
+
+        return a
+        
+        
+    def notify(self, x, a, r, x2):
+        self.episode.append((x,a,r))
+        
+
+    def notify_endofepisode(self, iter):
+        self.iteration = iter
+        self.updateQ_episode()
+        self.reset()
+
+        
+        
+    def choose_action(self, x):  # choose action from state x
+        
+        if (self.optimal):  # executes best policy, no updates
+            # Choose the action that maximizes expected reward.            
+            piA = self.getpiA(x)
+            a = np.argmax(piA)
+            
+        else:
+            s = np.sum(self.getpiA(x)) 
+            r = random.random() * s  # deal with non-normalized values
+            
+            if self.debug:
+                print "pi(a|x) = ", self.getpiA(x)
+                print "sum pi(a|x) ", s, "   - random: ", r
+            
+            
+            c = 0
+            a = 0
+            while (c<s+1):
+                c += self.getpi(x,a)
+                if self.debug:
+                    print "   - action ",a," p(a|x) = ",self.getpi(x,a)
+                    #print "          rand ",r," < c ", c, "   "
+                if (r<c):
+                #    print "***"
+                    break
+                a += 1
+
+        if self.debug:
+            print "Action ",a 
+            
+        return a
+
+        
+    def rreturn(self, k):
+        # return from episode k
+        r = 0
+        g = 1.0
+        while (k<len(self.episode)):
+            ep = self.episode[k]
+            r += g * ep[2]
+            g = g * self.gamma
+            k += 1
+        return r
+
+    def updateQ_episode(self):
+    
+        if (self.optimal):  # executes best policy, no updates
+            return
+            
+        self.Rvisit.fill(0) 
+        # update Q for all state-action pairs in this episode
+        k = 0
+        for ep in self.episode:    
+            x = ep[0] # current state
+            a = ep[1] # current action
+            if (self.firstvisit(x,a)):
+                r = self.rreturn(k) # return from this state
+                self.addR(x,a,r)
+                self.Q[x[0],x[1],a] = self.getRavg(x,a)
+            k += 1
+
+        # update pi for all states in this episode
+        for ep in self.episode:
+            if (self.debug):
+                print "[D] episode step ", ep
+
+            x = ep[0] # current state
+
+            ba = np.argmax(self.getQA(x))
+            if (self.debug):
+                print "[D] Q(x,:) = ", self.getQA(x)
+                print "[D] best action ", ba
+            
+            # update pi epsilon-greedy
+            for a in range(0,self.nactions):
+                if (a==ba):
+                    self.pi[x[0],x[1],a] = 1 - self.epsilon + self.epsilon / self.nactions
+                else:
+                    self.pi[x[0],x[1],a] = self.epsilon / self.nactions
+
+            if (self.debug):
+                print "[D] pi(a,:) = ", self.getpiA(x)
