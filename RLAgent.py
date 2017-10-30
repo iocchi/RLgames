@@ -6,13 +6,10 @@ import math
 from math import fabs
 
 
-class Agent():
+class RLAgent():
 
     def __init__(self):
         self.command = 0
-        self.sarsa = True # sarsa algorithm instead of Q-learning
-        self.maxVfu = 0 # max visits of next level for updates from previous level
-                           # (0: never update)
         self.alpha = 0.5 # -1: adative
         self.gamma = 1.0
         self.epsilon = -1 #  -1: adaptive
@@ -20,7 +17,6 @@ class Agent():
         self.episode = []
         self.iteration = 0
         self.debug = False
-        self.debugQ = False
         self.name = 'RL'
 
         
@@ -110,6 +106,10 @@ class Agent():
         self.updateQ(x,a,r,x2)
 
 
+    def getActionValue(self, x2):
+        print("ERROR: function getActionValue not implemented")
+        return 0
+
         
     def updateQ(self,x,a,r,x2,a2=None):
     
@@ -122,15 +122,9 @@ class Agent():
         if (not a2 is None):
             # a2 given
             vQa = self.getQ(x2,a2)
-        elif (self.sarsa):
-            # SARSA
-            sarsa_a = self.choose_action(x2)
-            sarsaQa = self.getQ(x2,sarsa_a) 
-            vQa = sarsaQa
         else:
-            # standard Q-learning
-            maxQa = max(self.QA(x2)) #self.Q[x2[0],x2[1],x2[2],x2[3],x2[4],:])
-            vQa = maxQa
+            vQa = self.getActionValue(x2)
+
         
         if (self.debug):
             print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,'  A: ',a2,' prev_Q: ', prev_Q, '  vQa: ', vQa
@@ -147,7 +141,6 @@ class Agent():
         # print "alpha = ",alpha
         # print "gamma = ",self.gamma
         
-        #self.Q[x[0],x[1],x[2],x[3],x[4],a] = (prev_Q + alpha * (r + self.gamma * vQa - prev_Q))
         q = prev_Q + alpha * (r + self.gamma * vQa - prev_Q)
         self.setQ(x,a,q)
         
@@ -165,7 +158,7 @@ class Agent():
         sa1=self.episode[k]
         x1 = sa1[0] # current state
         a1 = sa1[1] # current action
-        if (self.debugQ):
+        if (self.debug):
             print x1,' ',a1,'    Q: ', self.getQ(x1,a1) 
         k -= 1
         while (k>=0): # visit states in reverse order
@@ -179,15 +172,38 @@ class Agent():
 
             self.updateQ(x1,a1,r1,x2,a2)
             
-            if (self.debugQ):
+            if (self.debug):
                 print x1,' A: ',a1,' -> r: ',r1,' -> ',x2,'   Q: ', self.getQ(x1,a1) 
                 
             k -= 1
-        if (self.debugQ):
+        if (self.debug):
             sys.exit(1)            
 
     def notify_endofepisode(self, iter):
         self.iteration = iter
         self.updateQ_episode()
         self.episode = []
+
+
+class QAgent(RLAgent):
+
+    def __init__(self):
+        RLAgent.__init__(self)
+
+    def getActionValue(self, x2):
+        # Q-learning
+        maxQa = max(self.getQA(x2)) 
+        return maxQa
+
+
+class SarsaAgent(RLAgent):
+
+    def __init__(self):
+        RLAgent.__init__(self)
+
+    def getActionValue(self, x2):
+        # Sarsa
+        sarsa_a = self.choose_action(x2)
+        sarsaQa = self.getQ(x2,sarsa_a) 
+        return sarsaQa
         

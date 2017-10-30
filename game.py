@@ -37,9 +37,18 @@ def loadGameModule():
 def loadAgentModule():
     print("Loading agent "+args.agent)
     try:
-        modname = args.agent+'Agent'
-        mod = importlib.import_module(modname)
-        agent = mod.Agent()
+        if (args.agent=='Q'):
+            modname = 'RLAgent'
+            mod = importlib.import_module(modname)
+            agent = mod.QAgent()
+        elif (args.agent=='Sarsa'):
+            modname = 'RLAgent'
+            mod = importlib.import_module(modname)
+            agent = mod.SarsaAgent()
+        if (args.agent=='MC'):
+            modname = 'RLMCAgent'
+            mod = importlib.import_module(modname)
+            agent = mod.MCAgent()
     except:
         print "ERROR: agent ",modname," not found."
         raise
@@ -143,9 +152,9 @@ def evaluate(game, agent, n): # evaluate best policy n times (no updates)
     
 # main
 
-parser = argparse.ArgumentParser(description='RL for breakout game')
+parser = argparse.ArgumentParser(description='RL games')
 parser.add_argument('game', type=str, help='game (e.g., Breakout)')
-parser.add_argument('agent', type=str, help='agent (e.g., RL for RLAgent.py)')
+parser.add_argument('agent', type=str, help='agent [Q, Sarsa, MC]')
 parser.add_argument('trainfile', type=str, help='file for learning strctures')
 parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
 parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
@@ -155,7 +164,6 @@ parser.add_argument('-niter', type=float, help='stop after number of iterations 
 parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)
 parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)
 parser.add_argument('--enableRA', help='enable Reward Automa', action='store_true')
-parser.add_argument('--debugQ', help='debug Q updates', action='store_true')
 parser.add_argument('--debug', help='debug flag', action='store_true')
 parser.add_argument('--gui', help='GUI shown at start [default: hidden]', action='store_true')
 parser.add_argument('--sound', help='Sound enabled', action='store_true')

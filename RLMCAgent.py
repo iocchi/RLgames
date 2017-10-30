@@ -8,13 +8,10 @@ import math
 from math import fabs
 
 
-class Agent():
+class MCAgent():
 
     def __init__(self):
-        
-        self.sarsa = True # sarsa algorithm instead of Q-learning
-        self.maxVfu = 0 # max visits of next level for updates from previous level
-                           # (0: never update)
+        self.command = 0       
         self.alpha = 0.5 # not used
         self.gamma = 1.0 
         self.epsilon = 0.5 
@@ -22,7 +19,6 @@ class Agent():
         self.episode = []
         self.iteration = 0
         self.debug = False
-        self.debugQ = False
         self.name = 'RLMC'
 
     def init(self, nstates, nactions):
