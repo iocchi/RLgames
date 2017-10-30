@@ -2,6 +2,12 @@
 
 Examples of use of RL agents for different games.
 
+You can select a game, a RL algorithm and the training file. Learning mode will train the agent, evaluation mode (with option ``--eval``) will execute the current best policy.
+
+
+
+### How to use
+
 ```
 usage: game.py [-h] [-maxVfu MAXVFU] [-gamma GAMMA] [-epsilon EPSILON]
                [-alpha ALPHA] [-niter NITER] [-rows ROWS] [-cols COLS]
@@ -20,7 +26,7 @@ optional arguments:
   -maxVfu MAXVFU    max visits for forward update of RA-Q tables [default: 0]
   -gamma GAMMA      discount factor [default: 1.0]
   -epsilon EPSILON  epsilon greedy factor [default: -1 = adaptive]
-  -alpha ALPHA      alpha factor [default: -1 = based on visits]
+  -alpha ALPHA      alpha factor (-1 = based on visits) [default: 0.5]
   -niter NITER      stop after number of iterations [default: -1 = infinite]
   -rows ROWS        number of rows [default: 3]
   -cols COLS        number of columns [default: 3]
@@ -30,4 +36,54 @@ optional arguments:
   --sound           Sound enabled
   --eval            Evaluate best policy
 ```
+
+### Examples
+
+Game: SimpleGrid 5x5
+RL algorithm: Q-learning
+
+```
+python game.py SimpleGrid Q simplegrid55_Q_01 -rows 5 -cols 5
+
+```
+
+Game: SimpleGrid 7x5
+RL algorithm: Sarsa
+
+```
+python game.py SimpleGrid Sarsa simplegrid75_Sarsa_01 -rows 7 -cols 5
+
+```
+
+Game: BreakoutN (normal states) 3x3
+RL algorithm: MC
+
+```
+python game.py BreakoutN MC breakoutN33_MC_01 -rows 3 -cols 3
+
+```
+
+
+Game: BreakoutS (simplified states) 3x4
+RL algorithm: MC
+
+```
+python game.py BreakoutS MC breakoutS34_MC_01 -rows 3 -cols 4
+
+```
+
+You can stop the process at any time are resume it later.
+If you want to execute another experiment, just change the training filename.
+
+
+To evaluate the current best policy, use the same command line adding ```--gui --eval```.
+
+Example:
+
+```
+python game.py BreakoutS MC breakoutS34_MC_01 -rows 3 -cols 4 --gui --eval
+
+```
+
+
 

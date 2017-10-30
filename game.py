@@ -83,6 +83,7 @@ def load(fname, game, agent):
             game.hiscore = int(data['hiscore'])
             game.hireward = int(data['hireward'])
             agent.loaddata(data['agentdata'])
+            game.iteration -= 1
         except:
             print("Can't load data from input file, wrong format.")
             #raise
@@ -102,7 +103,8 @@ def execution_step(game, agent):
 # learning process
 def learn(game, agent):
 
-    run = True    
+    run = True
+    optimalPolicyFound = False 
     while (run and (args.niter<0 or game.iteration<=args.niter) and not game.userquit):
 
         game.reset() # increment game.iteration
@@ -126,8 +128,14 @@ def learn(game, agent):
         # end of experiment
         if (agent.optimal and game.goal_reached()):
             run = False
+            optimalPolicyFound = True
 
     game.quit()
+
+    if optimalPolicyFound:
+        print("\n****************************")
+        print("*** Optimal policy found ***")
+        print("****************************\n")
 
 
 # evaluation process
@@ -159,7 +167,7 @@ parser.add_argument('trainfile', type=str, help='file for learning strctures')
 parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
 parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
 parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
-parser.add_argument('-alpha', type=float, help='alpha factor [default: -1 = based on visits]', default=-1)
+parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: 0.5]', default=0.5)
 parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
 parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)
 parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)

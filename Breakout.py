@@ -101,8 +101,6 @@ class Breakout():
         #allows for holding of key
         pygame.key.set_repeat(1,0)
 
-        # self.reset()
-
         self.screen = pygame.display.set_mode([self.win_width,self.win_height])
         self.myfont = pygame.font.SysFont("Arial",  30)
 
@@ -482,6 +480,9 @@ class Breakout():
         sys.exit(1)
 
 
+#
+# Breakout with standard definition of states
+#
 class BreakoutN(Breakout):
 
     def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
@@ -530,6 +531,10 @@ class BreakoutN(Breakout):
         
         return ball_x  + self.n_ball_x * ball_y + self.n_ball_y * ball_dir + self.n_ball_dir * paddle_x
 
+
+#
+# Breakout with simplified definition of states
+#
 
 class BreakoutS(Breakout):
 
