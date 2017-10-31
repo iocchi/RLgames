@@ -22,7 +22,7 @@ STATES = {
 
 
 
-class SimpleGrid():
+class SimpleGrid(object):
 
     def __init__(self, rows=3, cols=3, trainsessionname='test'):
 

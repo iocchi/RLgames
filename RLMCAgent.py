@@ -8,7 +8,7 @@ import math
 from math import fabs
 
 
-class MCAgent():
+class MCAgent(object):
 
     def __init__(self):
         self.command = 0       

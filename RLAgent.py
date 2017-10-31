@@ -6,7 +6,7 @@ import math
 from math import fabs
 
 
-class RLAgent():
+class RLAgent(object):
 
     def __init__(self):
         self.command = 0

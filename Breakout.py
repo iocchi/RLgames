@@ -44,7 +44,7 @@ paddle_height = 10
 
 
 
-class Brick():
+class Brick(object):
 
     def __init__(self, i, j):
         self.i = i
@@ -55,7 +55,7 @@ class Brick():
 
 
 
-class Breakout():
+class Breakout(object):
 
     def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
 
@@ -228,10 +228,6 @@ class Breakout():
         ball_rect = pygame.Rect(self.ball_x-ball_radius, self.ball_y-ball_radius, ball_radius*2,ball_radius*2) #circles are measured from the center, so have to subtract 1 radius from the x and y
         paddle_rect = pygame.Rect(self.paddle_x, self.paddle_y, paddle_width, paddle_height)
 
-        if (len(self.bricks) == 0 and not self.finished):
-            #print("  -- %6d  *** New level ***" %(self.iteration) )
-            pass
-
         # TERMINATION OF EPISODE
         if (not self.finished):
             #check if the ball is off the bottom of the self.screen
@@ -316,7 +312,7 @@ class Breakout():
 
             # reset after paddle hits the ball
             if len(self.bricks) == 0:
-                print("  -- %6d  *** New level ***" %(self.iteration) )
+                # print("  -- %6d  *** New level ***" %(self.iteration) )
                 self.initBricks()
                 self.ball_speed_y = self.init_ball_speed_y
                 
