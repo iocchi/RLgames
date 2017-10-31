@@ -234,7 +234,8 @@ class Breakout(object):
             end1 = self.ball_y > self.screen.get_height() - ball_radius
             end2 = self.goal_reached()
             end3 = self.paddle_hit_without_brick == 30
-            if (end1 or end2 or end3):
+            end4 = len(self.bricks) == 0
+            if (end1 or end2 or end3 or end4):
                 if (pygame.display.get_active() and (not self.se_wall is None)):
                     self.se_wall.play()
                 if (end1):    
@@ -541,7 +542,7 @@ class BreakoutS(Breakout):
 
     def setStateActionSpace(self):
         self.n_diff_paddle_ball = 2*self.win_width/resolutionx+1
-        self.n_ball_y = self.win_height/resolutiony+1
+        self.n_ball_y = 1 # self.win_height/resolutiony+1
 
         self.nactions = 3  # 0: not moving, 1: left, 2: right
         
@@ -550,17 +551,10 @@ class BreakoutS(Breakout):
 
         
     def getstate(self):
-        resx = resolutionx # highest resolution
-        resy = resolutiony # highest resolution
-        if (self.ball_y<self.win_height/3): # upper part, lower resolution
-            resx *= 3
-            resy *= 3
-        elif (self.ball_y<2*self.win_height/3): # lower part, medium resolution
-            resx *= 2
-            resy *= 2
+        resx = resolutionx 
 
         diff_paddle_ball = (int(self.ball_x)-self.paddle_x+self.win_width)/resx            
-        ball_y = int(self.ball_y)/resy
+        ball_y = 0 # int(self.ball_y)/resy
         
         return diff_paddle_ball  + self.n_diff_paddle_ball * ball_y
         

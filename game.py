@@ -27,9 +27,12 @@ def loadGameModule():
         elif (args.game=='BreakoutN'):
             mod = importlib.import_module('Breakout')
             game = mod.BreakoutN(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutRA'):
+        elif (args.game=='BreakoutSRA'):
             mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game = mod.BreakoutSRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='BreakoutNRA'):
+            mod = importlib.import_module('BreakoutRA')
+            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
     except:
         print "ERROR: game ",args.game," not found."
         raise
