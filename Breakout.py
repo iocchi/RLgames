@@ -414,10 +414,12 @@ class Breakout():
 
         self.cumreward100 += self.cumreward
         numiter = 100
+        pgoal = 0
         if (self.iteration%numiter==0):
             #self.doSave()
+            pgoal = float(self.ngoalreached*100)/numiter
             print('-----------------------------------------------------------------------')
-            print("%s %6d Avg Reward last 100 runs:  >>> %d <<<  p goals >>> %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100,float(self.ngoalreached*100)/numiter))
+            print("%s %6d Avg Reward last 100 runs:  >>> %d <<<  p goals >>> %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100,pgoal))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.ngoalreached = 0
@@ -426,7 +428,7 @@ class Breakout():
         sys.stdout.flush()
         
         self.vscores.append(self.score)
-        self.resfile.write("%d,%d\n" % (self.score, self.cumreward))
+        self.resfile.write("%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached()))
         self.resfile.flush()
 
 

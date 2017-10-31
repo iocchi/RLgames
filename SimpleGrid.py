@@ -262,7 +262,7 @@ class SimpleGrid():
 
         sys.stdout.flush()
         
-        self.resfile.write("%d,%d\n" % (self.score, self.cumreward))
+        self.resfile.write("%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached()))
         self.resfile.flush()
 
 
