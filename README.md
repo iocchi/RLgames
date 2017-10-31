@@ -1,3 +1,5 @@
+infected
+
 # RLgames
 
 Examples of use of RL agents for different games.
@@ -85,5 +87,18 @@ python game.py BreakoutS MC breakoutS34_MC_01 -rows 3 -cols 4 --gui --eval
 
 ```
 
+### Plotting the results
+
+```
+python plotresults.py <trainfile>
+
+```
+
+Example:
+
+```
+python plotresults.py breakoutS34_MC_01
+
+```
 
 
