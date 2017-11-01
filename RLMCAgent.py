@@ -179,8 +179,6 @@ class MCAgent(object):
                 print "[D] Q(x,:) = ", self.getQA(x)
                 print "[D] best action ", ba
             
-            
-            
             # update pi epsilon-greedy
             for a in range(0,self.nactions):
                 if (a==ba):
@@ -190,3 +188,4 @@ class MCAgent(object):
 
             if (self.debug):
                 print "[D] pi(a,:) = ", self.getpiA(x)
+
