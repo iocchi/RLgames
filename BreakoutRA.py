@@ -18,6 +18,7 @@ from Breakout import *
 STATES = {
     'RAGoal':600,        # goal of reward automa
     'RAFail':-30,        # fail of reward automa
+    'GoodBrick':30       # good brick removed for next RA state
 }
 
 
@@ -129,6 +130,10 @@ class BreakoutSRA(BreakoutS):
        
     def getreward(self):
         r = self.current_reward
+        for b in self.last_brikcsremoved:
+            if b.j == self.RA.current_node:
+                r += STATES['GoodBrick']
+                # print 'Hit right brick for next RA state'
         if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
             r *= (self.RA.current_node+1)
             #print "MAXI REWARD ",r
@@ -211,6 +216,10 @@ class BreakoutNRA(BreakoutN):
        
     def getreward(self):
         r = self.current_reward
+        for b in self.last_brikcsremoved:
+            if b.i == self.RA.current_node:
+                r += STATES['GoodBrick']
+                #print 'Hit right brick for next RA state'
         if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
             r *= (self.RA.current_node+1)
             #print "MAXI REWARD ",r

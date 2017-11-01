@@ -39,7 +39,7 @@ plt.plot(gv,'g.')
 plt.title(fname)
 plt.xlabel('Iteration')
 plt.ylabel('Goal')
-#plt.savefig('fig/'+fname+'_g.png')
+#plt.savefig('fig/'+fname+'_g.png'
 plt.show()
 
 
@@ -73,7 +73,7 @@ plt.ylabel('Avg Reward')
 # plt.savefig('fig/'+fname+'_ar.png')
 plt.show()
 
-plt.ylim(ymin = -0.2, ymax = 1.2)
+#plt.ylim(ymin = -0.2, ymax = 1.2)
 plt.plot(gg,'g')
 plt.title(fname)
 plt.xlabel('Iteration/%d'%(d))

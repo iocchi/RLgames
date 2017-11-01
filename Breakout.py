@@ -183,7 +183,8 @@ class Breakout(object):
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
         #print('self.current_reward = 0')
         self.numactions += 1
-        
+        self.last_brikcsremoved = []
+
         while (self.prev_state == self.getstate()):
         
             if (self.firstAction):
@@ -326,6 +327,7 @@ class Breakout(object):
                     self.se_brick.play()
                 self.score = self.score + 1
                 self.bricks.remove(brick)
+                self.last_brikcsremoved.append(brick)
                 self.bricksgrid[(brick.i,brick.j)] = 0
                 self.ball_speed_y = -self.ball_speed_y
                 self.current_reward += STATES['Scores']

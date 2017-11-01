@@ -111,11 +111,14 @@ def learn(game, agent):
 
     run = True
     optimalPolicyFound = False 
+    last_goalreached = False
     while (run and (args.niter<0 or game.iteration<=args.niter) and not game.userquit):
 
         game.reset() # increment game.iteration
         game.draw()
         time.sleep(game.sleeptime)
+        if (last_goalreached):
+            agent.optimal = True
         while (run and not game.finished):
             run = game.input()
             if game.pause:
@@ -135,6 +138,10 @@ def learn(game, agent):
         if (agent.optimal and game.goal_reached()):
             run = False
             optimalPolicyFound = True
+
+        last_goalreached = game.goal_reached()
+
+
 
     game.quit()
 
