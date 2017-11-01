@@ -129,7 +129,7 @@ class BreakoutSRA(BreakoutS):
         return self.RA.current_node==self.RA.RAGoal
        
     def getreward(self):
-        r = self.current_reward
+        r = max(0,self.current_reward)
         for b in self.last_brikcsremoved:
             if b.j == self.RA.current_node:
                 r += STATES['GoodBrick']

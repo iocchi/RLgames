@@ -19,10 +19,12 @@ class RLAgent(object):
         self.debug = False
         self.name = 'RL'
         self.nstepsupdates = 0 # n-steps updates 
+        self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
         
     def init(self, nstates, nactions):
         self.Q = np.zeros((nstates,nactions))
         self.Visits = np.zeros((nstates,nactions))
+        self.etraces = {} # eligibility taces map
         self.nactions = nactions
 
     def savedata(self):
@@ -121,13 +123,44 @@ class RLAgent(object):
                 self.updateQ_n(kn,None) # update state-action n-steps back
                 kn += 1
         self.episode = []
-
+        #print "reset e"
+        self.etraces = {} # eligibility taces map
 
     def getActionValue(self, x2):
         print("ERROR: function getActionValue not implemented")
         return 0
 
+    def updateEligibility(self, x, a, alpha, delta):
+    
+        # update eligibility values of current (x,a)
+        # put to zero eligibility for all actions from this state
+        for ai in range(self.nactions):
+            if (ai!=a):
+                self.etraces.pop((x,ai),None)
+        accumulating_traces = False # False for replacing traces (more stable)
+        if ((x,a) in self.etraces and accumulating_traces):
+            self.etraces[(x,a)] += 1
+        else:
+            self.etraces[(x,a)] = 1
         
+        #print("update e: ",x,a)
+        toremove = [] # remove close-to-zero elements        
+        for e in self.etraces:
+            # update Q table
+            #print "  -- e ",e," ",self.etraces[e]
+            #print "  -- e x:",e[0]," a:",e[1]
+            q = alpha * delta * self.etraces[e]
+            self.addQ(e[0],e[1],q)
+            # update eligibility values
+            self.etraces[e] *= self.gamma * self.lambdae
+            if (self.etraces[e]<1e-3): # remove close-to-zero elements
+                toremove.append(e)
+        # remove close-to-zero elements
+        for e in toremove:
+            self.etraces.pop(e)
+
+            
+            
     def updateQ(self,x,a,r,x2):
     
         if (self.optimal):  # executes best policy, no updates
@@ -139,8 +172,8 @@ class RLAgent(object):
         vQa = self.getActionValue(x2)
         
         if (self.debug):
-            print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,'  A: ',a2,' prev_Q: ', prev_Q, '  vQa: ', vQa
-            print ' == Q update Q ',x,',',a,' <-  ...  Q ',x2,',',a2,' = ', vQa
+            print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,' prev_Q: ', prev_Q, '  vQa: ', vQa
+            print ' == Q update Q ',x,',',a,' <-  ...  Q ',x2,' = ', vQa
 
         if (self.alpha>=0):
             alpha = self.alpha
@@ -153,8 +186,13 @@ class RLAgent(object):
         # print "alpha = ",alpha
         # print "gamma = ",self.gamma
         
-        q = prev_Q + alpha * (r + self.gamma * vQa - prev_Q)
-        self.setQ(x,a,q)
+        delta = r + self.gamma * vQa - prev_Q
+        
+        if (self.lambdae>0):
+            self.updateEligibility(x,a,alpha,delta)
+        else:
+            q = prev_Q + alpha * delta 
+            self.setQ(x,a,q)
         
 
     def rreturn(self, k, n):
@@ -191,8 +229,18 @@ class RLAgent(object):
         # if not at the end of the episode
         if (not x2 is None):
             g += math.pow(self.gamma, self.nstepsupdates) * self.getActionValue(x2) # expected value in next state
-        q = self.alpha * (g - self.getQ(x_kn,a_kn))
-        self.addQ(x_kn,a_kn,q)
+        delta = (g - self.getQ(x_kn,a_kn))
+        
+        if (self.alpha>=0):
+            alpha = self.alpha
+        else:
+            alpha = 0.5
+
+        if (self.lambdae>0):
+            self.updateEligibility(x_kn,a_kn,alpha,delta)
+        else:
+            q = alpha * delta    
+            self.addQ(x_kn,a_kn,q)
 
 
 

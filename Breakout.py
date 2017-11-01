@@ -386,7 +386,7 @@ class Breakout(object):
         return self.command
 
     def getreward(self):
-        r = self.current_reward
+        r = max(0,self.current_reward)
         self.cumreward += r
         return r
 

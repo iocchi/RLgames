@@ -183,6 +183,7 @@ parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]',
 parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
 parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: 0.5]', default=0.5)
 parser.add_argument('-nstep', type=int, help='n-steps updates [default: 0]', default=0.5)
+parser.add_argument('-lambdae', type=float, help='lambda eligibility factor [default: -1 (no eligibility)]', default=-1)
 parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
 parser.add_argument('--debug', help='debug flag', action='store_true')
 parser.add_argument('--gui', help='GUI shown at start [default: hidden]', action='store_true')
@@ -208,6 +209,7 @@ agent.gamma = args.gamma
 agent.epsilon = args.epsilon
 agent.alpha = args.alpha
 agent.nstepsupdates = args.nstep
+agent.lambdae = args.lambdae
 #agent.maxVfu = args.maxVfu
 agent.debug = args.debug
 

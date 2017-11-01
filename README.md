@@ -75,6 +75,15 @@ python game.py BreakoutN MC breakoutN33_MC_01 -rows 3 -cols 3
 ```
 
 
+Game: BreakoutN (normal states) 3x4
+RL algorithm: Sarsa with n-step updates
+
+```
+python game.py BreakoutN Sarsa breakoutS34_S_n100_e01_01 -rows 3 -cols 4 -nstep 100 -epsilon 0.1
+
+```
+
+
 Game: BreakoutS (simplified states) 3x4
 RL algorithm: MC
 
@@ -82,6 +91,9 @@ RL algorithm: MC
 python game.py BreakoutS MC breakoutS34_MC_01 -rows 3 -cols 4
 
 ```
+
+
+
 
 You can stop the process at any time are resume it later.
 If you want to execute another experiment, just change the training filename.

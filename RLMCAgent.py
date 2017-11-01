@@ -20,6 +20,7 @@ class MCAgent(object):
         self.iteration = 0
         self.debug = False
         self.nstepsupdates = 0 # n-steps updates NOT USED HERE
+        self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)  NOT USED HERE
         self.name = 'RLMC'
 
     def init(self, nstates, nactions):
