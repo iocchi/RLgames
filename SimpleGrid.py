@@ -44,6 +44,8 @@ class SimpleGrid(object):
         self.iteration = 0
         self.cumreward = 0
         self.cumreward100 = 0 # cum reward for statistics
+        self.cumscore100 = 0 
+        self.ngoalreached = 0
         
         self.hiscore = 0
         self.hireward = -1000000
@@ -93,6 +95,7 @@ class SimpleGrid(object):
 
         self.score = 0
         self.cumreward = 0
+        self.cumscore = 0  
         
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
 
@@ -161,9 +164,12 @@ class SimpleGrid(object):
 
         self.current_reward += STATES['Alive']
         
+        self.score = self.pos_x + self.pos_y
+        
         # check if episode terminated
         if self.goal_reached():
             self.current_reward += STATES['Score']
+            self.ngoalreached += 1
             self.finished = True
         if (self.numactions>(self.cols+self.rows)*2):
             self.current_reward += STATES['Dead']
@@ -231,7 +237,7 @@ class SimpleGrid(object):
 
 
     def print_report(self, printall=False):
-        toprint = True
+        toprint = printall
         ch = ' '
         if (self.agent.optimal):
             ch = '*'
@@ -252,13 +258,17 @@ class SimpleGrid(object):
             print(s)
 
         self.cumreward100 += self.cumreward
+        self.cumscore100 += self.score
         numiter = 100
         if (self.iteration%numiter==0):
             #self.doSave()
+            pgoal = float(self.ngoalreached*100)/numiter
             print('-----------------------------------------------------------------------')
-            print("%s %6d Avg Reward last 100 runs:  >>> %d <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100))
+            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, pgoal))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0  
+            self.cumscore100 = 0 
+            self.ngoalreached = 0
 
         sys.stdout.flush()
         

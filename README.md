@@ -25,14 +25,13 @@ positional arguments:
 
 optional arguments:
   -h, --help        show this help message and exit
-  -maxVfu MAXVFU    max visits for forward update of RA-Q tables [default: 0]
+  -rows ROWS        number of rows [default: 3]
+  -cols COLS        number of columns [default: 3]
   -gamma GAMMA      discount factor [default: 1.0]
   -epsilon EPSILON  epsilon greedy factor [default: -1 = adaptive]
   -alpha ALPHA      alpha factor (-1 = based on visits) [default: 0.5]
+  -nstep NSTEP      n-steps updates [default: 0]
   -niter NITER      stop after number of iterations [default: -1 = infinite]
-  -rows ROWS        number of rows [default: 3]
-  -cols COLS        number of columns [default: 3]
-  --enableRA        enable Reward Automa
   --debug           debug flag
   --gui             GUI shown at start [default: hidden]
   --sound           Sound enabled
@@ -45,7 +44,7 @@ Game: SimpleGrid 5x5
 RL algorithm: Q-learning
 
 ```
-python game.py SimpleGrid Q simplegrid55_Q_01 -rows 5 -cols 5
+python game.py SimpleGrid Q simplegrid55_Q_01 -rows 5 -cols 5 -gamma 0.9
 
 ```
 
@@ -53,9 +52,19 @@ Game: SimpleGrid 7x5
 RL algorithm: Sarsa
 
 ```
-python game.py SimpleGrid Sarsa simplegrid75_Sarsa_01 -rows 7 -cols 5
+python game.py SimpleGrid Sarsa simplegrid75_Sarsa_01 -rows 7 -cols 5 -gamma 0.9
 
 ```
+
+Game: SimpleGrid 9x9
+RL algorithm: Sarsa with n-steps updates
+
+```
+python game.py SimpleGrid Sarsa simplegrid99_Sarsa_n10_01 -rows 9 -cols 9 -gamma 0.9 -nstep 10
+
+```
+
+
 
 Game: BreakoutN (normal states) 3x3
 RL algorithm: MC

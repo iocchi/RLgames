@@ -44,9 +44,9 @@ plt.show()
 
 
 d = 100 # size of interval
-ss = [] # vector of avg scores in interval
-rr = [] # vector of avg rewards in interval
-gg = [] # vector of percentage of goals reached in interval
+ss = [0] # vector of avg scores in interval
+rr = [0] # vector of avg rewards in interval
+gg = [0] # vector of percentage of goals reached in interval
 for i in range(0,n/d):
     si = sv[i*d:(i+1)*d]
     ri = rv[i*d:(i+1)*d]
@@ -54,6 +54,7 @@ for i in range(0,n/d):
     ss.append(np.mean(si))
     rr.append(np.mean(ri))
     gg.append(float((gi == 1).sum()*100.0)/d)
+
 
 #if (ylim>0):
 #    plt.ylim(ymin = 0, ymax = ylim)

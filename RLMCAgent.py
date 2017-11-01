@@ -19,6 +19,7 @@ class MCAgent(object):
         self.episode = []
         self.iteration = 0
         self.debug = False
+        self.nstepsupdates = 0 # n-steps updates NOT USED HERE
         self.name = 'RLMC'
 
     def init(self, nstates, nactions):
@@ -129,7 +130,7 @@ class MCAgent(object):
 
         
     def rreturn(self, k):
-        # return from episode k
+        # return of current episode from state x_k
         r = 0
         g = 1.0
         while (k<len(self.episode)):

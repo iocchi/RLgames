@@ -153,7 +153,7 @@ class BreakoutSRA(BreakoutS):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, sc: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -241,7 +241,7 @@ class BreakoutNRA(BreakoutN):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, sc: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score

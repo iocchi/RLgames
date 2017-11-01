@@ -18,7 +18,7 @@ class RLAgent(object):
         self.iteration = 0
         self.debug = False
         self.name = 'RL'
-
+        self.nstepsupdates = 0 # n-steps updates 
         
     def init(self, nstates, nactions):
         self.Q = np.zeros((nstates,nactions))
@@ -42,6 +42,10 @@ class RLAgent(object):
     def setQ(self, x, a, q):
         self.Q[x,a] = q
 
+    def addQ(self, x, a, q):
+        self.Q[x,a] += q
+
+        
     def incVisits(self, x, a):
         self.Visits[x,a] += 1
         # print "Visits ",x," <- ",self.Visits[x,:]
@@ -103,7 +107,20 @@ class RLAgent(object):
         
         self.episode.append((x,a,r))
         
-        self.updateQ(x,a,r,x2)
+        if (self.nstepsupdates<2):
+            self.updateQ(x,a,r,x2)
+        else:
+            kn = len(self.episode) - self.nstepsupdates
+            self.updateQ_n(kn,x2) # update state-action n-steps back
+
+    def notify_endofepisode(self, iter):
+        self.iteration = iter
+        if (self.nstepsupdates>1):
+            kn = len(self.episode) - self.nstepsupdates
+            while (kn < len(self.episode)):
+                self.updateQ_n(kn,None) # update state-action n-steps back
+                kn += 1
+        self.episode = []
 
 
     def getActionValue(self, x2):
@@ -111,7 +128,7 @@ class RLAgent(object):
         return 0
 
         
-    def updateQ(self,x,a,r,x2,a2=None):
+    def updateQ(self,x,a,r,x2):
     
         if (self.optimal):  # executes best policy, no updates
             return
@@ -119,12 +136,7 @@ class RLAgent(object):
         # Q of current state
         prev_Q = self.getQ(x,a)
         
-        if (not a2 is None):
-            # a2 given
-            vQa = self.getQ(x2,a2)
-        else:
-            vQa = self.getActionValue(x2)
-
+        vQa = self.getActionValue(x2)
         
         if (self.debug):
             print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,'  A: ',a2,' prev_Q: ', prev_Q, '  vQa: ', vQa
@@ -145,50 +157,50 @@ class RLAgent(object):
         self.setQ(x,a,q)
         
 
-                
-    def updateQ_episode(self):
-    
-        if (self.optimal):  # executes best policy, no updates
+    def rreturn(self, k, n):
+        # n-steps return of current episode from state x_k 
+        r = 0
+        g = 1.0
+        l = min(len(self.episode), k+n)
+        while (k<l):
+            ep = self.episode[k]
+            r += g * ep[2]
+            g = g * self.gamma
+            k += 1
+        return r
+
+        
+    def updateQ_n(self,kn,x2): # n-steps Q update
+        # kn = index of state n-steps back
+        # x2 = next state after last action
+   
+        if (self.optimal):  # executing best policy, no updates
             return
 
-        # update all states in this episode
-        if (self.debug):
-            print self.episode
-        k = len(self.episode)-1
-        sa1=self.episode[k]
-        x1 = sa1[0] # current state
-        a1 = sa1[1] # current action
-        if (self.debug):
-            print x1,' ',a1,'    Q: ', self.getQ(x1,a1) 
-        k -= 1
-        while (k>=0): # visit states in reverse order
-            sa1=self.episode[k]
-            sa2=self.episode[k+1]
-            x1 = sa1[0] # current state
-            a1 = sa1[1] # current action
-            r1 = sa1[2] # reward
-            x2 = sa2[0] # next state
-            a2 = sa2[1] # next action
+        if (kn<0):  # kn not valid
+            return
 
-            self.updateQ(x1,a1,r1,x2,a2)
-            
-            if (self.debug):
-                print x1,' A: ',a1,' -> r: ',r1,' -> ',x2,'   Q: ', self.getQ(x1,a1) 
-                
-            k -= 1
-        if (self.debug):
-            sys.exit(1)            
+        #print "debug updateQ_n ... "
+        ep = self.episode[kn]
+        x_kn = ep[0]
+        a_kn = ep[1]
+        g = self.rreturn(kn, self.nstepsupdates) # n-steps return from state x_{kn}
 
-    def notify_endofepisode(self, iter):
-        self.iteration = iter
-        self.updateQ_episode()
-        self.episode = []
+        #print "return = ",g
+        
+        # if not at the end of the episode
+        if (not x2 is None):
+            g += math.pow(self.gamma, self.nstepsupdates) * self.getActionValue(x2) # expected value in next state
+        q = self.alpha * (g - self.getQ(x_kn,a_kn))
+        self.addQ(x_kn,a_kn,q)
+
 
 
 class QAgent(RLAgent):
 
     def __init__(self):
         RLAgent.__init__(self)
+        self.name = 'Q-Learning'
 
     def getActionValue(self, x2):
         # Q-learning
@@ -200,6 +212,7 @@ class SarsaAgent(RLAgent):
 
     def __init__(self):
         RLAgent.__init__(self)
+        self.name = 'Sarsa'
 
     def getActionValue(self, x2):
         # Sarsa

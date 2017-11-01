@@ -177,18 +177,19 @@ parser = argparse.ArgumentParser(description='RL games')
 parser.add_argument('game', type=str, help='game (e.g., Breakout)')
 parser.add_argument('agent', type=str, help='agent [Q, Sarsa, MC]')
 parser.add_argument('trainfile', type=str, help='file for learning strctures')
-parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
+parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)
+parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)
 parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
 parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
 parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: 0.5]', default=0.5)
+parser.add_argument('-nstep', type=int, help='n-steps updates [default: 0]', default=0.5)
 parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
-parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)
-parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)
-parser.add_argument('--enableRA', help='enable Reward Automa', action='store_true')
 parser.add_argument('--debug', help='debug flag', action='store_true')
 parser.add_argument('--gui', help='GUI shown at start [default: hidden]', action='store_true')
 parser.add_argument('--sound', help='Sound enabled', action='store_true')
 parser.add_argument('--eval', help='Evaluate best policy', action='store_true')
+#parser.add_argument('--enableRA', help='enable Reward Automa', action='store_true')
+#parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
 
 args = parser.parse_args()
 
@@ -206,7 +207,8 @@ game.sound_enabled = args.sound
 agent.gamma = args.gamma
 agent.epsilon = args.epsilon
 agent.alpha = args.alpha
-agent.maxVfu = args.maxVfu
+agent.nstepsupdates = args.nstep
+#agent.maxVfu = args.maxVfu
 agent.debug = args.debug
 
 game.init(agent)
