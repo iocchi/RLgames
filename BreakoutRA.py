@@ -168,13 +168,15 @@ class BreakoutSRA(BreakoutS):
             print(s)
 
         self.cumreward100 += self.cumreward
+        self.cumscore100 += RAnode
         numiter = 100
         if (self.iteration%numiter==0):
             #self.doSave()
             print('-----------------------------------------------------------------------')
-            print("%s %6d Avg Reward last 100 runs:  >>> %d <<<  p goals >>> %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100,float(self.RA.goalreached*100)/numiter))
+            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
+            self.cumscore100 = 0
             self.RA.goalreached = 0
             
 
@@ -254,13 +256,15 @@ class BreakoutNRA(BreakoutN):
             print(s)
 
         self.cumreward100 += self.cumreward
+        self.cumscore100 += RAnode
         numiter = 100
         if (self.iteration%numiter==0):
             #self.doSave()
-            print('-----------------------------------------------------------------------')
-            print("%s %6d Avg Reward last 100 runs:  >>> %d <<<  p goals >>> %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100,float(self.RA.goalreached*100)/numiter))
-            print('-----------------------------------------------------------------------')
+            print('----------------------------------------------------------------------------------')
+            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print('----------------------------------------------------------------------------------')
             self.cumreward100 = 0
+            self.cumscore100 = 0
             self.RA.goalreached = 0
             
 

@@ -85,6 +85,7 @@ class Breakout(object):
         self.command = 0
         self.iteration = 0
         self.cumreward = 0
+        self.cumscore100 = 0 # cumulative score for statistics
         self.cumreward100 = 0 # cumulative reward for statistics
         self.ngoalreached = 0 # number of goals reached for stats
         
@@ -412,15 +413,17 @@ class Breakout(object):
             print(s)
 
         self.cumreward100 += self.cumreward
+        self.cumscore100 += self.score
         numiter = 100
         pgoal = 0
         if (self.iteration%numiter==0):
             #self.doSave()
             pgoal = float(self.ngoalreached*100)/numiter
             print('-----------------------------------------------------------------------')
-            print("%s %6d Avg Reward last 100 runs:  >>> %d <<<  p goals >>> %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100,pgoal))
+            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, pgoal))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
+            self.cumscore100 = 0
             self.ngoalreached = 0
             
 
