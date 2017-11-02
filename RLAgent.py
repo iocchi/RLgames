@@ -217,7 +217,7 @@ class RLAgent(object):
         if (kn<0):  # kn not valid
             return
 
-        #print "debug updateQ_n ... "
+        #print "debug updateQ_n ... ",kn
         ep = self.episode[kn]
         x_kn = ep[0]
         a_kn = ep[1]

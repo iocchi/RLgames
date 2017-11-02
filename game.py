@@ -223,7 +223,7 @@ parser.add_argument('-cols', type=int, help='number of columns [default: 3]', de
 parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
 parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
 parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: -1]', default=-1)
-parser.add_argument('-nstep', type=int, help='n-steps updates [default: 0]', default=0.5)
+parser.add_argument('-nstep', type=int, help='n-steps updates [default: 1]', default=1)
 parser.add_argument('-lambdae', type=float, help='lambda eligibility factor [default: -1 (no eligibility)]', default=-1)
 parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
 parser.add_argument('--debug', help='debug flag', action='store_true')
