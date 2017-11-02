@@ -29,6 +29,7 @@ resolutiony = 10
 
 
 STATES = {
+    'Init':100,
     'Alive':0,
     'Dead':-100,
     'PaddleNotMoving':0,
@@ -189,6 +190,7 @@ class Breakout(object):
         while (self.prev_state == self.getstate()):
         
             if (self.firstAction):
+                self.current_reward += STATES['Init']
                 self.firstAction = False
             
             if self.command == 0:  # not moving
@@ -386,7 +388,7 @@ class Breakout(object):
         return self.command
 
     def getreward(self):
-        r = max(0,self.current_reward)
+        r = self.current_reward
         self.cumreward += r
         return r
 
@@ -430,7 +432,7 @@ class Breakout(object):
         sys.stdout.flush()
         
         self.vscores.append(self.score)
-        self.resfile.write("%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached()))
+        self.resfile.write("%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions))
         self.resfile.flush()
 
 

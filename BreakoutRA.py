@@ -129,7 +129,7 @@ class BreakoutSRA(BreakoutS):
         return self.RA.current_node==self.RA.RAGoal
        
     def getreward(self):
-        r = max(0,self.current_reward)
+        r = self.current_reward
         for b in self.last_brikcsremoved:
             if b.j == self.RA.current_node:
                 r += STATES['GoodBrick']
@@ -183,7 +183,7 @@ class BreakoutSRA(BreakoutS):
         sys.stdout.flush()
         
         self.vscores.append(self.score)
-        self.resfile.write("%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached()))
+        self.resfile.write("%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions))
         self.resfile.flush()
 
 
@@ -271,7 +271,7 @@ class BreakoutNRA(BreakoutN):
         sys.stdout.flush()
         
         self.vscores.append(self.score)
-        self.resfile.write("%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached()))
+        self.resfile.write("%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions))
         self.resfile.flush()
 
 

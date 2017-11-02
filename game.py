@@ -9,10 +9,12 @@ from math import fabs
 import argparse
 
 trainfilename = 'default'
+optimalPolicyFound = False 
 
 args = None
 game = None
 agent = None
+
 
 
 def loadGameModule():
@@ -94,6 +96,36 @@ def load(fname, game, agent):
             print("Can't load data from input file, wrong format.")
             #raise
 
+            
+def writeinfo(trainfilename,game,agent,init=True):
+    global optimalPolicyFound
+    infofile = open("data/"+trainfilename +".info","a+")
+    if (init):
+        infofile.write("Train:   %s\n" %(trainfilename))
+        infofile.write("Game:    %s\n" %(args.game))
+        infofile.write("Size:    %d x %d\n" %(args.rows, args.cols))
+        infofile.write("Agent:   %s\n" %(agent.name))
+        infofile.write("gamma:   %f\n" %(agent.gamma))
+        infofile.write("epsilon: %f\n" %(agent.epsilon))
+        infofile.write("alpha:   %f\n" %(agent.alpha))
+        infofile.write("n-step:  %d\n" %(agent.nstepsupdates))
+        infofile.write("lambda:  %f\n\n" %(agent.lambdae))
+    elif optimalPolicyFound:
+        infofile.write("Optimal policy found.\n")
+        infofile.write("goal reached:     %d\n" %(game.iteration))
+        infofile.write("goal score:       %d\n" %(game.score))
+        infofile.write("goal reward:      %d\n" %(game.cumreward))
+        infofile.write("goal n. actions:  %d\n\n" %(game.numactions))
+        infofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward,game.numactions))
+    else:
+        infofile.write("last iteration:   %d\n" %(game.iteration))
+        infofile.write("last score:       %d\n" %(game.score))
+        infofile.write("last reward:      %d\n" %(game.cumreward))
+        infofile.write("last n. actions:  %d\n\n" %(game.numactions))
+    
+    infofile.flush()
+    infofile.close()
+
 def execution_step(game, agent):
     x = game.getstate() # current state
     if (game.isAuto):  # agent choice
@@ -108,9 +140,9 @@ def execution_step(game, agent):
 
 # learning process
 def learn(game, agent):
-
+    global optimalPolicyFound
+    
     run = True
-    optimalPolicyFound = False 
     last_goalreached = False
     while (run and (args.niter<0 or game.iteration<=args.niter) and not game.userquit):
 
@@ -140,10 +172,6 @@ def learn(game, agent):
             optimalPolicyFound = True
 
         last_goalreached = game.goal_reached()
-
-
-
-    game.quit()
 
     if optimalPolicyFound:
         print("\n****************************")
@@ -181,7 +209,7 @@ parser.add_argument('-rows', type=int, help='number of rows [default: 3]', defau
 parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)
 parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
 parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
-parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: 0.5]', default=0.5)
+parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: -1]', default=-1)
 parser.add_argument('-nstep', type=int, help='n-steps updates [default: 0]', default=0.5)
 parser.add_argument('-lambdae', type=float, help='lambda eligibility factor [default: -1 (no eligibility)]', default=-1)
 parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
@@ -219,11 +247,16 @@ game.init(agent)
 load(trainfilename,game,agent)
 print "Game iteration: ",game.iteration
 
+if (game.iteration==0):
+    writeinfo(trainfilename,game,agent,init=True)
+
 # learning or evaluation process
 if (args.eval):
     evaluate(game, agent, 10)
 else:    
     learn(game, agent)
+    writeinfo(trainfilename,game,agent,init=False)
 
-print "Experiment terminated !!!"
-print "\n"
+print "Experiment terminated !!!\n"
+
+game.quit()

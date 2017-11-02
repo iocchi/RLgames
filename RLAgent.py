@@ -179,7 +179,6 @@ class RLAgent(object):
             alpha = self.alpha
         else:
             self.incVisits(x,a)
-            k = 1
             s = self.getVisits(x,a)
             alpha = 1.0/s # math.sqrt(s)
     
@@ -234,7 +233,9 @@ class RLAgent(object):
         if (self.alpha>=0):
             alpha = self.alpha
         else:
-            alpha = 0.5
+            self.incVisits(x_kn,a_kn)
+            s = self.getVisits(x_kn,a_kn)
+            alpha = 1.0/s # math.sqrt(s)
 
         if (self.lambdae>0):
             self.updateEligibility(x_kn,a_kn,alpha,delta)
