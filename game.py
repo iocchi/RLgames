@@ -91,7 +91,6 @@ def load(fname, game, agent):
             game.hiscore = int(data['hiscore'])
             game.hireward = int(data['hireward'])
             agent.loaddata(data['agentdata'])
-            game.iteration -= 1
         except:
             print("Can't load data from input file, wrong format.")
             #raise
@@ -144,13 +143,18 @@ def learn(game, agent):
     
     run = True
     last_goalreached = False
+    next_optimal = False
+    if (game.iteration>0): # try an optimal run
+        next_optimal = True
+        
     while (run and (args.niter<0 or game.iteration<=args.niter) and not game.userquit):
 
         game.reset() # increment game.iteration
         game.draw()
         time.sleep(game.sleeptime)
-        if (last_goalreached):
+        if (last_goalreached or next_optimal):
             agent.optimal = True
+            next_optimal = False
         while (run and not game.finished):
             run = game.input()
             if game.pause:
