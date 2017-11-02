@@ -111,7 +111,7 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("n-step:  %d\n" %(agent.nstepsupdates))
         infofile.write("lambda:  %f\n\n" %(agent.lambdae))
         infofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
-        allinfofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
+        allinfofile.write("%s,%s,%d,%d,%s,%f,%f,%f,%d,%f\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
     elif optimalPolicyFound:
         infofile.write("Optimal policy found.\n")
         infofile.write("goal reached:     %d\n" %(game.iteration))
@@ -119,14 +119,14 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("goal reward:      %d\n" %(game.cumreward))
         infofile.write("goal n. actions:  %d\n\n" %(game.numactions))
         infofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward,game.numactions))
-        allinfofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward,game.numactions))
+        allinfofile.write("%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward,game.numactions))
     else:
         infofile.write("last iteration:   %d\n" %(game.iteration))
         infofile.write("last score:       %d\n" %(game.score))
         infofile.write("last reward:      %d\n" %(game.cumreward))
         infofile.write("last n. actions:  %d\n\n" %(game.numactions))
         infofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,,,,,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions))
-        allinfofile.write("\n%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,,,,,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions))
+        allinfofile.write("%s,%s,%d,%d,%s,%f,%f,%f,%d,%f,,,,,%d,%d,%d,%d\n" %(trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions))
     
     infofile.flush()
     infofile.close()
