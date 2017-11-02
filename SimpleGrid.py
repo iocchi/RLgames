@@ -13,6 +13,7 @@ orange = [180,100,20]
 
 
 STATES = {
+    'Init':100,
     'Alive':0,
     'Dead':-10,
     'NotMoving':-1,
@@ -136,6 +137,7 @@ class SimpleGrid(object):
         
         if (self.firstAction):
             self.firstAction = False
+            self.current_reward += STATES['Init']
         
         if self.command == 0:  # not moving
             # do nothing
