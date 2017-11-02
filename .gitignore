@@ -103,4 +103,5 @@ ENV/
 # train data
 data/*.npz
 data/*.dat
+data/*.info
 

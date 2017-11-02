@@ -154,6 +154,7 @@ def learn(game, agent):
     next_optimal = False
     if (game.iteration>0): # try an optimal run
         next_optimal = True
+        game.iteration -= 1
         
     while (run and (args.niter<0 or game.iteration<=args.niter) and not game.userquit):
 

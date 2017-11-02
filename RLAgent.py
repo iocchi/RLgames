@@ -109,7 +109,7 @@ class RLAgent(object):
         
         self.episode.append((x,a,r))
         
-        if (self.nstepsupdates<2):
+        if (self.nstepsupdates<1):
             self.updateQ(x,a,r,x2)
         else:
             kn = len(self.episode) - self.nstepsupdates
@@ -117,8 +117,8 @@ class RLAgent(object):
 
     def notify_endofepisode(self, iter):
         self.iteration = iter
-        if (self.nstepsupdates>1):
-            kn = len(self.episode) - self.nstepsupdates
+        if (self.nstepsupdates>0):
+            kn = max(0,len(self.episode) - self.nstepsupdates)
             while (kn < len(self.episode)):
                 self.updateQ_n(kn,None) # update state-action n-steps back
                 kn += 1
