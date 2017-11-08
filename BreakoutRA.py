@@ -203,7 +203,7 @@ class BreakoutNRA(BreakoutN):
 
     def getstate(self):
         x = super(BreakoutNRA, self).getstate()
-        return x + self.n_paddle_x * self.RA.current_node
+        return x + (self.n_ball_x*self.n_ball_y*self.n_ball_dir*self.n_paddle_x) * self.RA.current_node
 
     def reset(self):
         super(BreakoutNRA, self).reset()

@@ -29,7 +29,7 @@ resolutiony = 10
 
 
 STATES = {
-    'Init':100,
+    'Init':0,
     'Alive':0,
     'Dead':-100,
     'PaddleNotMoving':0,
@@ -535,7 +535,7 @@ class BreakoutN(Breakout):
         else:
             paddle_x = int(self.paddle_x)/resx
         
-        return ball_x  + self.n_ball_x * ball_y + self.n_ball_y * ball_dir + self.n_ball_dir * paddle_x
+        return ball_x  + self.n_ball_x * ball_y + (self.n_ball_x*self.n_ball_y) * ball_dir + (self.n_ball_x*self.n_ball_y*self.n_ball_dir) * paddle_x
 
 
 #
@@ -549,11 +549,10 @@ class BreakoutS(Breakout):
 
     def setStateActionSpace(self):
         self.n_diff_paddle_ball = 2*self.win_width/resolutionx+1
-        self.n_ball_y = 1 # self.win_height/resolutiony+1
 
         self.nactions = 3  # 0: not moving, 1: left, 2: right
         
-        self.nstates = self.n_diff_paddle_ball * self.n_ball_y
+        self.nstates = self.n_diff_paddle_ball
         print('Number of states: %d' %self.nstates)
 
         
@@ -561,7 +560,6 @@ class BreakoutS(Breakout):
         resx = resolutionx 
 
         diff_paddle_ball = (int(self.ball_x)-self.paddle_x+self.win_width)/resx            
-        ball_y = 0 # int(self.ball_y)/resy
         
-        return diff_paddle_ball  + self.n_diff_paddle_ball * ball_y
+        return diff_paddle_ball
         
