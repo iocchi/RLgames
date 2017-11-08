@@ -24,7 +24,7 @@ class RLAgent(object):
     def init(self, nstates, nactions):
         self.Q = np.zeros((nstates,nactions))
         self.Visits = np.zeros((nstates,nactions))
-        self.etraces = {} # eligibility taces map
+        self.etraces = {} # eligibility traces map
         self.nactions = nactions
 
     def savedata(self):
@@ -54,6 +54,11 @@ class RLAgent(object):
 
     def getVisits(self, x, a):
         return self.Visits[x,a]
+
+    def getAlphaVisitsInc(self, x, a):
+        self.incVisits(x,a)
+        s = self.getVisits(x,a)
+        return 1.0/s # math.sqrt(s)
 
     def getSumVisits(self, x):
         return np.sum(self.Visits[x,:])
@@ -142,15 +147,22 @@ class RLAgent(object):
             self.etraces[(x,a)] += 1
         else:
             self.etraces[(x,a)] = 1
-        
-        #print("update e: ",x,a)
+
+        if (self.debug):
+            print("update e: ",x,a)
         toremove = [] # remove close-to-zero elements        
         for e in self.etraces:
             # update Q table
-            #print "  -- e ",e," ",self.etraces[e]
-            #print "  -- e x:",e[0]," a:",e[1]
-            q = alpha * delta * self.etraces[e]
-            self.addQ(e[0],e[1],q)
+            if (delta!=0):
+                if (alpha<0):
+                    alpha = self.getAlphaVisitsInc(e[0],e[1])
+                q = alpha * delta * self.etraces[e]
+                self.addQ(e[0],e[1],q)
+                if (self.debug):
+                    print "  -- e ",e," ",self.etraces[e]
+                    print "  -- e x:",e[0]," a:",e[1]
+                    print "  -- alpha: ",alpha,"  delta: ", delta
+                    print "  -- Q(e) = ", self.getQ(e[0],e[1])
             # update eligibility values
             self.etraces[e] *= self.gamma * self.lambdae
             if (self.etraces[e]<1e-3): # remove close-to-zero elements
@@ -158,6 +170,8 @@ class RLAgent(object):
         # remove close-to-zero elements
         for e in toremove:
             self.etraces.pop(e)
+        if (self.debug):
+            print "\n"
 
             
             
@@ -174,24 +188,18 @@ class RLAgent(object):
         if (self.debug):
             print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,' prev_Q: ', prev_Q, '  vQa: ', vQa
             print ' == Q update Q ',x,',',a,' <-  ...  Q ',x2,' = ', vQa
-
-        if (self.alpha>=0):
-            alpha = self.alpha
-        else:
-            self.incVisits(x,a)
-            s = self.getVisits(x,a)
-            alpha = 1.0/s # math.sqrt(s)
-    
-        # print "alpha = ",alpha
-        # print "gamma = ",self.gamma
-        
+            
         delta = r + self.gamma * vQa - prev_Q
         
         if (self.lambdae>0):
-            self.updateEligibility(x,a,alpha,delta)
+            self.updateEligibility(x,a,self.alpha,delta)
         else:
-            q = prev_Q + alpha * delta 
-            self.setQ(x,a,q)
+            if (self.alpha>=0):
+                alpha = self.alpha
+            else:
+                alpha = self.getAlphaVisitsInc(x,a)
+            q = alpha * delta 
+            self.addQ(x,a,q)
         
 
     def rreturn(self, k, n):
@@ -210,36 +218,42 @@ class RLAgent(object):
     def updateQ_n(self,kn,x2): # n-steps Q update
         # kn = index of state n-steps back
         # x2 = next state after last action
-   
+
+        if (self.debug):
+            print "updateQ_n ",kn, " optimal = ",self.optimal
+        
         if (self.optimal):  # executing best policy, no updates
             return
+
+        if (self.debug):
+            print "debug updateQ_n ... ",kn
 
         if (kn<0):  # kn not valid
             return
 
-        #print "debug updateQ_n ... ",kn
         ep = self.episode[kn]
         x_kn = ep[0]
         a_kn = ep[1]
         g = self.rreturn(kn, self.nstepsupdates) # n-steps return from state x_{kn}
 
-        #print "return = ",g
+        if (self.debug):
+            print "debug updateQ_n ... ",kn
+            print "x = ",x_kn, "  a = ",a_kn
+            print "return = ",g
         
         # if not at the end of the episode
         if (not x2 is None):
             g += math.pow(self.gamma, self.nstepsupdates) * self.getActionValue(x2) # expected value in next state
+            
         delta = (g - self.getQ(x_kn,a_kn))
-        
-        if (self.alpha>=0):
-            alpha = self.alpha
-        else:
-            self.incVisits(x_kn,a_kn)
-            s = self.getVisits(x_kn,a_kn)
-            alpha = 1.0/s # math.sqrt(s)
 
         if (self.lambdae>0):
-            self.updateEligibility(x_kn,a_kn,alpha,delta)
+            self.updateEligibility(x_kn,a_kn,self.alpha,delta)
         else:
+            if (self.alpha>=0):
+                alpha = self.alpha
+            else:
+                alpha = self.getAlphaVisitsInc(x,a)
             q = alpha * delta    
             self.addQ(x_kn,a_kn,q)
 
