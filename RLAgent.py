@@ -253,7 +253,7 @@ class RLAgent(object):
             if (self.alpha>=0):
                 alpha = self.alpha
             else:
-                alpha = self.getAlphaVisitsInc(x,a)
+                alpha = self.getAlphaVisitsInc(x_kn,a_kn)
             q = alpha * delta    
             self.addQ(x_kn,a_kn,q)
 
