@@ -20,10 +20,15 @@ white = [255,255,255]
 grey = [180,180,180]
 orange = [180,100,20]
 
+# game's constant variables
+ball_radius = 10
+paddle_width = 80
+paddle_height = 10
+
 block_width = 60
 block_height = 12
-block_xdistance = 50  # for 6 bricks: 20 ???
-
+block_xdistance = 20
+            
 resolutionx = 20
 resolutiony = 10
 
@@ -37,11 +42,6 @@ STATES = {
     'Hit':1,        # paddle hit
     'Goal':100,     # level completed
 }
-
-#the game's constant variables
-ball_radius = 10
-paddle_width = 80
-paddle_height = 10
 
 
 
@@ -70,6 +70,9 @@ class Breakout(object):
         self.trainsessionname = trainsessionname
         self.brick_rows = brick_rows
         self.brick_cols = brick_cols
+
+        if (self.brick_cols<5):
+            self.block_xdistance = 50
         
         # Configuration
         self.deterministic = True
