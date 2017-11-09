@@ -140,9 +140,9 @@ class RewardAutoma(object):
                 self.last_node = self.current_node
                 self.current_node += 1
                 reward += STATES['RAGoal']/self.ncolors
-                print("  -- RA state transition to %d, " %(self.current_node))
+                #print("  -- RA state transition to %d, " %(self.current_node))
                 if (self.current_node==self.RAGoal):
-                    print("  <<< RA GOAL >>>")
+                    #print("  <<< RA GOAL >>>")
                     reward += STATES['RAGoal']
                     self.goalreached += 1
             elif (self.sum('B')>1):
