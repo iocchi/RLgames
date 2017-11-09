@@ -16,9 +16,10 @@ from Breakout import *
 
 
 STATES = {
-    'RAGoal':600,        # goal of reward automa
-    'RAFail':-30,        # fail of reward automa
-    'GoodBrick':30       # good brick removed for next RA state
+    'RAGoal':600,         # goal of reward automa
+    'RAFail':-30,         # fail of reward automa
+    'GoodBrick':30,       # good brick removed for next RA state
+    'WrongBrick':-5       # wrong brick removed for next RA state
 }
 
 
@@ -66,6 +67,16 @@ class RewardAutoma(object):
             return 0
             
         reward = 0
+        
+        
+        for b in self.game.last_brikcsremoved:
+            if b.i == self.current_node:
+                reward += STATES['GoodBrick']
+                #print 'Hit right brick for next RA state'
+            else:
+                reward += STATES['WrongBrick']
+                #print 'Hit wrong brick for next RA state'
+
         f = np.zeros(self.brick_cols)
         for c in range(0,self.brick_cols):
             f[c] = self.check_free_cols([c])
@@ -74,7 +85,7 @@ class RewardAutoma(object):
             if f[self.current_node]:
                 self.last_node = self.current_node
                 self.current_node += 1
-                reward += STATES['RAGoal']/self.brick_cols
+                reward += STATES['RAGoal']
                 #print("  -- RA state transition to %d, " %(self.current_node))
                 if (self.current_node==self.RAGoal):
                     # print("  <<< RA GOAL >>>")
@@ -218,10 +229,6 @@ class BreakoutNRA(BreakoutN):
        
     def getreward(self):
         r = self.current_reward
-        for b in self.last_brikcsremoved:
-            if b.i == self.RA.current_node:
-                r += STATES['GoodBrick']
-                # print 'Hit right brick for next RA state'
         if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
             r *= (self.RA.current_node+1)
             #print "MAXI REWARD ",r
