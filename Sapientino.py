@@ -6,13 +6,22 @@ import time
 import math
 from math import fabs
 
-black = [0, 0, 0]
-white = [255,255,255]
-grey = [180,180,180]
-orange = [180,100,20]
-red = [200,0,0]
-green = [0,200,0]
-blue = [0,0,200]
+COLORS = {
+    'black':  [0, 0, 0],
+    'white':  [255,255,255],
+    'grey':   [180,180,180],
+    'orange': [180,100,20],
+    'red':    [200,0,0],
+    'green':  [0,200,0],
+    'blue':  [0,0,200]
+}
+
+
+
+TOKENS = [ ['r1', 'red', 0, 1],  ['r2', 'red', 2, 2],  
+    ['g1', 'green', 1, 3], ['g2', 'green', 5, 1],
+    ['b1', 'blue', 1, 0], ['b2', 'blue', 4, 2] 
+]
 
 
 STATES = {
@@ -25,7 +34,6 @@ STATES = {
     'RAFail':-100,
     'RAGoal':1000
 }
-
 
 # Reward automa
 
@@ -47,8 +55,10 @@ class RewardAutoma(object):
         self.current_node = 0
         self.last_node = self.current_node
 
-    def count(self,col):
+    def countbipcol(self,col):
         r = 0
+        for t in self.tokenbip:
+
         if (col=='R' and self.game.pred1_bip==1):
             r += 1
         if (col=='R' and self.game.pred2_bip==1):
@@ -63,8 +73,10 @@ class RewardAutoma(object):
             r += 1
         return r
 
-    def sum(self,col):
+    def sumbipcol(self,col):
         r = 0
+        for t in self.tokenbip:
+            
         if (col=='R'):
             r = self.game.pred1_bip + self.game.pred2_bip
         if (col=='G'):
@@ -79,10 +91,10 @@ class RewardAutoma(object):
         if (self.current_node==0): # todo RED 1
             if (self.game.check_color()=='R'):
                 reward += STATES['GoodColor']
-            if (self.count('R')==1):
+            if (self.countbipcol('R')==1):
                 reward += STATES['RAGoal']/(self.ncolors*2)
                 self.current_node += 1
-            elif (self.count('G')+self.count('B')>0):
+            elif (self.countbipcol('G')+self.countbipcol('B')>0):
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
@@ -91,12 +103,12 @@ class RewardAutoma(object):
         if (self.current_node==1): # todo RED 2
             if (self.game.check_color()=='R'):
                 reward += STATES['GoodColor']             
-            if (self.count('R')==2):
+            if (self.countbipcol('R')==2):
                 self.last_node = self.current_node
                 self.current_node += 1
                 reward += STATES['RAGoal']/self.ncolors
                 # print("  -- RA state transition to %d, " %(self.current_node))
-            elif (self.count('G')+self.count('B')>0 or self.sum('R')>1):
+            elif (self.countbipcol('G')+self.countbipcol('B')>0 or self.sumbipcol('R')>1):
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
@@ -105,10 +117,10 @@ class RewardAutoma(object):
         elif (self.current_node==2): # todo GREEN 1
             if (self.game.check_color()=='G'):
                 reward += STATES['GoodColor']
-            if (self.count('G')==1):
+            if (self.countbipcol('G')==1):
                 reward += STATES['RAGoal']/(self.ncolors*2)
                 self.current_node += 1
-            elif (self.count('B')>0):
+            elif (self.countbipcol('B')>0):
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
@@ -117,12 +129,12 @@ class RewardAutoma(object):
         elif (self.current_node==3): # todo GREEN 2
             if (self.game.check_color()=='G'):
                 reward += STATES['GoodColor']
-            if (self.count('G')==2):
+            if (self.countbipcol('G')==2):
                 self.last_node = self.current_node
                 self.current_node += 1
                 reward += STATES['RAGoal']/self.ncolors
                 # print("  -- RA state transition to %d, " %(self.current_node))
-            elif (self.count('B')>0 or self.sum('G')>1):
+            elif (self.countbipcol('B')>0 or self.sumbipcol('G')>1):
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
@@ -131,7 +143,7 @@ class RewardAutoma(object):
         elif (self.current_node==4): # todo BLUE 1
             if (self.game.check_color()=='B'):
                 reward += STATES['GoodColor']
-            if (self.count('B')==1):
+            if (self.countbipcol('B')==1):
                 reward += STATES['RAGoal']/(self.ncolors*2)   
                 self.current_node += 1
              
@@ -145,7 +157,7 @@ class RewardAutoma(object):
                     #print("  <<< RA GOAL >>>")
                     reward += STATES['RAGoal']
                     self.goalreached += 1
-            elif (self.sum('B')>1):
+            elif (self.sumbipcol('B')>1):
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
@@ -200,12 +212,12 @@ class Sapientino(object):
         self.radius = 5
 
         # color tokens
-        self.pred1 = (0, 1) # row, col
-        self.pred2 = (2, 2)
-        self.pgreen1 = (1, 3) # row, col
-        self.pgreen2 = (5, 1)
-        self.pblue1 = (1, 0) # row, col
-        self.pblue2 = (4, 2)
+        #self.pred1 = (0, 1) # row, col
+        #self.pred2 = (2, 2)
+        #self.pgreen1 = (1, 3) # row, col
+        #self.pgreen2 = (5, 1)
+        #self.pblue1 = (1, 0) # row, col
+        #self.pblue2 = (4, 2)
  
 
 
@@ -260,13 +272,7 @@ class Sapientino(object):
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
 
-        self.pred1_bip = 0
-        self.pred2_bip = 0
-        self.pgreen1_bip = 0
-        self.pgreen2_bip = 0
-        self.pblue1_bip = 0
-        self.pblue2_bip = 0
-
+        self.tokenbip = []
         
         self.RA.reset()
 
@@ -283,42 +289,23 @@ class Sapientino(object):
 
 
     def update_color(self):
-        if (self.pos_x == self.pred1[0] and self.pos_y == self.pred1[1]):
-            self.pred1_bip += 1
-            return 'R'
-        elif (self.pos_x == self.pred2[0] and self.pos_y == self.pred2[1]):
-            self.pred2_bip += 1
-            return 'R'
-        elif (self.pos_x == self.pgreen1[0] and self.pos_y == self.pgreen1[1]):
-            self.pgreen1_bip += 1
-            return 'G'
-        elif (self.pos_x == self.pgreen2[0] and self.pos_y == self.pgreen2[1]):
-            self.pgreen2_bip += 1
-            return 'G'
-        elif (self.pos_x == self.pblue1[0] and self.pos_y == self.pblue1[1]):
-            self.pblue1_bip += 1
-            return 'B'
-        elif (self.pos_x == self.pblue2[0] and self.pos_y == self.pblue2[1]):
-            self.pblue2_bip += 1
-            return 'B'
+        r = ' '
+        for t in TOKENS:
+            if (self.pos_x == t[2] and self.pos_y == t[3]):
+                self.tokenbip.append(t[0])
+                r = t[1]
+                break
         else:
-            return ' '
+            return r
 
     def check_color(self):
-        if (self.pos_x == self.pred1[0] and self.pos_y == self.pred1[1]):
-            return 'R'
-        elif (self.pos_x == self.pred2[0] and self.pos_y == self.pred2[1]):
-            return 'R'
-        elif (self.pos_x == self.pgreen1[0] and self.pos_y == self.pgreen1[1]):
-            return 'G'
-        elif (self.pos_x == self.pgreen2[0] and self.pos_y == self.pgreen2[1]):
-            return 'G'
-        elif (self.pos_x == self.pblue1[0] and self.pos_y == self.pblue1[1]):
-            return 'B'
-        elif (self.pos_x == self.pblue2[0] and self.pos_y == self.pblue2[1]):
-            return 'B'
+        r = ' '
+        for t in TOKENS:
+            if (self.pos_x == t[2] and self.pos_y == t[3]):
+                r = t[1]
+                break
         else:
-            return ' '
+            return r
  
         
     def update(self, a):
@@ -512,7 +499,7 @@ class Sapientino(object):
 
 
     def draw(self):
-        self.screen.fill(white)
+        self.screen.fill(pygame.color.THECOLORS['white'])
 
         score_label = self.myfont.render(str(self.RA.current_node), 100, pygame.color.THECOLORS['black'])
         self.screen.blit(score_label, (20, 10))
@@ -549,57 +536,30 @@ class Sapientino(object):
         # grid
         for i in range (0,self.cols+1):
             ox = self.offx + i*self.size_square
-            pygame.draw.line(self.screen, black, [ox, self.offy], [ox, self.offy+self.rows*self.size_square])
+            pygame.draw.line(self.screen, pygame.color.THECOLORS['black'], [ox, self.offy], [ox, self.offy+self.rows*self.size_square])
         for i in range (0,self.rows+1):
             oy = self.offy + i*self.size_square
-            pygame.draw.line(self.screen, black, [self.offx , oy], [self.offx + self.cols*self.size_square, oy])
+            pygame.draw.line(self.screen, pygame.color.THECOLORS['black'], [self.offx , oy], [self.offx + self.cols*self.size_square, oy])
 
 
         # color tokens
-        sq = self.size_square/2 -5
-       
-        dx = int(self.offx + self.pred1[0] * self.size_square)
-        dy = int(self.offy + (self.rows-self.pred1[1]-1) * self.size_square)
-        pygame.draw.rect(self.screen, red, (dx+5,dy+5,self.size_square-10,self.size_square-10))
-        if (self.pred1_bip>0):
-            pygame.draw.rect(self.screen, black, (dx+15,dy+15,self.size_square-30,self.size_square-30))
+        for t in TOKENS:
+            tk = t[0]
+            col = t[1]
+            u = t[2]
+            v = t[3]
+            dx = int(self.offx + u * self.size_square)
+            dy = int(self.offy + (self.rows-v-1) * self.size_square)
+            sqsz = (dx+5,dy+5,self.size_square-10,self.size_square-10)
+            pygame.draw.rect(self.screen, pygame.color.THECOLORS[col], sqsz)
+            if tk in self.tokenbip:
+                pygame.draw.rect(self.screen, pygame.color.THECOLORS['black'], (dx+15,dy+15,self.size_square-30,self.size_square-30))
 
-        dx = int(self.offx + self.pred2[0] * self.size_square)
-        dy = int(self.offy + (self.rows-self.pred2[1]-1) * self.size_square)
-        pygame.draw.rect(self.screen, red, (dx+5,dy+5,self.size_square-10,self.size_square-10))
-        if (self.pred2_bip>0):
-            pygame.draw.rect(self.screen, black, (dx+15,dy+15,self.size_square-30,self.size_square-30))
-
-        dx = int(self.offx + self.pgreen1[0] * self.size_square)
-        dy = int(self.offy + (self.rows-self.pgreen1[1]-1) * self.size_square)
-        pygame.draw.rect(self.screen, green, (dx+5,dy+5,self.size_square-10,self.size_square-10))
-        if (self.pgreen1_bip>0):
-            pygame.draw.rect(self.screen, black, (dx+15,dy+15,self.size_square-30,self.size_square-30))
-
-        dx = int(self.offx + self.pgreen2[0] * self.size_square)
-        dy = int(self.offy + (self.rows-self.pgreen2[1]-1) * self.size_square)
-        pygame.draw.rect(self.screen, green, (dx+5,dy+5,self.size_square-10,self.size_square-10))
-        if (self.pgreen2_bip>0):
-            pygame.draw.rect(self.screen, black, (dx+15,dy+15,self.size_square-30,self.size_square-30))
-
-        dx = int(self.offx + self.pblue1[0] * self.size_square)
-        dy = int(self.offy + (self.rows-self.pblue1[1]-1) * self.size_square)
-        pygame.draw.rect(self.screen, blue, (dx+5,dy+5,self.size_square-10,self.size_square-10))
-        if (self.pblue1_bip>0):
-            pygame.draw.rect(self.screen, black, (dx+15,dy+15,self.size_square-30,self.size_square-30))
-
-        dx = int(self.offx + self.pblue2[0] * self.size_square)
-        dy = int(self.offy + (self.rows-self.pblue2[1]-1) * self.size_square)
-        pygame.draw.rect(self.screen, blue, (dx+5,dy+5,self.size_square-10,self.size_square-10))
-        if (self.pblue2_bip>0):
-            pygame.draw.rect(self.screen, black, (dx+15,dy+15,self.size_square-30,self.size_square-30))
-
-       
 
         # agent position
         dx = int(self.offx + self.pos_x * self.size_square)
         dy = int(self.offy + (self.rows-self.pos_y-1) * self.size_square)
-        pygame.draw.circle(self.screen, orange, [dx+self.size_square/2, dy+self.size_square/2], 2*self.radius, 0)
+        pygame.draw.circle(self.screen, pygame.color.THECOLORS['orange'], [dx+self.size_square/2, dy+self.size_square/2], 2*self.radius, 0)
 
         pygame.display.update()
 
