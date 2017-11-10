@@ -39,6 +39,9 @@ def loadGameModule():
         elif (args.game=='Sapientino'):
             mod = importlib.import_module('Sapientino')
             game = mod.Sapientino(rows=args.rows, cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='Sapientino1C'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino1C(rows=args.rows, cols=args.cols, trainsessionname=trainfilename)
     except:
         print "ERROR: game ",args.game," not found."
         raise

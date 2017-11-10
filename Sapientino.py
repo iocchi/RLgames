@@ -6,21 +6,14 @@ import time
 import math
 from math import fabs
 
-COLORS = {
-    'black':  [0, 0, 0],
-    'white':  [255,255,255],
-    'grey':   [180,180,180],
-    'orange': [180,100,20],
-    'red':    [200,0,0],
-    'green':  [0,200,0],
-    'blue':  [0,0,200]
-}
 
-
-
-TOKENS = [ ['r1', 'red', 0, 1],  ['r2', 'red', 2, 2],  
-    ['g1', 'green', 1, 3], ['g2', 'green', 5, 1],
-    ['b1', 'blue', 1, 0], ['b2', 'blue', 4, 2] 
+TOKENS = [ ['r1', 'red', 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],   
+    ['g1', 'green', 4, 0], ['g2', 'green', 5, 2], ['g3', 'green', 5, 4],
+    ['b1', 'blue', 1, 3], ['b2', 'blue', 2, 4],  ['b3', 'blue', 6, 0], 
+    ['p1', 'pink', 2, 1], ['p2', 'pink', 2, 3], ['p3', 'pink', 4, 2], 
+    ['n1', 'brown', 3, 0], ['n2', 'brown', 3, 4], ['n3', 'brown', 6, 1],
+    ['y1', 'gray', 0, 2], ['y2', 'gray', 3, 1], ['y3', 'gray', 4, 3],
+    ['u1', 'purple', 0, 4], ['u2', 'purple', 1, 0], ['u3', 'purple', 5, 1]
 ]
 
 
@@ -30,7 +23,8 @@ STATES = {
     'Dead':-100,
     'Score':0,    
     'Hit':-10,
-    'GoodColor':1,    
+    'GoodColor':0,
+    'GoalStep':100,
     'RAFail':-100,
     'RAGoal':1000
 }
@@ -41,8 +35,8 @@ class RewardAutoma(object):
 
     def __init__(self):
         # RA states
-        self.ncolors = 3
-        self.nRAstates = 2*self.ncolors+2  # number of RA states
+        self.ncolors = 7
+        self.nRAstates = 3*self.ncolors+2  # number of RA states
         self.RAGoal = self.nRAstates-2
         self.RAFail = self.nRAstates-1        
         self.goalreached = 0 # number of RA goals reached for statistics
@@ -54,115 +48,59 @@ class RewardAutoma(object):
     def reset(self):
         self.current_node = 0
         self.last_node = self.current_node
+        self.past_colors = []
 
     def countbipcol(self,col):
-        r = 0
-        for t in self.tokenbip:
+        if col in self.game.colorbip:
+            return self.game.colorbip[col]
+        else:
+            return 0
 
-        if (col=='R' and self.game.pred1_bip==1):
-            r += 1
-        if (col=='R' and self.game.pred2_bip==1):
-            r += 1
-        if (col=='G' and self.game.pgreen1_bip==1):
-            r += 1
-        if (col=='G' and self.game.pgreen2_bip==1):
-            r += 1
-        if (col=='B' and self.game.pblue1_bip==1):
-            r += 1
-        if (col=='B' and self.game.pblue2_bip==1):
-            r += 1
-        return r
-
-    def sumbipcol(self,col):
+    def countbipothercol(self,scol):
         r = 0
-        for t in self.tokenbip:
-            
-        if (col=='R'):
-            r = self.game.pred1_bip + self.game.pred2_bip
-        if (col=='G'):
-            r = self.game.pgreen1_bip + self.game.pgreen2_bip
-        if (col=='B'):
-            r = self.game.pblue1_bip + self.game.pblue2_bip
+        for c in self.game.colorbip:
+            if (not c in scol):
+                r += self.game.colorbip[c]
         return r
 
     # RewardAutoma Transition
     def update(self):
-        reward = 0        
-        if (self.current_node==0): # todo RED 1
-            if (self.game.check_color()=='R'):
-                reward += STATES['GoodColor']
-            if (self.countbipcol('R')==1):
-                reward += STATES['RAGoal']/(self.ncolors*2)
-                self.current_node += 1
-            elif (self.countbipcol('G')+self.countbipcol('B')>0):
-                self.last_node = self.current_node
-                self.current_node = self.RAFail  # FAIL
-                reward += STATES['RAFail']
-                # print("  *** RA FAIL *** ")
+        reward = 0
 
-        if (self.current_node==1): # todo RED 2
-            if (self.game.check_color()=='R'):
-                reward += STATES['GoodColor']             
-            if (self.countbipcol('R')==2):
-                self.last_node = self.current_node
-                self.current_node += 1
-                reward += STATES['RAGoal']/self.ncolors
-                # print("  -- RA state transition to %d, " %(self.current_node))
-            elif (self.countbipcol('G')+self.countbipcol('B')>0 or self.sumbipcol('R')>1):
+        # check double bip
+        for t in self.game.tokenbip:
+            if self.game.tokenbip[t]>1:
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
-                # print("  *** RA FAIL *** ")
-                
-        elif (self.current_node==2): # todo GREEN 1
-            if (self.game.check_color()=='G'):
-                reward += STATES['GoodColor']
-            if (self.countbipcol('G')==1):
-                reward += STATES['RAGoal']/(self.ncolors*2)
-                self.current_node += 1
-            elif (self.countbipcol('B')>0):
-                self.last_node = self.current_node
-                self.current_node = self.RAFail  # FAIL
-                reward += STATES['RAFail']
-                # print("  *** RA FAIL *** ")
+                #print("  *** RA FAIL (two bips) *** ")
 
-        elif (self.current_node==3): # todo GREEN 2
-            if (self.game.check_color()=='G'):
+        if (self.current_node < self.RAGoal):
+            i_col = self.current_node / 3 # target color to bip
+            target_col = TOKENS[i_col*3][1] # target color to bip
+            n_col = self.current_node % 3 # n color already bipped
+            
+            #print "RA update %d %s %d " %(i_col, target_col, n_col)
+            if (not target_col in self.past_colors):
+                self.past_colors.append(target_col)  # used to avoid checking bips on past colors
+            
+            if (self.game.check_color()==target_col):
                 reward += STATES['GoodColor']
-            if (self.countbipcol('G')==2):
-                self.last_node = self.current_node
-                self.current_node += 1
-                reward += STATES['RAGoal']/self.ncolors
-                # print("  -- RA state transition to %d, " %(self.current_node))
-            elif (self.countbipcol('B')>0 or self.sumbipcol('G')>1):
-                self.last_node = self.current_node
-                self.current_node = self.RAFail  # FAIL
-                reward += STATES['RAFail']
-                # print("  *** RA FAIL *** ")
+                #print "GoodColor reward"
 
-        elif (self.current_node==4): # todo BLUE 1
-            if (self.game.check_color()=='B'):
-                reward += STATES['GoodColor']
-            if (self.countbipcol('B')==1):
-                reward += STATES['RAGoal']/(self.ncolors*2)   
+            if (self.countbipcol(target_col)>n_col):
+                reward += STATES['GoalStep']
+                #print "GoalStep reward"
                 self.current_node += 1
-             
-        elif (self.current_node==5): # todo BLUE 2
-            if (self.count('B')==2):
-                self.last_node = self.current_node
-                self.current_node += 1
-                reward += STATES['RAGoal']/self.ncolors
-                #print("  -- RA state transition to %d, " %(self.current_node))
-                if (self.current_node==self.RAGoal):
-                    #print("  <<< RA GOAL >>>")
+                if (self.current_node==self.RAGoal): #  GOAL
                     reward += STATES['RAGoal']
-                    self.goalreached += 1
-            elif (self.sumbipcol('B')>1):
+                    #print("  *** RA GOAL *** ")
+                
+            elif (self.countbipothercol(self.past_colors)>0):
                 self.last_node = self.current_node
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
-                # print("  *** RA FAIL *** ")
-
+                #print("  *** RA FAIL *** ")
 
         elif (self.current_node==self.RAGoal): #  GOAL
             pass
@@ -211,16 +149,6 @@ class Sapientino(object):
         self.offy = 100
         self.radius = 5
 
-        # color tokens
-        #self.pred1 = (0, 1) # row, col
-        #self.pred2 = (2, 2)
-        #self.pgreen1 = (1, 3) # row, col
-        #self.pgreen2 = (5, 1)
-        #self.pblue1 = (1, 0) # row, col
-        #self.pblue2 = (4, 2)
- 
-
-
         if (self.cols>10):
             self.win_width += self.size_square * (self.cols-10)
         if (self.rows>10):
@@ -246,7 +174,7 @@ class Sapientino(object):
 
         self.agent = agent
         self.nactions = 5  # 0: left, 1: right, 2: up, 3: down, 4: bip
-        ns = self.rows * self.cols * self.RA.nRAstates
+        ns = self.getSizeStateSpace() * self.RA.nRAstates
         print('Number of states: %d' %ns)
         self.agent.init(ns, self.nactions) 
 
@@ -254,8 +182,8 @@ class Sapientino(object):
         
     def reset(self):
         
-        self.pos_x = 0
-        self.pos_y = 0
+        self.pos_x = 3
+        self.pos_y = 2
 
         self.score = 0
         self.cumreward = 0
@@ -272,11 +200,13 @@ class Sapientino(object):
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
 
-        self.tokenbip = []
+        self.tokenbip = {}
+        self.colorbip = {}
         
         self.RA.reset()
 
-
+    def getSizeStateSpace(self):
+        return self.rows * self.cols
         
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y + (self.cols * self.rows) * self.RA.current_node     
@@ -284,19 +214,21 @@ class Sapientino(object):
 
 
     def goal_reached(self):
-        #return self.score == 6
         return self.RA.current_node==self.RA.RAGoal
 
 
     def update_color(self):
-        r = ' '
         for t in TOKENS:
             if (self.pos_x == t[2] and self.pos_y == t[3]):
-                self.tokenbip.append(t[0])
-                r = t[1]
+                if t[0] in self.tokenbip:
+                    self.tokenbip[t[0]] += 1
+                else:
+                    self.tokenbip[t[0]] = 1
+                if t[1] in self.colorbip:
+                    self.colorbip[t[1]] += 1
+                else:
+                    self.colorbip[t[1]] = 1
                 break
-        else:
-            return r
 
     def check_color(self):
         r = ' '
@@ -304,8 +236,7 @@ class Sapientino(object):
             if (self.pos_x == t[2] and self.pos_y == t[3]):
                 r = t[1]
                 break
-        else:
-            return r
+        return r
  
         
     def update(self, a):
@@ -347,7 +278,8 @@ class Sapientino(object):
                 self.pos_y = 0 
                 self.current_reward += STATES['Hit']
         elif self.command == 4:  # bip
-            if (self.update_color()!=' '):
+            self.update_color()
+            if (self.check_color()!=' '):
                 self.current_reward += STATES['Score']
                 if self.debug:
                     print "*** Score: ",self.score
@@ -569,3 +501,25 @@ class Sapientino(object):
         self.resfile.close()
         pygame.quit()
 
+
+class Sapientino1C(Sapientino):
+
+    def getSizeStateSpace(self):
+        self.origns = super(Sapientino1C, self).getSizeStateSpace()
+        # red color status
+        red_ns = 8
+        ns = self.origns * red_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(Sapientino1C, self).getstate()        
+        xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
+        x = x + self.origns * xr
+        return x
+        
