@@ -164,7 +164,7 @@ class BreakoutSRA(BreakoutS):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d  %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -248,7 +248,7 @@ class BreakoutNRA(BreakoutN):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d  %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -305,5 +305,30 @@ class BreakoutSRAExt(BreakoutSRA):
                     r += b
                 b *= 2
         return r
+
+
+
         
+class BreakoutNRAExt(BreakoutNRA):
+
+    def setStateActionSpace(self):
+        super(BreakoutNRAExt, self).setStateActionSpace()
+        self.nstates *= math.pow(2,self.brick_rows*self.brick_cols)
+        print('Number of states: %d' %self.nstates)
+        print('Number of actions: %d' %self.nactions)
+
+    def getstate(self):
+        x = super(BreakoutNRAExt, self).getstate()
+        return x + (self.n_ball_x * self.n_ball_y * self.n_ball_dir * self.n_paddle_x * self.RA.nRAstates) * self.encodebricks(self.bricksgrid)
         
+    def encodebricks(self,brickgrid):
+        b = 1
+        r = 0
+        for i in range(0,self.brick_cols):
+            for j in range(0,self.brick_rows):
+                if self.bricksgrid[i][j]==1:
+                    r += b
+                b *= 2
+        return r
+  
+  
