@@ -49,6 +49,7 @@ class RewardAutoma(object):
         self.current_node = 0
         self.last_node = self.current_node
         self.past_colors = []
+        
 
     def countbipcol(self,col):
         if col in self.game.colorbip:
@@ -188,7 +189,7 @@ class Sapientino(object):
         self.score = 0
         self.cumreward = 0
         self.cumscore = 0  
-        
+        self.gamman = 1.0 # cumulative gamma over time
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
 
         self.prev_state = None # previous state
@@ -199,14 +200,14 @@ class Sapientino(object):
         self.iteration += 1
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
-
         self.tokenbip = {}
-        self.colorbip = {}
-        
+        self.colorbip = {}        
         self.RA.reset()
 
+        
     def getSizeStateSpace(self):
         return self.rows * self.cols
+
         
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y + (self.cols * self.rows) * self.RA.current_node     
@@ -296,7 +297,7 @@ class Sapientino(object):
             self.current_reward += STATES['Score']
             self.ngoalreached += 1
             self.finished = True
-        if (self.numactions>(self.cols+self.rows)*10):
+        if (self.numactions>(self.cols*self.rows)*10):
             self.current_reward += STATES['Dead']
             self.finished = True
         if (self.RA.current_node==self.RA.RAFail):
@@ -368,18 +369,13 @@ class Sapientino(object):
 
         r = self.current_reward
         
-        if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
-            r *= (self.RA.current_node+1)
+        #if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
+        #    r *= (self.RA.current_node+1)
             # print "MAXI REWARD ",r
-        elif (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
+        if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
-        self.cumreward += r
-        return r
-
-
-
-        r = self.current_reward
-        self.cumreward += r
+        self.cumreward += self.gamman * r
+        self.gamman *= self.agent.gamma
         return r
 
 
@@ -396,7 +392,7 @@ class Sapientino(object):
         self.score = RAnode
 
 
-        s = 'Iter %6d, sc: %3d, na: %4d, r: %5d %c' %(self.iteration, self.score,self.numactions, self.cumreward, ch)
+        s = 'Iter %6d, sc: %3d, na: %4d, r: %8.2f, mem: %d %c' %(self.iteration, self.score,self.numactions, self.cumreward, len(self.agent.Q), ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -418,7 +414,7 @@ class Sapientino(object):
             #self.doSave()
             pgoal = float(self.ngoalreached*100)/numiter
             print('-----------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, pgoal))
+            print("%s %6d avg last 100: reward %.2f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,float(self.cumreward100)/100, float(self.cumscore100)/100, pgoal))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0  
             self.cumscore100 = 0 
@@ -521,5 +517,83 @@ class Sapientino1C(Sapientino):
         x = super(Sapientino1C, self).getstate()        
         xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
         x = x + self.origns * xr
+        return x
+        
+class Sapientino2C(Sapientino):
+
+    def getSizeStateSpace(self):
+        self.origns = super(Sapientino2C, self).getSizeStateSpace()
+        # red color status
+        red_ns = 8
+        green_ns = 8
+        ns = self.origns * red_ns * green_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(Sapientino2C, self).getstate()        
+        xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
+        xg = self.gettokenbip('g1')+2*self.gettokenbip('g2')+4*self.gettokenbip('g3')
+        x = x + self.origns * ( xr + 8 * xg ) 
+        return x
+        
+class Sapientino3C(Sapientino):
+
+    def getSizeStateSpace(self):
+        self.origns = super(Sapientino3C, self).getSizeStateSpace()
+        # red color status
+        red_ns = 8
+        green_ns = 8
+        blue_ns = 8
+        ns = self.origns * red_ns * green_ns * blue_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(Sapientino3C, self).getstate()        
+        xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
+        xg = self.gettokenbip('g1')+2*self.gettokenbip('g2')+4*self.gettokenbip('g3')
+        xb = self.gettokenbip('b1')+2*self.gettokenbip('b2')+4*self.gettokenbip('b3')
+        x = x + self.origns * ( xr + 8 * xg + 8*8 * xb ) 
+        return x
+        
+class SapientinoExt(Sapientino):
+
+    def __init__(self, brick_rows, brick_cols, trainsessionname, ncol):
+        Sapientino.__init__(self,brick_rows, brick_cols, trainsessionname)
+        self.ncol = ncol
+        
+    def getSizeStateSpace(self):
+        self.origns = super(SapientinoExt, self).getSizeStateSpace()
+        # all color status
+        col_ns = pow(8,self.ncol)
+        ns = self.origns * col_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(SapientinoExt, self).getstate()
+        f = 1
+        tx = 0
+        for i in range(0,self.ncol):
+            t = TOKENS[i]
+            tx += f * self.gettokenbip(t[0])
+            f *= 2
+        x = x + self.origns * tx
         return x
         

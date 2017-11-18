@@ -16,7 +16,7 @@ from Breakout import *
 
 
 STATES = {
-    'RAGoal':600,         # goal of reward automa
+    'RAGoal':1000,         # goal of reward automa
     'RAFail':-30,         # fail of reward automa
     'GoodBrick':30,       # good brick removed for next RA state
     'WrongBrick':-5       # wrong brick removed for next RA state
@@ -126,7 +126,7 @@ class BreakoutSRA(BreakoutS):
 
     def getstate(self):
         x = super(BreakoutSRA, self).getstate()
-        return x + (self.n_ball_x*self.n_ball_y*self.n_ball_dir*self.n_paddle_x) * self.RA.current_node
+        return x + (self.n_diff_paddle_ball) * self.RA.current_node
 
     def reset(self):
         super(BreakoutSRA, self).reset()
@@ -134,7 +134,7 @@ class BreakoutSRA(BreakoutS):
 
     def update(self, a):
         super(BreakoutSRA, self).update(a)
-        self.RA.update()
+        self.current_reward += self.RA.update()
          
     def goal_reached(self):
         return self.RA.current_node==self.RA.RAGoal
@@ -145,10 +145,10 @@ class BreakoutSRA(BreakoutS):
             if b.i == self.RA.current_node:
                 r += STATES['GoodBrick']
                 #print 'Hit right brick for next RA state'
-        if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
-            r *= (self.RA.current_node+1)
+        #if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
+            #r *= (self.RA.current_node+1)
             #print "MAXI REWARD ",r
-        elif (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
+        if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
         self.cumreward += r
         return r
@@ -164,7 +164,7 @@ class BreakoutSRA(BreakoutS):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -184,7 +184,7 @@ class BreakoutSRA(BreakoutS):
         if (self.iteration%numiter==0):
             #self.doSave()
             print('-----------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print("%s %6d avg last 100: reward %d | RA %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
@@ -222,17 +222,17 @@ class BreakoutNRA(BreakoutN):
 
     def update(self, a):
         super(BreakoutNRA, self).update(a)
-        self.RA.update()
+        self.current_reward += self.RA.update()
          
     def goal_reached(self):
         return self.RA.current_node==self.RA.RAGoal
        
     def getreward(self):
         r = self.current_reward
-        if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
-            r *= (self.RA.current_node+1)
+        #if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
+        #    r *= (self.RA.current_node+1)
             #print "MAXI REWARD ",r
-        elif (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
+        if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
         self.cumreward += r
         return r
@@ -268,7 +268,7 @@ class BreakoutNRA(BreakoutN):
         if (self.iteration%numiter==0):
             #self.doSave()
             print('----------------------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print("%s %6d avg last 100: reward %d | RA %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
             print('----------------------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
@@ -284,3 +284,26 @@ class BreakoutNRA(BreakoutN):
 
 
 
+class BreakoutSRAExt(BreakoutSRA):
+
+    def setStateActionSpace(self):
+        super(BreakoutSRAExt, self).setStateActionSpace()
+        self.nstates *= math.pow(2,self.brick_rows*self.brick_cols)
+        print('Number of states: %d' %self.nstates)
+        print('Number of actions: %d' %self.nactions)
+
+    def getstate(self):
+        x = super(BreakoutSRAExt, self).getstate()
+        return x + (self.n_diff_paddle_ball * self.RA.nRAstates) * self.encodebricks(self.bricksgrid)
+        
+    def encodebricks(self,brickgrid):
+        b = 1
+        r = 0
+        for i in range(0,self.brick_cols):
+            for j in range(0,self.brick_rows):
+                if self.bricksgrid[i][j]==1:
+                    r += b
+                b *= 2
+        return r
+        
+        

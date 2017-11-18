@@ -20,10 +20,17 @@ class RLAgent(object):
         self.name = 'RL'
         self.nstepsupdates = 0 # n-steps updates 
         self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
+
         
     def init(self, nstates, nactions):
-        self.Q = np.zeros((nstates,nactions))
-        self.Visits = np.zeros((nstates,nactions))
+        if nstates<1000000:
+            self.Q = np.zeros((nstates,nactions))
+            self.Visits = np.zeros((nstates,nactions))
+            self.sparse = False
+        else:
+            self.Q = {}
+            self.Visits = {}
+            self.sparse = True
         self.etraces = {} # eligibility traces map
         self.nactions = nactions
 
@@ -36,16 +43,36 @@ class RLAgent(object):
          
         
     def getQ(self, x, a):
-        return self.Q[x,a]
+        if self.sparse:
+            if x in self.Q:
+                return self.Q[x][a]
+            else:
+                return 0
+        else:
+            return self.Q[x,a]
 
     def getQA(self, x):
-        return self.Q[x,:]
+        if self.sparse:
+            if x in self.Q:
+                return self.Q[x]
+            else:
+                return np.zeros(self.nactions)
+        else:    
+            return self.Q[x,:]
         
     def setQ(self, x, a, q):
-        self.Q[x,a] = q
+        if self.sparse:
+            if not x in self.Q:
+                self.Q[x] = np.zeros(self.nactions)
+            self.Q[x][a] = q
+        else:
+            self.Q[x,a] = q
 
     def addQ(self, x, a, q):
-        self.Q[x,a] += q
+        if self.sparse:
+            self.setQ(x,a,self.getQ(x,a)+q)
+        else:
+            self.Q[x,a] += q
 
         
     def incVisits(self, x, a):
@@ -130,6 +157,7 @@ class RLAgent(object):
         self.episode = []
         #print "reset e"
         self.etraces = {} # eligibility taces map
+
 
     def getActionValue(self, x2):
         print("ERROR: function getActionValue not implemented")
