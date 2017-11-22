@@ -102,7 +102,8 @@ class Breakout(object):
         self.win_height = 480
 
         pygame.init()
-
+        pygame.display.set_caption('Breakout')
+        
         #allows for holding of key
         pygame.key.set_repeat(1,0)
 

@@ -640,4 +640,4 @@ class SapientinoExt2(Sapientino):
         x = x + self.origns * bx + (self.origns * self.bip_ns) * cx
         return x
 
-   
+

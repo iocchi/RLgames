@@ -33,45 +33,27 @@ def loadGameModule():
         elif (args.game=='BreakoutSRA'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutSRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutSRAExt'):
+        elif (args.game=='BreakoutSRAX'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutSRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
         elif (args.game=='BreakoutNRA'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutNRAExt'):
+        elif (args.game=='BreakoutNRAX'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='Sapientino'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(rows=args.rows, cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='Sapientino1C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,1)
-        elif (args.game=='Sapientino2C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,2)
-        elif (args.game=='Sapientino3C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,3)
-        elif (args.game=='Sapientino4C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,4)
-        elif (args.game=='Sapientino5C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,5)
-        elif (args.game=='Sapientino6C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,6)
-        elif (args.game=='Sapientino7C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,7)
         elif (args.game=='Sapientino2'):
-            mod = importlib.import_module('Sapientino2')
-            game = mod.Sapientino(rows=args.rows, cols=args.cols, trainsessionname=trainfilename)
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
         elif (args.game=='Sapientino2X'):
-            mod = importlib.import_module('Sapientino2')
-            game = mod.SapientinoExt2(args.rows, args.cols, trainfilename, 7)
+            mod = importlib.import_module('Sapientino')
+            game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=2)
+        elif (args.game=='Sapientino3'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+        elif (args.game=='Sapientino3X'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=3)
     except:
         print "ERROR: game ",args.game," not found."
         raise
@@ -153,7 +135,7 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("n-step:  %d\n" %(agent.nstepsupdates))
         infofile.write("lambda:  %f\n\n" %(agent.lambdae))
         infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
-        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
+        #allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
     elif optimalPolicyFound:
         infofile.write("Optimal policy found.\n")
         infofile.write("goal reached:     %d\n" %(game.iteration))
