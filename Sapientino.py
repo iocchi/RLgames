@@ -498,7 +498,7 @@ class SapientinoExt(Sapientino):
         self.ncol = ncol
         
     def getSizeStateSpace(self):
-        self.origns = super(SapientinoExt2, self).getSizeStateSpace()
+        self.origns = super(SapientinoExt, self).getSizeStateSpace()
         # all color status
         self.bip_ns = 2
         self.col_ns = self.ncol + 1
@@ -518,7 +518,7 @@ class SapientinoExt(Sapientino):
 
 
     def getstate(self):
-        x = super(SapientinoExt2, self).getstate()
+        x = super(SapientinoExt, self).getstate()
         f = 1
         if self.command == 4:
             bx = 1
@@ -538,7 +538,7 @@ class SapientinoExt2(Sapientino):
         self.ncol = ncol
         
     def getSizeStateSpace(self):
-        self.origns = super(SapientinoExt, self).getSizeStateSpace()
+        self.origns = super(SapientinoExt2, self).getSizeStateSpace()
         # all color status
         col_ns = pow(8,self.ncol)
         ns = self.origns * col_ns
@@ -551,7 +551,7 @@ class SapientinoExt2(Sapientino):
             return 0
 
     def getstate(self):
-        x = super(SapientinoExt, self).getstate()
+        x = super(SapientinoExt2, self).getstate()
         f = 1
         tx = 0
         for i in range(0,self.ncol):

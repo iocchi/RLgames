@@ -6,68 +6,57 @@ agent = 'Sarsa'
 epsilon = 0.1
 alpha = 0.01
 niter = 10000
-repetitions = 10
+repetitions = 1
 
-def Sapientino(nvisitpercol, lambdae, nstep)
+def ExpSapientino(nvisitpercol, strextended, lambdae, nstep):
 
-game = 'Sapientino%d' %nvisitpercol
-basetrainfilename = 'Sap%d_S_l0%d' %(nvisitpercol, int(lambdae*100)
+    game = 'Sapientino%d%s' %(nvisitpercol, strextended) 
+    basetrainfilename = 'Sap%d%s_S' %(nvisitpercol, strextended) 
+    if (lambdae>0):
+        basetrainfilename = basetrainfilename + '_l0%d' %(int(lambdae*100))
+    if (nstep>1):
+        basetrainfilename = basetrainfilename + '_n%d' %(nstep)
 
-for i in range(0,repetitions):
-    cmd = "python game.py %s %s %s_%02d -epsilon %f -lambdae %f -alpha %f -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,niter)
-    print cmd
-    #os.system(cmd)
-
-game = 'Sapientino2X'
-basetrainfilename = 'Sap2X_S_e01_l09_a001'
-
-for i in range(0,repetitions):
-    cmd = "python game.py %s %s %s_%02d -epsilon %f -lambdae %f -alpha %f -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,niter)
-    print cmd
-    #os.system(cmd)
-
-    
-# Sapientino 2  - Sarsa(lambda)
+    for i in range(0,repetitions):
+        cmd = "python game.py %s %s %s_%02d -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,nstep,niter)
+        print cmd
+        os.system(cmd)
 
 
-# Sapientino 3  - Sarsa(lambda)
-    
-game = 'Sapientino3'
-basetrainfilename = 'Sap3_S_e01_l09_a001'
 
-for i in range(0,repetitions):
-    cmd = "python game.py %s %s %s_%02d -epsilon %f -lambdae %f -alpha %f -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,niter)
-    print cmd
-    #os.system(cmd)
+        
+def ExpBreakout(rows, cols, strextended, lambdae, nstep):
 
-game = 'Sapientino3X'
-basetrainfilename = 'Sap3X_S_e01_l09_a001'
+    game = 'BreakoutNRA%s' %(strextended) 
+    basetrainfilename = 'BNRA%s_S' %(strextended) 
+    if (lambdae>0):
+        basetrainfilename = basetrainfilename + '_l0%d' %(int(lambdae*100))
+    if (nstep>1):
+        basetrainfilename = basetrainfilename + '_n%d' %(nstep)
 
-for i in range(0,repetitions):
-    cmd = "python game.py %s %s %s_%02d -epsilon %f -lambdae %f -alpha %f -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,niter)
-    print cmd
-    #os.system(cmd)
+    for i in range(0,repetitions):
+        cmd = "python game.py %s %s %s_%02d -rows %d -cols %d -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d" %(game,agent,basetrainfilename,i,rows,cols,epsilon,lambdae,alpha,nstep,niter)
+        print cmd
+        os.system(cmd)
 
-    
-    
-    
-# Breakout 3x6  - Sarsa(lambda)
-    
-lambdae = 0.99    
-game = 'BreakoutNRA'
-basetrainfilename = 'B36_S_e01_l099_a001'
 
-for i in range(0,repetitions):
-    cmd = "python game.py %s %s %s_%02d -rows 3 -cols 6 -epsilon %f -lambdae %f -alpha %f -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,niter)
-    print cmd
-    #os.system(cmd)
 
-lambdae = 0.99
-game = 'BreakoutNRAX'
-basetrainfilename = 'BX36_S_e01_l099_a001'
+        
+# main
 
-for i in range(0,repetitions):
-    cmd = "python game.py %s %s %s_%02d -rows 3 -cols 6 -epsilon %f -lambdae %f -alpha %f -niter %d" %(game,agent,basetrainfilename,i,epsilon,lambdae,alpha,niter)
-    print cmd
-    #os.system(cmd)
-    
+ExpSapientino(2,'',0.0,1) # Sarsa
+ExpSapientino(2,'X',0.0,1) # Sarsa
+ExpSapientino(2,'',0.9,1) # Sarsa(\lambda)
+ExpSapientino(2,'X',0.9,1) # Sarsa(\lambda)
+ExpSapientino(2,'',-1,10) # n-step Sarsa
+ExpSapientino(2,'X',-1,10) # n-step Sarsa
+
+ExpSapientino(3,'',0.0,1) # Sarsa
+ExpSapientino(3,'X',0.0,1) # Sarsa
+ExpSapientino(3,'',0.9,1) # Sarsa(\lambda)
+ExpSapientino(3,'X',0.9,1) # Sarsa(\lambda)
+ExpSapientino(3,'',-1,10) # n-step Sarsa
+ExpSapientino(3,'X',-1,10) # n-step Sarsa
+
+ExpBreakout(3,6,'',0.99,1) # Sarsa(\lambda)
+ExpBreakout(3,6,'X',0.99,1) # Sarsa(\lambda)
