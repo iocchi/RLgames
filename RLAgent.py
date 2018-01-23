@@ -5,6 +5,9 @@ import time
 import math
 from math import fabs
 
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+
 
 class RLAgent(object):
 
@@ -20,10 +23,21 @@ class RLAgent(object):
         self.name = 'RL'
         self.nstepsupdates = 0 # n-steps updates 
         self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
-
+        self.sparse = False
+        self.Qapproximation = False
         
     def init(self, nstates, nactions):
-        if nstates<1000000:
+        if (self.Qapproximation):
+            self.Q = {}
+            for a in range(0,nactions):
+                self.Q[a] = Sequential()
+                self.Q[a].add(Dense(15, input_dim=2))
+                self.Q[a].add(Activation('sigmoid'))
+                self.Q[a].add(Dense(1))
+                self.Q[a].add(Activation('linear'))
+                self.Q[a].compile(loss='mse', optimizer='sgd')
+            self.Visits = {}
+        elif nstates<1000000:
             self.Q = np.zeros((nstates,nactions))
             self.Visits = np.zeros((nstates,nactions))
             self.sparse = False
@@ -31,6 +45,7 @@ class RLAgent(object):
             self.Q = {}
             self.Visits = {}
             self.sparse = True
+
         self.etraces = {} # eligibility traces map
         self.nactions = nactions
 
@@ -43,7 +58,15 @@ class RLAgent(object):
          
         
     def getQ(self, x, a):
-        if self.sparse:
+        if (self.Qapproximation):
+            xa = np.zeros((1,2))
+            xa[(0,0)] = x
+            xa[(0,1)] = 1
+            vQaa = self.Q[a].predict(xa) 
+            vQa = vQaa[0][0]
+            #print(" Q[x] predict  %s\n" %vQa)
+            return vQa
+        elif self.sparse:
             if x in self.Q:
                 return self.Q[x][a]
             else:
@@ -52,7 +75,12 @@ class RLAgent(object):
             return self.Q[x,a]
 
     def getQA(self, x):
-        if self.sparse:
+        if (self.Qapproximation):
+            r = []
+            for a in range(0,self.nactions):
+                r.append(self.getQ(x,a))
+            return r
+        elif self.sparse:
             if x in self.Q:
                 return self.Q[x]
             else:
@@ -61,7 +89,14 @@ class RLAgent(object):
             return self.Q[x,:]
         
     def setQ(self, x, a, q):
-        if self.sparse:
+        if (self.Qapproximation):
+            xa = np.zeros((1,2))
+            qa = np.zeros((1,1))
+            xa[(0,0)] = x/10
+            xa[(0,1)] = x%10
+            qa[(0,0)] = q
+            self.Q[a].fit(xa,qa,verbose=0)
+        elif self.sparse:
             if not x in self.Q:
                 self.Q[x] = np.zeros(self.nactions)
             self.Q[x][a] = q
@@ -69,18 +104,22 @@ class RLAgent(object):
             self.Q[x,a] = q
 
     def addQ(self, x, a, q):
-        if self.sparse:
+        if self.sparse or self.Qapproximation:
             self.setQ(x,a,self.getQ(x,a)+q)
         else:
             self.Q[x,a] += q
 
         
     def incVisits(self, x, a):
-        self.Visits[x,a] += 1
-        # print "Visits ",x," <- ",self.Visits[x,:]
+        if (not self.Qapproximation):
+            self.Visits[x,a] += 1
+            # print("Visits %d <- %x %s" %(x,self.Visits[x,:]))
 
     def getVisits(self, x, a):
-        return self.Visits[x,a]
+        if (not self.Qapproximation):
+            return self.Visits[x,a]
+        else:
+            return 1
 
     def getAlphaVisitsInc(self, x, a):
         self.incVisits(x,a)
@@ -129,15 +168,15 @@ class RLAgent(object):
         
         a = self.choose_action(x)
         if self.debug:
-            print "Q: ",x," -> ",self.getQA(x)
-            print "Decision: ",x,"  -> ",a
+            print("Q: %d -> %f" %(x,self.getQA(x)))
+            print("Decision: %d  -> %d " %(x,a))
 
         return a
         
     def notify(self, x, a, r, x2):
 
         if (self.debug):
-            print "Q update ",x," r: ",r
+            print("Q update %d with r: %f" %(x,r))
         
         self.episode.append((x,a,r))
         
@@ -186,11 +225,11 @@ class RLAgent(object):
                     alpha = self.getAlphaVisitsInc(e[0],e[1])
                 q = alpha * delta * self.etraces[e]
                 self.addQ(e[0],e[1],q)
-                if (self.debug):
-                    print "  -- e ",e," ",self.etraces[e]
-                    print "  -- e x:",e[0]," a:",e[1]
-                    print "  -- alpha: ",alpha,"  delta: ", delta
-                    print "  -- Q(e) = ", self.getQ(e[0],e[1])
+                #if (self.debug):
+                    #print "  -- e ",e," ",self.etraces[e]
+                    #print "  -- e x:",e[0]," a:",e[1]
+                    #print "  -- alpha: ",alpha,"  delta: ", delta
+                    #print "  -- Q(e) = ", self.getQ(e[0],e[1])
             # update eligibility values
             self.etraces[e] *= self.gamma * self.lambdae
             if (self.etraces[e]<1e-3): # remove close-to-zero elements
@@ -199,7 +238,7 @@ class RLAgent(object):
         for e in toremove:
             self.etraces.pop(e)
         if (self.debug):
-            print "\n"
+            print("\n")
 
             
             
@@ -213,9 +252,9 @@ class RLAgent(object):
         
         vQa = self.getActionValue(x2)
         
-        if (self.debug):
-            print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,' prev_Q: ', prev_Q, '  vQa: ', vQa
-            print ' == Q update Q ',x,',',a,' <-  ...  Q ',x2,' = ', vQa
+        #if (self.debug):
+        #    print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,' prev_Q: ', prev_Q, '  vQa: ', vQa
+        #    print ' == Q update Q ',x,',',a,' <-  ...  Q ',x2,' = ', vQa
             
         delta = r + self.gamma * vQa - prev_Q
         
@@ -247,14 +286,14 @@ class RLAgent(object):
         # kn = index of state n-steps back
         # x2 = next state after last action
 
-        if (self.debug):
-            print "updateQ_n ",kn, " optimal = ",self.optimal
+        #if (self.debug):
+        #    print "updateQ_n ",kn, " optimal = ",self.optimal
         
         if (self.optimal):  # executing best policy, no updates
             return
 
-        if (self.debug):
-            print "debug updateQ_n ... ",kn
+        #if (self.debug):
+        #    print "debug updateQ_n ... ",kn
 
         if (kn<0):  # kn not valid
             return
@@ -264,10 +303,10 @@ class RLAgent(object):
         a_kn = ep[1]
         g = self.rreturn(kn, self.nstepsupdates) # n-steps return from state x_{kn}
 
-        if (self.debug):
-            print "debug updateQ_n ... ",kn
-            print "x = ",x_kn, "  a = ",a_kn
-            print "return = ",g
+        #if (self.debug):
+        #    print "debug updateQ_n ... ",kn
+        #    print "x = ",x_kn, "  a = ",a_kn
+        #    print "return = ",g
         
         # if not at the end of the episode
         if (not x2 is None):

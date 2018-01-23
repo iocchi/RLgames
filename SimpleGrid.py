@@ -13,12 +13,13 @@ orange = [180,100,20]
 
 
 STATES = {
-    'Init':100,
+    'Init':0,
     'Alive':0,
     'Dead':-10,
     'NotMoving':-1,
-    'Score':10,    
-    'Hit':-1,        
+    'Score':1000,  
+    'Higher':10,  
+    'Hit':-5,        
 }
 
 
@@ -85,6 +86,7 @@ class SimpleGrid(object):
         self.nactions = 5  # 0: not moving, 1: left, 2: right, 3: up, 4: down        
         ns = self.rows * self.cols
         print('Number of states: %d' %ns)
+        print('Number of actions: %d' %self.nactions)
         self.agent.init(ns, self.nactions) # 1 for RA not used here
 
 
@@ -108,8 +110,6 @@ class SimpleGrid(object):
         self.iteration += 1
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
-        
-
 
         
     def getstate(self):
@@ -166,7 +166,10 @@ class SimpleGrid(object):
 
         self.current_reward += STATES['Alive']
         
-        self.score = self.pos_x + self.pos_y
+        xy = self.pos_x + self.pos_y
+        if (xy > self.score):
+            self.score = xy
+            self.current_reward += STATES['Higher']
         
         # check if episode terminated
         if self.goal_reached():
@@ -202,7 +205,7 @@ class SimpleGrid(object):
                     self.isPressed = True
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
-                    print "Game paused: ",self.pause
+                    print("Game paused: %s" %self.pause)
                 elif event.key == pygame.K_a:
                     self.isAuto = not self.isAuto
                 elif event.key == pygame.K_s:
@@ -219,10 +222,10 @@ class SimpleGrid(object):
                     self.agent.debug = False
                 elif event.key == pygame.K_o:
                     self.optimalPolicyUser = not self.optimalPolicyUser
-                    print "Best policy: ",self.optimalPolicyUser
+                    print("Best policy: %s" %self.optimalPolicyUser)
                 elif event.key == pygame.K_q:
                     self.userquit = True
-                    print "User quit !!!"
+                    print("User quit !!!")
                     
         if not self.isPressed:
             self.command = 0
@@ -319,7 +322,7 @@ class SimpleGrid(object):
             pygame.draw.line(self.screen, black, [self.offx , oy], [self.offx + self.cols*self.size_square, oy])
 
         
-        pygame.draw.circle(self.screen, orange, [dx+self.size_square/2, dy+self.size_square/2], 2*self.radius, 0)
+        pygame.draw.circle(self.screen, orange, [dx+self.size_square//2, dy+self.size_square//2], 2*self.radius, 0)
 
         pygame.display.update()
 
