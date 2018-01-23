@@ -92,6 +92,8 @@ class Breakout(object):
         self.cumscore100 = 0 # cumulative score for statistics
         self.cumreward100 = 0 # cumulative reward for statistics
         self.ngoalreached = 0 # number of goals reached for stats
+
+        self.action_names = ['--','<-','->']
         
         self.hiscore = 0
         self.hireward = -1000000
@@ -102,7 +104,8 @@ class Breakout(object):
         self.win_height = 480
 
         pygame.init()
-
+        pygame.display.set_caption('Breakout')
+        
         #allows for holding of key
         pygame.key.set_repeat(1,0)
 
@@ -125,6 +128,7 @@ class Breakout(object):
         self.agent = agent
         self.setStateActionSpace()
         self.agent.init(self.nstates, self.nactions)
+        self.agent.set_action_names(self.action_names)
 
     
     def initBricks(self):
@@ -183,7 +187,7 @@ class Breakout(object):
 
         self.prev_state = self.getstate() # remember previous state
         
-        #print " == Update start ",self.prev_state 
+        #print(" == Update start %d" %self.prev_state)
         
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
         #print('self.current_reward = 0')
@@ -218,7 +222,7 @@ class Breakout(object):
 
             self.hitDetect()
             
-        #print " ** Update end ",self.getstate(), " prev ",self.prev_state
+        #print(" ** Update end - state: %d prev: %d" %(self.getstate(),self.prev_state))
 
     def randomAngle(self):
         if (not self.deterministic):
@@ -338,7 +342,7 @@ class Breakout(object):
                 self.ball_speed_y = -self.ball_speed_y
                 self.current_reward += STATES['Scores']
                 self.paddle_hit_without_brick = 0
-                #print "bricks left: ",len(self.bricks)
+                #print("bricks left: %d" %len(self.bricks))
                 break
 
         if self.ball_hit_count > 5:
@@ -360,7 +364,7 @@ class Breakout(object):
                     self.isPressed = True
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
-                    print "Game paused: ",self.pause
+                    print("Game paused: %d" %self.pause)
                 elif event.key == pygame.K_a:
                     self.isAuto = not self.isAuto
                 elif event.key == pygame.K_s:
@@ -377,10 +381,10 @@ class Breakout(object):
                     self.agent.debug = False
                 elif event.key == pygame.K_o:
                     self.optimalPolicyUser = not self.optimalPolicyUser
-                    print "Best policy: ",self.optimalPolicyUser
+                    print("Best policy: %d" %self.optimalPolicyUser)
                 elif event.key == pygame.K_q:
                     self.userquit = True
-                    print "User quit !!!"
+                    print("User quit !!!")
                     
         if not self.isPressed:
             self.command = 0
@@ -498,15 +502,16 @@ class BreakoutN(Breakout):
         Breakout.__init__(self,brick_rows, brick_cols, trainsessionname)
         
     def setStateActionSpace(self):
-        self.n_ball_x = self.win_width/resolutionx+1
-        self.n_ball_y = self.win_height/resolutiony+1
+        self.n_ball_x = int(self.win_width/resolutionx)+1
+        self.n_ball_y = int(self.win_height/resolutiony)+1
         self.n_ball_dir = 10 # ball going up (0-5) or down (6-9)
                         # ball going left (1,2) straight (0) right (3,4)
-        self.n_paddle_x = self.win_width/resolutionx+1
+        self.n_paddle_x = int(self.win_width/resolutionx)+1
         self.nactions = 3  # 0: not moving, 1: left, 2: right
         
         self.nstates = self.n_ball_x * self.n_ball_y * self.n_ball_dir * self.n_paddle_x
         print('Number of states: %d' %self.nstates)
+        print('Number of actions: %d' %self.nactions)
  
     def getstate(self):
         #diff_paddle_ball = (int(self.ball_x)-self.paddle_x+self.win_width)/resolution
@@ -538,7 +543,9 @@ class BreakoutN(Breakout):
         else:
             paddle_x = int(self.paddle_x)/resx
         
-        return ball_x  + self.n_ball_x * ball_y + (self.n_ball_x*self.n_ball_y) * ball_dir + (self.n_ball_x*self.n_ball_y*self.n_ball_dir) * paddle_x
+        x = ball_x  + self.n_ball_x * ball_y + (self.n_ball_x*self.n_ball_y) * ball_dir + (self.n_ball_x*self.n_ball_y*self.n_ball_dir) * paddle_x
+        
+        return int(x)
 
 
 #
@@ -551,7 +558,7 @@ class BreakoutS(Breakout):
         Breakout.__init__(self,brick_rows, brick_cols, trainsessionname)
 
     def setStateActionSpace(self):
-        self.n_diff_paddle_ball = 2*self.win_width/resolutionx+1
+        self.n_diff_paddle_ball = int(2*self.win_width/resolutionx)+1
 
         self.nactions = 3  # 0: not moving, 1: left, 2: right
         
@@ -562,7 +569,7 @@ class BreakoutS(Breakout):
     def getstate(self):
         resx = resolutionx 
 
-        diff_paddle_ball = (int(self.ball_x)-self.paddle_x+self.win_width)/resx            
+        diff_paddle_ball = int((self.ball_x-self.paddle_x+self.win_width)/resx)
         
         return diff_paddle_ball
         

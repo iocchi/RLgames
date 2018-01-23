@@ -21,12 +21,12 @@ TOKENS = [ ['r1', 'red', 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],
 STATES = {
     'Init':0,
     'Alive':0,
-    'Dead':0,
-    'Score':0,
-    'Hit':0,
+    'Dead':-10,
+    'Score':20,    
+    'Hit':-1,
     'GoodColor':0,
     'GoalStep':50,
-    'RAFail':0,
+    'RAFail':-10,
     'RAGoal':200
 }
 
@@ -34,21 +34,10 @@ STATES = {
 
 class RewardAutoma(object):
 
-    def __init__(self, ncol, nvisitpercol):
+    def __init__(self):
         # RA states
-        self.ncolors = ncol
-        self.nvisitpercol = nvisitpercol
-        self.nRAstates = math.pow(2,self.ncolors*3)+1  # number of RA states
-        self.RAGoal = self.nRAstates-1
-        self.RAFail = self.nRAstates        
-        self.goalreached = 0 # number of RA goals reached for statistics
-        self.reset()
-
-    def OLD__init__(self, ncol, nvisitpercol):
-        # RA states
-        self.ncolors = ncol
-        self.nvisitpercol = nvisitpercol
-        self.nRAstates = self.nvisitpercol*self.ncolors+2  # number of RA states
+        self.ncolors = 7
+        self.nRAstates = 2*self.ncolors+2  # number of RA states
         self.RAGoal = self.nRAstates-2
         self.RAFail = self.nRAstates-1        
         self.goalreached = 0 # number of RA goals reached for statistics
@@ -63,7 +52,6 @@ class RewardAutoma(object):
         self.past_colors = []
         
 
-
     def countbipcol(self,col):
         if col in self.game.colorbip:
             return self.game.colorbip[col]
@@ -77,42 +65,8 @@ class RewardAutoma(object):
                 r += self.game.colorbip[c]
         return r
 
-
-    def encode_tokenbip(self):
-        c = 0
-        b = 1
-        for t in TOKENS:
-            c = c + self.game.tokenbip[t[0]] * b
-            b *= 2
-        return c
-
     # RewardAutoma Transition
     def update(self):
-        reward = 0
-        endupdate = False
-        # check double bip
-        for t in self.game.tokenbip:
-            if self.game.tokenbip[t]>1:
-                self.last_node = self.current_node
-                self.current_node = self.RAFail  # FAIL
-                reward += STATES['RAFail']
-                #print("  *** RA FAIL (two bips) *** ")
-                endupdate = True
-
-        if (not endupdate):
-            self.last_node = self.current_node
-            self.current_node = self.encode_tokenbip()
-
-            if (self.last_node != self.current_node):
-                reward += STATES['GoalStep']
-            if (self.current_node==self.RAGoal): #  GOAL
-                reward += STATES['RAGoal']
-
-        return reward
-
-
-    # RewardAutoma Transition
-    def update_OLD(self):
         reward = 0
 
         # check double bip
@@ -124,9 +78,9 @@ class RewardAutoma(object):
                 #print("  *** RA FAIL (two bips) *** ")
 
         if (self.current_node < self.RAGoal):
-            i_col = self.current_node / self.nvisitpercol # target color to bip
+            i_col = self.current_node / 2 # target color to bip
             target_col = TOKENS[i_col*3][1] # target color to bip
-            n_col = self.current_node % self.nvisitpercol # n color already bipped
+            n_col = self.current_node % 2 # n color already bipped
             
             #print "RA update %d %s %d " %(i_col, target_col, n_col)
             if (not target_col in self.past_colors):
@@ -162,7 +116,7 @@ class RewardAutoma(object):
 
 class Sapientino(object):
 
-    def __init__(self, rows=5, cols=7, trainsessionname='test', ncol=7, nvisitpercol=2):
+    def __init__(self, rows=5, cols=7, trainsessionname='test'):
 
         self.agent = None
         self.isAuto = True
@@ -206,12 +160,15 @@ class Sapientino(object):
 
         pygame.init()
 
+        #allows for holding of key
+        #pygame.key.set_repeat(1,0)
+
+        # self.reset()
+
         self.screen = pygame.display.set_mode([self.win_width,self.win_height])
         self.myfont = pygame.font.SysFont("Arial",  30)
         
-        self.ncolors = ncol
-        self.nvisitpercol = nvisitpercol
-        self.RA = RewardAutoma(self.ncolors, self.nvisitpercol)
+        self.RA = RewardAutoma()
         self.RA.init(self)
 
         
@@ -240,7 +197,7 @@ class Sapientino(object):
         self.gamman = 1.0 # cumulative gamma over time
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
 
-        self.prev_state = 0 # previous state
+        self.prev_state = None # previous state
         self.firstAction = True # first action of the episode
         self.finished = False # episode finished
         self.newstate = True # new state reached
@@ -250,9 +207,6 @@ class Sapientino(object):
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
         self.tokenbip = {}
         self.colorbip = {}        
-        for t in TOKENS:
-            self.tokenbip[t[0]] = 0
-            self.colorbip[t[1]] = 0
         self.RA.reset()
 
         
@@ -272,8 +226,15 @@ class Sapientino(object):
     def update_color(self):
         for t in TOKENS:
             if (self.pos_x == t[2] and self.pos_y == t[3]):
-                self.tokenbip[t[0]] += 1 # token id
-                self.colorbip[t[1]] += 1 # color
+                if t[0] in self.tokenbip:
+                    self.tokenbip[t[0]] += 1
+                else:
+                    self.tokenbip[t[0]] = 1
+                if t[1] in self.colorbip:
+                    self.colorbip[t[1]] += 1
+                else:
+                    self.colorbip[t[1]] = 1
+                break
 
     def check_color(self):
         r = ' '
@@ -293,6 +254,7 @@ class Sapientino(object):
         # print " == Update start ",self.prev_state," action",self.command 
         
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
+        #print('self.current_reward = 0')
         self.numactions += 1 # total number of actions axecuted in this episode
         
         white_bip = False
@@ -323,11 +285,10 @@ class Sapientino(object):
                 self.current_reward += STATES['Hit']
         elif self.command == 4:  # bip
             self.update_color()
-            if (self.check_color()!=' '):
-                pass
-                #self.current_reward += STATES['Score']
+            #if (self.check_color()!=' '):
+                #self.current_reward += STATES['Nothing']
                 #if self.debug:
-                #    print "bip on color"
+                #    print "Bip on color"
             else:
                 white_bip = True
 
@@ -336,7 +297,7 @@ class Sapientino(object):
 
         self.current_reward += self.RA.update()
         
-        # check if episode finished
+        # check if episode terminated
         if self.goal_reached():
             self.current_reward += STATES['Score']
             self.ngoalreached += 1
@@ -411,7 +372,11 @@ class Sapientino(object):
 
     def getreward(self):
 
-        r = self.current_reward        
+        r = self.current_reward
+        
+        #if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
+        #    r *= (self.RA.current_node+1)
+            # print "MAXI REWARD ",r
         if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
         self.cumreward += self.gamman * r
@@ -487,18 +452,21 @@ class Sapientino(object):
             cmd = 'v'
         elif self.command==4:
             cmd = 'x'
-        s = '%d %s %d' %(self.prev_state,cmd,x)
+        s = '%d %s' %(x,cmd)
         count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
         self.screen.blit(count_label, (60, 10))
         
 
-        if self.isAuto is True:
-            auto_label = self.myfont.render("Auto", 100, pygame.color.THECOLORS['red'])
-            self.screen.blit(auto_label, (self.win_width-200, 10))
         if (self.agent.optimal):
             opt_label = self.myfont.render("Best", 100, pygame.color.THECOLORS['red'])
-            self.screen.blit(opt_label, (self.win_width-100, 10))
-
+            self.screen.blit(opt_label, (self.win_width-150, 10))
+        elif self.isAuto:
+            auto_label = self.myfont.render("Learn", 100, pygame.color.THECOLORS['red'])
+            self.screen.blit(auto_label, (self.win_width-150, 10))
+        else:
+            auto_label = self.myfont.render("Manual", 100, pygame.color.THECOLORS['red'])
+            self.screen.blit(auto_label, (self.win_width-150, 10))
+            
 
         
         # grid
@@ -520,37 +488,138 @@ class Sapientino(object):
             dy = int(self.offy + (self.rows-v-1) * self.size_square)
             sqsz = (dx+5,dy+5,self.size_square-10,self.size_square-10)
             pygame.draw.rect(self.screen, pygame.color.THECOLORS[col], sqsz)
-            if (self.tokenbip[tk]==1):
+            if tk in self.tokenbip:
                 pygame.draw.rect(self.screen, pygame.color.THECOLORS['black'], (dx+15,dy+15,self.size_square-30,self.size_square-30))
+
 
         # agent position
         dx = int(self.offx + self.pos_x * self.size_square)
         dy = int(self.offy + (self.rows-self.pos_y-1) * self.size_square)
         pygame.draw.circle(self.screen, pygame.color.THECOLORS['orange'], [dx+self.size_square/2, dy+self.size_square/2], 2*self.radius, 0)
+
         pygame.display.update()
 
-        
+
+
     def quit(self):
         self.resfile.close()
         pygame.quit()
-        
 
-        
 
+class Sapientino1C(Sapientino):
+
+    def getSizeStateSpace(self):
+        self.origns = super(Sapientino1C, self).getSizeStateSpace()
+        # red color status
+        red_ns = 8
+        ns = self.origns * red_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(Sapientino1C, self).getstate()        
+        xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
+        x = x + self.origns * xr
+        return x
+        
+class Sapientino2C(Sapientino):
+
+    def getSizeStateSpace(self):
+        self.origns = super(Sapientino2C, self).getSizeStateSpace()
+        # red color status
+        red_ns = 8
+        green_ns = 8
+        ns = self.origns * red_ns * green_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(Sapientino2C, self).getstate()        
+        xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
+        xg = self.gettokenbip('g1')+2*self.gettokenbip('g2')+4*self.gettokenbip('g3')
+        x = x + self.origns * ( xr + 8 * xg ) 
+        return x
+        
+class Sapientino3C(Sapientino):
+
+    def getSizeStateSpace(self):
+        self.origns = super(Sapientino3C, self).getSizeStateSpace()
+        # red color status
+        red_ns = 8
+        green_ns = 8
+        blue_ns = 8
+        ns = self.origns * red_ns * green_ns * blue_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(Sapientino3C, self).getstate()        
+        xr = self.gettokenbip('r1')+2*self.gettokenbip('r2')+4*self.gettokenbip('r3')
+        xg = self.gettokenbip('g1')+2*self.gettokenbip('g2')+4*self.gettokenbip('g3')
+        xb = self.gettokenbip('b1')+2*self.gettokenbip('b2')+4*self.gettokenbip('b3')
+        x = x + self.origns * ( xr + 8 * xg + 8*8 * xb ) 
+        return x
         
 class SapientinoExt(Sapientino):
 
-    def __init__(self, rows=5, cols=7, trainsessionname='test', ncol=7, nvisitpercol=2):
-        Sapientino.__init__(self, rows, cols, trainsessionname, ncol, nvisitpercol)
+    def __init__(self, rows, cols, trainsessionname, ncol):
+        Sapientino.__init__(self, rows, cols, trainsessionname)
         self.ncol = ncol
         
     def getSizeStateSpace(self):
         self.origns = super(SapientinoExt, self).getSizeStateSpace()
         # all color status
+        col_ns = pow(8,self.ncol)
+        ns = self.origns * col_ns
+        return ns
+    
+    def gettokenbip(self,col):
+        if (col in self.tokenbip):
+            return 1
+        else:
+            return 0
+
+    def getstate(self):
+        x = super(SapientinoExt, self).getstate()
+        f = 1
+        tx = 0
+        for i in range(0,self.ncol):
+            t = TOKENS[i]
+            tx += f * self.gettokenbip(t[0])
+            f *= 2
+        x = x + self.origns * tx
+        return x
+        
+
+class SapientinoExt2(Sapientino):
+
+    def __init__(self, rows, cols, trainsessionname, ncol):
+        Sapientino.__init__(self,rows, cols, trainsessionname)
+        self.ncol = ncol
+        
+    def getSizeStateSpace(self):
+        self.origns = super(SapientinoExt2, self).getSizeStateSpace()
+        # all color status
         self.bip_ns = 2
         self.col_ns = self.ncol + 1
         ns = self.origns * self.bip_ns * self.col_ns
         return ns
+
 
     def currentcolor(self):
         scol = self.check_color()
@@ -565,7 +634,7 @@ class SapientinoExt(Sapientino):
 
 
     def getstate(self):
-        x = super(SapientinoExt, self).getstate()
+        x = super(SapientinoExt2, self).getstate()
         f = 1
         if self.command == 4:
             bx = 1
@@ -576,29 +645,4 @@ class SapientinoExt(Sapientino):
         x = x + self.origns * bx + (self.origns * self.bip_ns) * cx
         return x
 
-
-        
-class SapientinoExt2(Sapientino):
-
-    def __init__(self, rows=5, cols=7, trainsessionname='test', ncol=7, nvisitpercol=2):
-        Sapientino.__init__(self, rows, cols, trainsessionname, ncol, nvisitpercol)
-        self.ncol = ncol
-        
-    def getSizeStateSpace(self):
-        self.origns = super(SapientinoExt2, self).getSizeStateSpace()
-        # all color status
-        col_ns = pow(8,self.ncol)
-        ns = self.origns * col_ns
-        return ns
-
-    def getstate(self):
-        x = super(SapientinoExt2, self).getstate()
-        f = 1
-        tx = 0
-        for i in range(0,self.ncol):
-            t = TOKENS[i]
-            tx += f * self.tokenbip[t[0]]
-            f *= 2
-        x = x + self.origns * tx
-        return x
 

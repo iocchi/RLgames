@@ -19,7 +19,7 @@ agent = None
 
 
 def loadGameModule():
-    print("Loading game "+args.game)
+    print("Loading game %s" %args.game)
     try:
         if (args.game=='SimpleGrid'):
             mod = importlib.import_module(args.game)
@@ -33,7 +33,7 @@ def loadGameModule():
         elif (args.game=='BreakoutSRA'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutSRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutSRAExt'):
+        elif (args.game=='BreakoutSRAX'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutSRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
         elif (args.game=='BreakoutNRA'):
@@ -42,35 +42,26 @@ def loadGameModule():
         elif (args.game=='BreakoutNRA1'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename, RAenabled=False)
-        elif (args.game=='BreakoutNRAExt'):
+        elif (args.game=='BreakoutNRAX'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='Sapientino'):
+        elif (args.game=='Sapientino2'):
             mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(rows=args.rows, cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='Sapientino1C'):
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
+        elif (args.game=='Sapientino2X'):
             mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,1)
-        elif (args.game=='Sapientino2C'):
+            game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=2)
+        elif (args.game=='Sapientino3'):
             mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,2)
-        elif (args.game=='Sapientino3C'):
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+        elif (args.game=='Sapientino3X'):
             mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,3)
-        elif (args.game=='Sapientino4C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,4)
-        elif (args.game=='Sapientino5C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,5)
-        elif (args.game=='Sapientino6C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,6)
-        elif (args.game=='Sapientino7C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(args.rows, args.cols, trainfilename,7)
+            game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=3)
+        else:
+            print("ERROR: game %s not found." %args.game)
+            sys.exit(1)
     except:
-        print "ERROR: game ",args.game," not found."
+        print("ERROR: game %s not found." %args.game)
         raise
         sys.exit(1)
     return game
@@ -87,12 +78,20 @@ def loadAgentModule():
             modname = 'RLAgent'
             mod = importlib.import_module(modname)
             agent = mod.SarsaAgent()
-        if (args.agent=='MC'):
+        elif (args.agent=='SarsaLin'):
+            modname = 'RLAgent'
+            mod = importlib.import_module(modname)
+            agent = mod.SarsaAgent()
+            agent.Qapproximation = True
+        elif (args.agent=='MC'):
             modname = 'RLMCAgent'
             mod = importlib.import_module(modname)
             agent = mod.MCAgent()
+        else:
+            print("ERROR: agent %s not found." %modname)
+            sys.exit(1)
     except:
-        print "ERROR: agent ",modname," not found."
+        print("ERROR: agent %s not found." %modname)
         raise
         sys.exit(1)
     return agent
@@ -105,7 +104,7 @@ def save():
         filename = 'data/'+trainfilename
         savedata = [int(game.iteration), int(game.hiscore), int(game.hireward), agent.savedata()]
         np.savez(filename, iter = savedata[0], hiscore = savedata[1], hireward = savedata[2], agentdata = savedata[3])
-        print "Data saved successfully on file ", filename, "\n\n\n"
+        print("Data saved successfully on file %s\n\n\n" %filename)
 
         
 def load(fname, game, agent):
@@ -150,7 +149,7 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("n-step:  %d\n" %(agent.nstepsupdates))
         infofile.write("lambda:  %f\n\n" %(agent.lambdae))
         infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
-        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
+        #allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
     elif optimalPolicyFound:
         infofile.write("Optimal policy found.\n")
         infofile.write("goal reached:     %d\n" %(game.iteration))
@@ -191,7 +190,7 @@ def learn(game, agent):
     run = True
     last_goalreached = False
     next_optimal = False
-    if (game.iteration>0): # try an optimal run
+    if (game.iteration>0 and not game.debug): # try an optimal run
         next_optimal = True
         game.iteration -= 1
         
@@ -229,6 +228,10 @@ def learn(game, agent):
         print("\n***************************")
         print("***  Goal policy found  ***")
         print("***************************\n")
+        if (agent.Qapproximation):
+            for a in range(0,game.nactions):
+                print("Q[%d]" %a)
+                print("       ",agent.Q[a].get_weights())
 
 
 # evaluation process
@@ -300,7 +303,7 @@ game.init(agent)
 
 # load saved data
 load(trainfilename,game,agent)
-print "Game iteration: ",game.iteration
+print("Game iteration: %d" %game.iteration)
 
 if (game.iteration==0):
     writeinfo(trainfilename,game,agent,init=True)
@@ -312,6 +315,6 @@ else:
     learn(game, agent)
     writeinfo(trainfilename,game,agent,init=False)
 
-print "Experiment terminated !!!\n"
+print("Experiment terminated !!!\n")
 
 game.quit()
