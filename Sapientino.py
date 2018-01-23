@@ -20,13 +20,13 @@ TOKENS = [ ['r1', 'red', 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],
 STATES = {
     'Init':0,
     'Alive':0,
-    'Dead':-100,
-    'Score':0,    
-    'Hit':-10,
+    'Dead':-10,
+    'Score':100,
+    'Hit':-1,
     'GoodColor':0,
-    'GoalStep':100,
-    'RAFail':-100,
-    'RAGoal':1000
+    'GoalStep':1000,
+    'RAFail':-10,
+    'RAGoal':10000
 }
 
 # Reward automa
@@ -292,7 +292,7 @@ class Sapientino(object):
 
         self.current_reward += self.RA.update()
         
-        # check if episode terminated
+        # check if episode finished
         if self.goal_reached():
             self.current_reward += STATES['Score']
             self.ngoalreached += 1

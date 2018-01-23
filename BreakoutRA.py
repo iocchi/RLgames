@@ -201,9 +201,12 @@ class BreakoutSRA(BreakoutS):
 
 class BreakoutNRA(BreakoutN):
 
-    def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
+    def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test', RAenabled=True):
         BreakoutN.__init__(self,brick_rows, brick_cols, trainsessionname)
-        self.RA = RewardAutoma(brick_cols)
+        RA_cols = 0
+        if (RAenabled):
+            RA_cols = brick_cols
+        self.RA = RewardAutoma(RA_cols)
         self.RA.init(self)
 
     def setStateActionSpace(self):
@@ -280,6 +283,9 @@ class BreakoutNRA(BreakoutN):
         self.vscores.append(self.score)
         self.resfile.write("%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions))
         self.resfile.flush()
+
+
+
 
 
 

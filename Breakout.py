@@ -36,10 +36,10 @@ resolutiony = 10
 STATES = {
     'Init':0,
     'Alive':0,
-    'Dead':-100,
+    'Dead':0,
     'PaddleNotMoving':0,
     'Scores':10,    # brick removed
-    'Hit':0,        # paddle hit
+    'Hit':1,        # paddle hit
     'Goal':100,     # level completed
 }
 
