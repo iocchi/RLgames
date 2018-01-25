@@ -99,6 +99,9 @@ class RewardAutoma(object):
                 #print("  *** RA FAIL (two bips) *** ")
                 endupdate = True
 
+        # Check rule
+
+
         if (not endupdate):
             self.last_node = self.current_node
             self.current_node = self.encode_tokenbip()
@@ -253,23 +256,26 @@ class Sapientino(object):
         for t in TOKENS:
             self.tokenbip[t[0]] = 0
             self.colorbip[t[1]] = 0
+        self.countbip=0
         self.RA.reset()
 
         
     def getSizeStateSpace(self):
         return self.rows * self.cols
 
-        
+
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y + (self.cols * self.rows) * self.RA.current_node     
         return x
 
 
     def goal_reached(self):
-        return self.RA.current_node==self.RA.RAGoal
+        #return self.RA.current_node==self.RA.RAGoal
+        return self.countbip==self.ncolors*3
 
 
     def update_color(self):
+        self.countbip += 1
         for t in TOKENS:
             if (self.pos_x == t[2] and self.pos_y == t[3]):
                 self.tokenbip[t[0]] += 1 # token id
@@ -429,7 +435,7 @@ class Sapientino(object):
         RAnode = self.RA.current_node
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
-        self.score = RAnode
+        self.score = self.countbip # RAnode
 
 
         s = 'Iter %6d, sc: %3d, na: %4d, r: %8.2f, mem: %d %c' %(self.iteration, self.score,self.numactions, self.cumreward, len(self.agent.Q), ch)

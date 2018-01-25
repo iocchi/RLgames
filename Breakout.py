@@ -38,8 +38,8 @@ STATES = {
     'Alive':0,
     'Dead':0,
     'PaddleNotMoving':0,
-    'Scores':10,    # brick removed
-    'Hit':1,        # paddle hit
+    'Scores':0,    # brick removed
+    'Hit':0,        # paddle hit
     'Goal':100,     # level completed
 }
 

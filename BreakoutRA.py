@@ -16,10 +16,10 @@ from Breakout import *
 
 
 STATES = {
-    'RAGoal':1000,         # goal of reward automa
-    'RAFail':-30,         # fail of reward automa
-    'GoodBrick':30,       # good brick removed for next RA state
-    'WrongBrick':-5       # wrong brick removed for next RA state
+    'RAGoal':100,       # goal of reward automa
+    'RAFail':0,         # fail of reward automa
+    'GoodBrick':0,      # good brick removed for next RA state
+    'WrongBrick':0      # wrong brick removed for next RA state
 }
 
 
