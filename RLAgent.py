@@ -147,7 +147,10 @@ class RLAgent(object):
     def getAlphaVisitsInc(self, x, a):
         self.incVisits(x,a)
         s = self.getVisits(x,a)
-        a = 1.0/float(s)
+        try: #TODO debug here
+            a = 1.0/float(s)
+        except:
+            a = 1.0
         #print("visits: %d, a = %.6f" %(s,a))
         return a # math.sqrt(s)
 

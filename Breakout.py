@@ -19,6 +19,7 @@ black = [0, 0, 0]
 white = [255,255,255]
 grey = [180,180,180]
 orange = [180,100,20]
+red = [180,0,0]
 
 # game's constant variables
 ball_radius = 10
@@ -64,6 +65,7 @@ class Breakout(object):
         self.isAuto = True
         self.gui_visible = False
         self.sound_enabled = False
+        self.fire_enabled = False
         self.userquit = False
         self.optimalPolicyUser = False  # optimal policy set by user
         self.evalBestPolicy = False
@@ -93,7 +95,12 @@ class Breakout(object):
         self.cumreward100 = 0 # cumulative reward for statistics
         self.ngoalreached = 0 # number of goals reached for stats
 
-        self.action_names = ['--','<-','->']
+        self.action_names = ['--','<-','->','o'] # stay, left, right, fire
+
+        # firing variables
+        self.fire_posx = 0
+        self.fire_posy = 0
+        self.fire_speedy = 0 # 0 = not firing, <0 firing up
         
         self.hiscore = 0
         self.hireward = -1000000
@@ -174,6 +181,11 @@ class Breakout(object):
         
         self.initBricks()
 
+        # firing variables
+        self.fire_posx = 0
+        self.fire_posy = 0
+        self.fire_speedy = 0 # 0 = not firing, <0 firing up
+
 
 
 
@@ -207,20 +219,31 @@ class Breakout(object):
             elif self.command == 1:  # moving left
                 self.paddle_x -= self.paddle_speed
             elif self.command == 2:  # moving right
-                self.paddle_x += self.paddle_speed
-                
+                self.paddle_x += self.paddle_speed                
 
             if self.paddle_x < 0:
                 self.paddle_x = 0
             if self.paddle_x > self.screen.get_width() - paddle_width:
                 self.paddle_x = self.screen.get_width() - paddle_width
 
+            if self.command == 3:  # fire
+                if (self.fire_speedy==0):
+                    self.fire_posx = self.paddle_x + paddle_width/2
+                    self.fire_posy = self.paddle_y
+                    self.fire_speedy = -self.init_ball_speed_y*2
+
+
             self.current_reward += STATES['Alive']
             ##MOVE THE BALL
             self.ball_y += self.ball_speed_y
             self.ball_x += self.ball_speed_x
 
+            # firing
+            if (self.fire_speedy < 0):
+                self.fire_posy += self.fire_speedy
+
             self.hitDetect()
+
             
         #print(" ** Update end - state: %d prev: %d" %(self.getstate(),self.prev_state))
 
@@ -238,6 +261,9 @@ class Breakout(object):
         ##COLLISION DETECTION
         ball_rect = pygame.Rect(self.ball_x-ball_radius, self.ball_y-ball_radius, ball_radius*2,ball_radius*2) #circles are measured from the center, so have to subtract 1 radius from the x and y
         paddle_rect = pygame.Rect(self.paddle_x, self.paddle_y, paddle_width, paddle_height)
+
+        fire_rect = pygame.Rect(self.fire_posx-1, self.fire_posy-1, 3, 3)
+
 
         # TERMINATION OF EPISODE
         if (not self.finished):
@@ -345,6 +371,31 @@ class Breakout(object):
                 #print("bricks left: %d" %len(self.bricks))
                 break
 
+        #firing
+        if (self.fire_posy < 5):
+            #reset
+            self.fire_posx = 0
+            self.fire_posy = 0
+            self.fire_speedy = 0
+
+        for brick in self.bricks:
+            if brick.rect.colliderect(fire_rect):
+                #print 'brick hit with fire ',brick.i,brick.j
+                if (pygame.display.get_active() and (not self.se_wall is None)):
+                    self.se_brick.play()
+                self.score = self.score + 1
+                self.bricks.remove(brick)
+                self.last_brikcsremoved.append(brick)
+                self.bricksgrid[(brick.i,brick.j)] = 0
+                self.current_reward += STATES['Scores']
+                self.paddle_hit_without_brick = 0
+                #print("bricks left: %d" %len(self.bricks))
+                # reset firing
+                self.fire_posx = 0
+                self.fire_posy = 0
+                self.fire_speedy = 0
+                break
+
         if self.ball_hit_count > 5:
             self.randomAngle()
 
@@ -361,6 +412,9 @@ class Breakout(object):
                     self.isPressed = True
                 elif event.key == pygame.K_RIGHT:
                     self.command = 2
+                    self.isPressed = True
+                elif event.key == pygame.K_x: # Fire
+                    self.command = 3
                     self.isPressed = True
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
@@ -458,6 +512,8 @@ class Breakout(object):
             cmd = '<'
         elif self.command==2:
             cmd = '>'
+        elif self.command==3:
+            cmd = 'o'
         s = '%d %s' %(x,cmd)
         count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
         self.screen.blit(count_label, (60, 10))
@@ -475,6 +531,10 @@ class Breakout(object):
             pygame.draw.rect(self.screen,grey,brick.rect,0)
         pygame.draw.circle(self.screen, orange, [int(self.ball_x), int(self.ball_y)], ball_radius, 0)
         pygame.draw.rect(self.screen, grey, [self.paddle_x, self.paddle_y, paddle_width, paddle_height], 0)
+
+        # print("fire %d %d %d" %(self.fire_posx, self.fire_posy,self.fire_speedy))
+        if (self.fire_speedy<0):
+            pygame.draw.rect(self.screen, red, [self.fire_posx, self.fire_posy, 5, 5], 0)
 
         pygame.display.update()
 
@@ -500,6 +560,8 @@ class BreakoutN(Breakout):
 
     def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
         Breakout.__init__(self,brick_rows, brick_cols, trainsessionname)
+        STATES['Scores'] = 10    # brick removed
+
         
     def setStateActionSpace(self):
         self.n_ball_x = int(self.win_width/resolutionx)+1
@@ -556,11 +618,15 @@ class BreakoutS(Breakout):
 
     def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
         Breakout.__init__(self,brick_rows, brick_cols, trainsessionname)
+        STATES['Scores'] = 10    # brick removed
 
     def setStateActionSpace(self):
         self.n_diff_paddle_ball = int(2*self.win_width/resolutionx)+1
 
         self.nactions = 3  # 0: not moving, 1: left, 2: right
+        if (self.fire_enabled):
+            self.nactions = 4  # 3: fire
+
         
         self.nstates = self.n_diff_paddle_ball
         print('Number of states: %d' %self.nstates)
@@ -572,4 +638,27 @@ class BreakoutS(Breakout):
         diff_paddle_ball = int((self.ball_x-self.paddle_x+self.win_width)/resx)
         
         return diff_paddle_ball
+
+
+class BreakoutF(Breakout):
+
+    def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
+        Breakout.__init__(self,brick_rows, brick_cols, trainsessionname)
+        STATES['Scores'] = 10    # brick removed
+
+    def setStateActionSpace(self):
+        self.n_diff_paddle_ball = int(2*self.win_width/resolutionx)+1
+
+        self.fire_enabled = True
+        self.nactions = 4  # 0: not moving, 1: left, 2: right, 3: fire
+        self.nstates = self.n_diff_paddle_ball
+        print('Number of states: %d' %self.nstates)
+        print('Number of actions: %d' %self.nactions)
+
         
+    def getstate(self):
+        resx = resolutionx 
+
+        diff_paddle_ball = int((self.ball_x-self.paddle_x+self.win_width)/resx)
+        
+        return diff_paddle_ball        

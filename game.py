@@ -27,6 +27,9 @@ def loadGameModule():
         elif (args.game=='BreakoutS'):
             mod = importlib.import_module('Breakout')
             game = mod.BreakoutS(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='BreakoutF'):
+            mod = importlib.import_module('Breakout')
+            game = mod.BreakoutF(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
         elif (args.game=='BreakoutN'):
             mod = importlib.import_module('Breakout')
             game = mod.BreakoutN(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
