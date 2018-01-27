@@ -15,14 +15,6 @@ from math import fabs
 from Breakout import *
 
 
-STATES = {
-    'RAGoal':100,       # goal of reward automa
-    'RAFail':0,         # fail of reward automa
-    'GoodBrick':0,      # good brick removed for next RA state
-    'WrongBrick':0      # wrong brick removed for next RA state
-}
-
-
 # Reward automa
 
 class RewardAutoma(object):
@@ -38,7 +30,13 @@ class RewardAutoma(object):
             self.nRAstates = 2  # number of RA states
             self.RAGoal = 1 # never reached
             self.RAFail = 2 # never reached
-        
+
+        self.STATES = {
+            'RAGoal':100,       # goal of reward automa
+            'RAFail':0,         # fail of reward automa
+            'GoodBrick':0,      # good brick removed for next RA state
+            'WrongBrick':0      # wrong brick removed for next RA state
+        }
         self.goalreached = 0 # number of RA goals reached for statistics
         self.reset()
         
@@ -68,13 +66,12 @@ class RewardAutoma(object):
             
         reward = 0
         
-        
         for b in self.game.last_brikcsremoved:
             if b.i == self.current_node:
-                reward += STATES['GoodBrick']
+                reward += self.STATES['GoodBrick']
                 #print 'Hit right brick for next RA state'
             else:
-                reward += STATES['WrongBrick']
+                reward += self.STATES['WrongBrick']
                 #print 'Hit wrong brick for next RA state'
 
         f = np.zeros(self.brick_cols)
@@ -85,18 +82,18 @@ class RewardAutoma(object):
             if f[self.current_node]:
                 self.last_node = self.current_node
                 self.current_node += 1
-                reward += STATES['RAGoal']
+                reward += self.STATES['RAGoal']
                 #print("  -- RA state transition to %d, " %(self.current_node))
                 if (self.current_node==self.RAGoal):
                     # print("  <<< RA GOAL >>>")
-                    reward += STATES['RAGoal']
+                    reward += self.STATES['RAGoal']
                     self.goalreached += 1
             else:
                 for c in range(self.current_node, self.brick_cols):
                     if f[c]:
                         self.last_node = self.current_node
                         self.current_node = self.RAFail  # FAIL
-                        reward += STATES['RAFail']
+                        reward += self.STATES['RAFail']
                         #print("  *** RA FAIL *** ")
                         break
 
@@ -117,6 +114,16 @@ class BreakoutSRA(BreakoutS):
         BreakoutS.__init__(self,brick_rows, brick_cols, trainsessionname)
         self.RA = RewardAutoma(brick_cols)
         self.RA.init(self)
+        self.STATES = {
+            'Init':0,
+            'Alive':0,
+            'Dead':0,
+            'PaddleNotMoving':0,
+            'Scores':0,    # brick removed
+            'Hit':0,        # paddle hit
+            'Goal':0,     # level completed
+        }
+
 
     def setStateActionSpace(self):
         super(BreakoutSRA, self).setStateActionSpace()
@@ -140,14 +147,15 @@ class BreakoutSRA(BreakoutS):
         return self.RA.current_node==self.RA.RAGoal
        
     def getreward(self):
-        r = self.current_reward
-        for b in self.last_brikcsremoved:
-            if b.i == self.RA.current_node:
-                r += STATES['GoodBrick']
+        #r = self.current_reward
+        #for b in self.last_brikcsremoved:
+        #    if b.i == self.RA.current_node:
+        #         r += self.STATES['GoodBrick']
                 #print 'Hit right brick for next RA state'
         #if (self.current_reward>0 and self.RA.current_node>0 and self.RA.current_node<=self.RA.RAGoal):
             #r *= (self.RA.current_node+1)
             #print "MAXI REWARD ",r
+
         if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
         self.cumreward += r
@@ -208,6 +216,16 @@ class BreakoutNRA(BreakoutN):
             RA_cols = brick_cols
         self.RA = RewardAutoma(RA_cols)
         self.RA.init(self)
+        self.STATES = {
+            'Init':0,
+            'Alive':0,
+            'Dead':0,
+            'PaddleNotMoving':0,
+            'Scores':0,    # brick removed
+            'Hit':0,        # paddle hit
+            'Goal':0,     # level completed
+        }
+
 
     def setStateActionSpace(self):
         super(BreakoutNRA, self).setStateActionSpace()

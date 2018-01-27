@@ -27,9 +27,10 @@ def loadGameModule():
         elif (args.game=='BreakoutS'):
             mod = importlib.import_module('Breakout')
             game = mod.BreakoutS(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutF'):
+        elif (args.game=='BreakoutFS'):
             mod = importlib.import_module('Breakout')
-            game = mod.BreakoutF(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game = mod.BreakoutS(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game.fire_enabled = True
         elif (args.game=='BreakoutN'):
             mod = importlib.import_module('Breakout')
             game = mod.BreakoutN(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
@@ -42,6 +43,10 @@ def loadGameModule():
         elif (args.game=='BreakoutNRA'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='BreakoutFNRA'):
+            mod = importlib.import_module('BreakoutRA')
+            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game.fire_enabled = True
         elif (args.game=='BreakoutNRA1'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename, RAenabled=False)

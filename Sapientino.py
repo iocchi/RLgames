@@ -6,8 +6,9 @@ import time
 import math
 from math import fabs
 
+COLORS = ['red', 'green', 'blue', 'pink', 'brown', 'gray', 'purple' ]
 
-TOKENS = [ ['r1', 'red', 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],   
+TOKENS = [ ['r1', COLORS[0], 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],   
     ['g1', 'green', 4, 0], ['g2', 'green', 5, 2], ['g3', 'green', 5, 4],
     ['b1', 'blue', 1, 3], ['b2', 'blue', 2, 4],  ['b3', 'blue', 6, 0], 
     ['p1', 'pink', 2, 1], ['p2', 'pink', 2, 3], ['p3', 'pink', 4, 2], 
@@ -16,7 +17,7 @@ TOKENS = [ ['r1', 'red', 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],
     ['u1', 'purple', 0, 4], ['u2', 'purple', 1, 0], ['u3', 'purple', 5, 1]
 ]
 
-# positive rewards slightly higher than negative rewards
+# only positive rewards
 
 STATES = {
     'Init':0,
@@ -25,9 +26,9 @@ STATES = {
     'Score':0,
     'Hit':0,
     'GoodColor':0,
-    'GoalStep':50,
+    'GoalStep':100,
     'RAFail':0,
-    'RAGoal':200
+    'RAGoal':100
 }
 
 # Reward automa
@@ -38,9 +39,9 @@ class RewardAutoma(object):
         # RA states
         self.ncolors = ncol
         self.nvisitpercol = nvisitpercol
-        self.nRAstates = math.pow(2,self.ncolors*3)+1  # number of RA states
-        self.RAGoal = self.nRAstates-1
-        self.RAFail = self.nRAstates        
+        self.nRAstates = math.pow(2,self.ncolors*3)+2  # number of RA states
+        self.RAGoal = self.nRAstates
+        self.RAFail = self.nRAstates+1        
         self.goalreached = 0 # number of RA goals reached for statistics
         self.reset()
 
@@ -61,7 +62,7 @@ class RewardAutoma(object):
         self.current_node = 0
         self.last_node = self.current_node
         self.past_colors = []
-        
+        self.last_id_colvisited = -1 # color index visited nvisitpercol times
 
 
     def countbipcol(self,col):
@@ -89,27 +90,43 @@ class RewardAutoma(object):
     # RewardAutoma Transition
     def update(self):
         reward = 0
-        endupdate = False
+        self.last_node = self.current_node
+
         # check double bip
         for t in self.game.tokenbip:
-            if self.game.tokenbip[t]>1:
-                self.last_node = self.current_node
+            if self.game.tokenbip[t]>1:                
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
                 #print("  *** RA FAIL (two bips) *** ")
-                endupdate = True
 
-        # Check rule
-
-
-        if (not endupdate):
-            self.last_node = self.current_node
+        if (self.current_node != self.RAFail):
             self.current_node = self.encode_tokenbip()
 
+            # Check rule
+            # nvisitpercol
+            c = np.zeros(self.ncolors)
+            kc = -1
+            for i in range(len(COLORS)):
+                if (not self.game.colorbip[COLORS[i]]>=self.nvisitpercol):
+                    break
+                kc = i
+            #print("%d visits until color %d" %(self.nvisitpercol,kc))
+                    
+            for i in range(kc+2,len(COLORS)):
+                if (self.game.colorbip[COLORS[i]]>0):
+                    #print("RA failure for color %r" %i)
+                    self.current_node = self.RAFail
+                    break
+
             if (self.last_node != self.current_node):
-                reward += STATES['GoalStep']
-            if (self.current_node==self.RAGoal): #  GOAL
-                reward += STATES['RAGoal']
+                if (self.current_node == self.RAFail):
+                    reward += STATES['RAFail']
+                elif (self.last_id_colvisited != kc): # new state in which color has been visited right amunt of time
+                    self.last_id_colvisited = kc
+                    reward += STATES['GoalStep']
+                if (kc==self.ncolors-1): #  GOAL
+                    self.current_node = self.RAGoal
+                    reward += STATES['RAGoal']
 
         return reward
 
@@ -270,8 +287,7 @@ class Sapientino(object):
 
 
     def goal_reached(self):
-        #return self.RA.current_node==self.RA.RAGoal
-        return self.countbip==self.ncolors*3
+        return self.RA.current_node==self.RA.RAGoal
 
 
     def update_color(self):
