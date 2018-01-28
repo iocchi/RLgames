@@ -443,7 +443,6 @@ class Sapientino(object):
         return self.command
 
     def getreward(self):
-
         r = self.current_reward        
         if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0

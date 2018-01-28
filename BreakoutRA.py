@@ -32,7 +32,7 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':100,       # goal of reward automa
+            'RAGoal':100000,       # goal of reward automa
             'RAFail':0,         # fail of reward automa
             'GoodBrick':0,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
@@ -147,7 +147,7 @@ class BreakoutSRA(BreakoutS):
         return self.RA.current_node==self.RA.RAGoal
        
     def getreward(self):
-        #r = self.current_reward
+        r = self.current_reward
         #for b in self.last_brikcsremoved:
         #    if b.i == self.RA.current_node:
         #         r += self.STATES['GoodBrick']
@@ -158,7 +158,8 @@ class BreakoutSRA(BreakoutS):
 
         if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
-        self.cumreward += r
+        self.cumreward += self.gamman * r
+        self.gamman *= self.agent.gamma
         return r
 
     def print_report(self, printall=False):
@@ -192,7 +193,7 @@ class BreakoutSRA(BreakoutS):
         if (self.iteration%numiter==0):
             #self.doSave()
             print('-----------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %d | RA %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print("%s %6d avg last 100: reward %.1f | RA %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
@@ -255,7 +256,8 @@ class BreakoutNRA(BreakoutN):
             #print "MAXI REWARD ",r
         if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
-        self.cumreward += r
+        self.cumreward += self.gamman * r
+        self.gamman *= self.agent.gamma
         return r
 
     def print_report(self, printall=False):
@@ -289,7 +291,7 @@ class BreakoutNRA(BreakoutN):
         if (self.iteration%numiter==0):
             #self.doSave()
             print('----------------------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %d | RA %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print("%s %6d avg last 100: reward %.1f | RA %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
             print('----------------------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0

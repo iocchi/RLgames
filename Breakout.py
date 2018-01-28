@@ -166,6 +166,8 @@ class Breakout(object):
         self.ball_hit_count = 0
         self.paddle_hit_count = 0
         self.cumreward = 0
+        self.gamman = 1.0 # cumulative gamma over time
+
         self.paddle_hit_without_brick = 0
         
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
@@ -423,10 +425,10 @@ class Breakout(object):
                     self.isAuto = not self.isAuto
                 elif event.key == pygame.K_s:
                     self.sleeptime = 1.0
-                    self.agent.debug = False
+                    #self.agent.debug = False
                 elif event.key == pygame.K_d:
                     self.sleeptime = 0.07
-                    self.agent.debug = False
+                    #self.agent.debug = False
                 elif event.key == pygame.K_f:
                     self.sleeptime = 0.005
                     self.agent.debug = False
@@ -449,8 +451,11 @@ class Breakout(object):
         return self.command
 
     def getreward(self):
-        r = self.current_reward
-        self.cumreward += r
+        r = self.current_reward        
+        if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
+            r = 0
+        self.cumreward += self.gamman * r
+        self.gamman *= self.agent.gamma
         return r
 
 
@@ -483,7 +488,7 @@ class Breakout(object):
             #self.doSave()
             pgoal = float(self.ngoalreached*100)/numiter
             print('-----------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %d | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration,self.cumreward100/100, float(self.cumscore100)/100, pgoal))
+            print("%s %6d avg last 100: reward %.1f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, float(self.cumreward100/100), float(self.cumscore100)/100, pgoal))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
