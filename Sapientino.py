@@ -62,7 +62,7 @@ class RewardAutoma(object):
         self.current_node = 0
         self.last_node = self.current_node
         self.past_colors = []
-        self.last_id_colvisited = -1 # color index visited nvisitpercol times
+        #self.last_id_colvisited = -1 # color index visited nvisitpercol times
 
 
     def countbipcol(self,col):
@@ -106,27 +106,38 @@ class RewardAutoma(object):
             # nvisitpercol
             c = np.zeros(self.ncolors)
             kc = -1
+            #print self.game.colorbip
             for i in range(len(COLORS)):
-                if (not self.game.colorbip[COLORS[i]]>=self.nvisitpercol):
-                    break
-                kc = i
-            #print("%d visits until color %d" %(self.nvisitpercol,kc))
-                    
-            for i in range(kc+2,len(COLORS)):
-                if (self.game.colorbip[COLORS[i]]>0):
-                    #print("RA failure for color %r" %i)
+                if (self.game.colorbip[COLORS[i]]>self.nvisitpercol):
                     self.current_node = self.RAFail
                     break
+                elif (self.game.colorbip[COLORS[i]]<self.nvisitpercol):
+                    break
+                kc = i # last color with nvisitsper col satisfied
+            #print("%d visits until color %d" %(self.nvisitpercol,kc))
+
+            if (kc==self.ncolors-1): #  GOAL
+                self.current_node = self.RAGoal
+
+            # check bips in colors >= kc+2
+            if (self.current_node != self.RAFail and self.current_node != self.RAGoal):
+                for i in range(kc+2,len(COLORS)):
+                    if (self.game.colorbip[COLORS[i]]>0):
+                        #print("RA failure for color %r" %i)
+                        self.current_node = self.RAFail
+                        break
 
             if (self.last_node != self.current_node):
                 if (self.current_node == self.RAFail):
                     reward += STATES['RAFail']
-                elif (self.last_id_colvisited != kc): # new state in which color has been visited right amunt of time
-                    self.last_id_colvisited = kc
+                #elif (self.last_id_colvisited != kc): # new state in which color has been visited right amunt of time
+                #    self.last_id_colvisited = kc
+                #    reward += STATES['GoalStep']
+                else: # new state good for the goal
                     reward += STATES['GoalStep']
-                if (kc==self.ncolors-1): #  GOAL
-                    self.current_node = self.RAGoal
+                if (self.current_node == self.RAGoal): #  GOAL
                     reward += STATES['RAGoal']
+                    #print("RAGoal")
 
         return reward
 
