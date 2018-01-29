@@ -32,9 +32,9 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':100000,       # goal of reward automa
+            'RAGoal':1000,       # goal of reward automa
             'RAFail':0,         # fail of reward automa
-            'GoodBrick':0,      # good brick removed for next RA state
+            'GoodBrick':100,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
         }
         self.goalreached = 0 # number of RA goals reached for statistics
@@ -142,6 +142,8 @@ class BreakoutSRA(BreakoutS):
     def update(self, a):
         super(BreakoutSRA, self).update(a)
         self.current_reward += self.RA.update()
+        if (self.RA.current_node==self.RA.RAFail):
+            self.finished = True
          
     def goal_reached(self):
         return self.RA.current_node==self.RA.RAGoal
@@ -223,8 +225,8 @@ class BreakoutNRA(BreakoutN):
             'Dead':0,
             'PaddleNotMoving':0,
             'Scores':0,    # brick removed
-            'Hit':0,        # paddle hit
-            'Goal':0,     # level completed
+            'Hit':1,       # paddle hit
+            'Goal':0,      # level completed
         }
 
 
@@ -245,6 +247,8 @@ class BreakoutNRA(BreakoutN):
     def update(self, a):
         super(BreakoutNRA, self).update(a)
         self.current_reward += self.RA.update()
+        if (self.RA.current_node==self.RA.RAFail):
+            self.finished = True
          
     def goal_reached(self):
         return self.RA.current_node==self.RA.RAGoal
@@ -258,7 +262,12 @@ class BreakoutNRA(BreakoutN):
             r = 0
         self.cumreward += self.gamman * r
         self.gamman *= self.agent.gamma
+
+        if (r<0):
+            print("Neg reward: %.1f" %r)
         return r
+
+
 
     def print_report(self, printall=False):
         toprint = printall

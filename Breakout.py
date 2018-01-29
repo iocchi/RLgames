@@ -232,7 +232,10 @@ class Breakout(object):
                 if (self.fire_speedy==0):
                     self.fire_posx = self.paddle_x + paddle_width/2
                     self.fire_posy = self.paddle_y
-                    self.fire_speedy = -self.init_ball_speed_y*2
+                    if (self.init_ball_speed_y>0):
+                        self.fire_speedy = -self.init_ball_speed_y*2
+                    else:
+                        self.fire_speedy = -10
 
 
             self.current_reward += self.STATES['Alive']
@@ -266,6 +269,7 @@ class Breakout(object):
 
         fire_rect = pygame.Rect(self.fire_posx-1, self.fire_posy-1, 3, 3)
 
+        # print("fire pos %d %d - spd %d" %(self.fire_posx, self.fire_posy, self.fire_speedy))
 
         # TERMINATION OF EPISODE
         if (not self.finished):
@@ -273,8 +277,9 @@ class Breakout(object):
             end1 = self.ball_y > self.screen.get_height() - ball_radius
             end2 = self.goal_reached()
             end3 = self.paddle_hit_without_brick == 30
+            end3b = self.numactions > 100 * self.brick_cols
             end4 = len(self.bricks) == 0
-            if (end1 or end2 or end3 or end4):
+            if (end1 or end2 or end3 or end3b or end4):
                 if (pygame.display.get_active() and (not self.se_wall is None)):
                     self.se_wall.play()
                 if (end1):    

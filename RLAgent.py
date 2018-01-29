@@ -27,6 +27,7 @@ class RLAgent(object):
         self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
         self.sparse = False
         self.Qapproximation = False
+        self.error = False
         
     def init(self, nstates, nactions):
         if (self.Qapproximation):
@@ -106,6 +107,9 @@ class RLAgent(object):
             if not x in self.Q:
                 self.Q[x] = np.zeros(self.nactions)
             self.Q[x][a] = q
+            #if (q<0):
+            #    print("Neg Q [%d,%d] <- %.3f" %(x,a,q))
+            #    self.error = True # signal error
         else:
             self.Q[x,a] = q
 
@@ -168,7 +172,6 @@ class RLAgent(object):
             #print "  -- iter = ",s,"  -- epsilon = ",epsilon
         else:
             epsilon = self.epsilon
-
         self.best_action = False
         ar = random.random()
         #if (self.debug):
@@ -215,7 +218,8 @@ class RLAgent(object):
                 c='*'
             print(" -  Decision %s %s" %(self.action_names[a],c))
         return a
-        
+
+
     def notify(self, x, a, r, x2):
 
         self.episode.append((x,a,r))
@@ -234,6 +238,7 @@ class RLAgent(object):
         else:
             kn = len(self.episode) - self.nstepsupdates
             self.updateQ_n(kn,x2) # update state-action n-steps back
+
 
     def notify_endofepisode(self, iter):
         self.iteration = iter
@@ -279,8 +284,7 @@ class RLAgent(object):
     def updateEligibility(self, x, a, alpha, delta):
     
         if (self.debug):
-            print("  updating e: %d %d ..." %(x,a))
-            #print("  etraces: %d " %(len(self.etraces)))
+            print "  updating e: %d %d ..." %(x,a), " -  etraces: %d " %(len(self.etraces))
         for e in self.etraces:
             # update Q table
             if (delta!=0):
@@ -293,16 +297,16 @@ class RLAgent(object):
                     #print "  -- e x:",e[0]," a:",e[1]
                     #print "  -- alpha: ",alpha,"  delta: ", delta
                     #print "  -- Q(e) = ", self.getQ(e[0],e[1])
-                    print "  -- Q[%d] = " %(e[0]),
+                    print "  -e- Q[%d] = " %(e[0]),
                     self.printQA(self.getQA(e[0]))
                     print
         if (self.debug):
-            print "\n"
+            print "++\n"
         # clear traces after update
         #self.etraces = {}
 
             
-            
+    # NOT USED. JUST FOR EXPLANATION
     def updateQ(self,x,a,r,x2):
     
         if (self.optimal):  # executes best policy, no updates
@@ -367,17 +371,30 @@ class RLAgent(object):
         if (self.debug):
             print "return_pre = ",g
 
+        Qx2 = self.getActionValue(x2)
         # if not at the end of the episode
         if (not x2 is None and x_kn!=x2):
-            g += math.pow(self.gamma, self.nstepsupdates) * self.getActionValue(x2) # expected value in next state
+            g += math.pow(self.gamma, self.nstepsupdates) * Qx2 # expected value in next state
 
-        delta = (g - self.getQ(x_kn,a_kn))
+        q_kn = self.getQ(x_kn,a_kn)
+        delta = (g - q_kn)
 
         if (self.debug):
-            print "debug updateQ_n ... ",kn
-            print "x = ",x_kn, "  a = ",a_kn, "x2 = ",x2
+            print "debug updateQ_n "
+            print "x_kn = ",x_kn, "  a_kn = ",a_kn, "x2 = ",x2
+            print "Q[%d] = %.3f" %(x2,Qx2)
             print "return_complete = ",g
+            print "Q[%d] = %.3f" %(x_kn,q_kn)
             print "delta = ",delta
+
+        if (abs(delta)<0.001):
+            return
+
+        # option for intermediate positive rewards ???
+        #if (delta < 0):
+        #    print("delta < 0 !!!")
+        #    self.error = True
+
 
         if (self.lambdae>0):
             self.updateEligibility(x_kn,a_kn,self.alpha,delta)

@@ -47,6 +47,11 @@ def loadGameModule():
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
             game.fire_enabled = True
+            game.init_ball_speed_y = 0
+        elif (args.game=='BreakoutBFNRA'):
+            mod = importlib.import_module('BreakoutRA')
+            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game.fire_enabled = True
         elif (args.game=='BreakoutNRA1'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename, RAenabled=False)
@@ -215,9 +220,17 @@ def learn(game, agent):
             if game.pause:
                 time.sleep(1)
                 continue
-            execution_step(game, agent)
-            game.draw()
-            time.sleep(game.sleeptime)
+            try:
+                execution_step(game, agent)
+                if (agent.error):
+                    game.pause = True
+                    agent.debug = True
+                    agent.error = False
+                game.draw()
+                time.sleep(game.sleeptime)
+            except KeyboardInterrupt:
+                print("User quit")
+                run = False
 
         # episode finished
         if (game.finished): 
@@ -261,68 +274,71 @@ def evaluate(game, agent, n): # evaluate best policy n times (no updates)
         game.print_report(printall=True)
         i += 1
     agent.optimal = False
+
     
 # main
+if __name__ == "__main__":
 
-parser = argparse.ArgumentParser(description='RL games')
-parser.add_argument('game', type=str, help='game (e.g., Breakout)')
-parser.add_argument('agent', type=str, help='agent [Q, Sarsa, MC]')
-parser.add_argument('trainfile', type=str, help='file for learning strctures')
-parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)
-parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)
-parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
-parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
-parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: -1]', default=-1)
-parser.add_argument('-nstep', type=int, help='n-steps updates [default: 1]', default=1)
-parser.add_argument('-lambdae', type=float, help='lambda eligibility factor [default: -1 (no eligibility)]', default=-1)
-parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
-parser.add_argument('--debug', help='debug flag', action='store_true')
-parser.add_argument('--gui', help='GUI shown at start [default: hidden]', action='store_true')
-parser.add_argument('--sound', help='Sound enabled', action='store_true')
-parser.add_argument('--eval', help='Evaluate best policy', action='store_true')
-#parser.add_argument('--enableRA', help='enable Reward Automa', action='store_true')
-#parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
+    parser = argparse.ArgumentParser(description='RL games')
+    parser.add_argument('game', type=str, help='game (e.g., Breakout)')
+    parser.add_argument('agent', type=str, help='agent [Q, Sarsa, MC]')
+    parser.add_argument('trainfile', type=str, help='file for learning strctures')
+    parser.add_argument('-rows', type=int, help='number of rows [default: 3]', default=3)
+    parser.add_argument('-cols', type=int, help='number of columns [default: 3]', default=3)
+    parser.add_argument('-gamma', type=float, help='discount factor [default: 1.0]', default=1.0)
+    parser.add_argument('-epsilon', type=float, help='epsilon greedy factor [default: -1 = adaptive]', default=-1)
+    parser.add_argument('-alpha', type=float, help='alpha factor (-1 = based on visits) [default: -1]', default=-1)
+    parser.add_argument('-nstep', type=int, help='n-steps updates [default: 1]', default=1)
+    parser.add_argument('-lambdae', type=float, help='lambda eligibility factor [default: -1 (no eligibility)]', default=-1)
+    parser.add_argument('-niter', type=float, help='stop after number of iterations [default: -1 = infinite]', default=-1)
+    parser.add_argument('--debug', help='debug flag', action='store_true')
+    parser.add_argument('--gui', help='GUI shown at start [default: hidden]', action='store_true')
+    parser.add_argument('--sound', help='Sound enabled', action='store_true')
+    parser.add_argument('--eval', help='Evaluate best policy', action='store_true')
+    #parser.add_argument('--enableRA', help='enable Reward Automa', action='store_true')
+    #parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-trainfilename = args.trainfile.replace('.npz','')
+    trainfilename = args.trainfile.replace('.npz','')
 
-# load game and agent modules
-game = loadGameModule()
-agent = loadAgentModule()
+    # load game and agent modules
+    game = loadGameModule()
+    agent = loadAgentModule()
 
-# set parameters
-game.debug = args.debug
-game.gui_visible = args.gui
-game.sound_enabled = args.sound
-if (args.debug):
-    game.sleeptime = 1.0
-    game.gui_visible = True
-    
-agent.gamma = args.gamma
-agent.epsilon = args.epsilon
-agent.alpha = args.alpha
-agent.nstepsupdates = args.nstep
-agent.lambdae = args.lambdae
-#agent.maxVfu = args.maxVfu
-agent.debug = args.debug
+    # set parameters
+    game.debug = args.debug
+    game.gui_visible = args.gui
+    game.sound_enabled = args.sound
+    if (args.debug):
+        game.sleeptime = 1.0
+        game.gui_visible = True
+        
+    agent.gamma = args.gamma
+    agent.epsilon = args.epsilon
+    agent.alpha = args.alpha
+    agent.nstepsupdates = args.nstep
+    agent.lambdae = args.lambdae
+    #agent.maxVfu = args.maxVfu
+    agent.debug = args.debug
 
-game.init(agent)
+    game.init(agent)
 
-# load saved data
-load(trainfilename,game,agent)
-print("Game iteration: %d" %game.iteration)
+    # load saved data
+    load(trainfilename,game,agent)
+    print("Game iteration: %d" %game.iteration)
 
-if (game.iteration==0):
-    writeinfo(trainfilename,game,agent,init=True)
+    if (game.iteration==0):
+        writeinfo(trainfilename,game,agent,init=True)
 
-# learning or evaluation process
-if (args.eval):
-    evaluate(game, agent, 10)
-else:    
-    learn(game, agent)
-    writeinfo(trainfilename,game,agent,init=False)
+    # learning or evaluation process
+    if (args.eval):
+        evaluate(game, agent, 10)
+    else:    
+        learn(game, agent)
+        writeinfo(trainfilename,game,agent,init=False)
 
-print("Experiment terminated !!!\n")
+    print("Experiment terminated !!!\n")
 
-game.quit()
+    game.quit()
+

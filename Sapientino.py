@@ -236,6 +236,7 @@ class Sapientino(object):
             self.win_height += self.size_square * (self.rows-10)
 
         pygame.init()
+        pygame.display.set_caption('Sapientino')
 
         self.screen = pygame.display.set_mode([self.win_width,self.win_height])
         self.myfont = pygame.font.SysFont("Arial",  30)
