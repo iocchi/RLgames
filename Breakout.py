@@ -277,7 +277,7 @@ class Breakout(object):
             end1 = self.ball_y > self.screen.get_height() - ball_radius
             end2 = self.goal_reached()
             end3 = self.paddle_hit_without_brick == 30
-            end3b = self.numactions > 100 * self.brick_cols
+            end3b = self.numactions > 300 * self.brick_cols
             end4 = len(self.bricks) == 0
             if (end1 or end2 or end3 or end3b or end4):
                 if (pygame.display.get_active() and (not self.se_wall is None)):
@@ -524,7 +524,8 @@ class Breakout(object):
             cmd = '>'
         elif self.command==3:
             cmd = 'o'
-        s = '%d %s' %(x,cmd)
+        #s = '%d %s' %(x,cmd)
+        s = '%s' %(cmd)
         count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
         self.screen.blit(count_label, (60, 10))
         #count_label = self.myfont.render(str(self.ball_speed_y), 100, pygame.color.THECOLORS['brown'])
