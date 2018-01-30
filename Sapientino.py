@@ -62,21 +62,21 @@ class RewardAutoma(object):
         self.current_node = 0
         self.last_node = self.current_node
         self.past_colors = []
-        #self.last_id_colvisited = -1 # color index visited nvisitpercol times
+        self.consecutive_turns = 0 # number of consecutive turn actions
 
 
-    def countbipcol(self,col):
-        if col in self.game.colorbip:
-            return self.game.colorbip[col]
-        else:
-            return 0
+#    def countbipcol(self,col):
+#        if col in self.game.colorbip:
+#            return self.game.colorbip[col]
+#        else:
+#            return 0
 
-    def countbipothercol(self,scol):
-        r = 0
-        for c in self.game.colorbip:
-            if (not c in scol):
-                r += self.game.colorbip[c]
-        return r
+#    def countbipothercol(self,scol):
+#        r = 0
+#        for c in self.game.colorbip:
+#            if (not c in scol):
+#                r += self.game.colorbip[c]
+#        return r
 
 
     def encode_tokenbip(self):
@@ -87,10 +87,21 @@ class RewardAutoma(object):
             b *= 2
         return c
 
+
     # RewardAutoma Transition
-    def update(self):
+    def update(self, a=None): # last action executed
         reward = 0
         self.last_node = self.current_node
+
+        # check consecutive turns in differential mode
+        if (a == 0 or a == 1): # turn left/right
+            self.consecutive_turns += 1
+        else:
+            self.consecutive_turns = 0
+
+        if (self.consecutive_turns>=4):
+            self.current_node = self.RAFail  # FAIL
+            reward += STATES['RAFail']   
 
         # check double bip
         for t in self.game.tokenbip:
@@ -142,52 +153,7 @@ class RewardAutoma(object):
         return reward
 
 
-    # RewardAutoma Transition
-    def update_OLD(self):
-        reward = 0
 
-        # check double bip
-        for t in self.game.tokenbip:
-            if self.game.tokenbip[t]>1:
-                self.last_node = self.current_node
-                self.current_node = self.RAFail  # FAIL
-                reward += STATES['RAFail']
-                #print("  *** RA FAIL (two bips) *** ")
-
-        if (self.current_node < self.RAGoal):
-            i_col = self.current_node / self.nvisitpercol # target color to bip
-            target_col = TOKENS[i_col*3][1] # target color to bip
-            n_col = self.current_node % self.nvisitpercol # n color already bipped
-            
-            #print "RA update %d %s %d " %(i_col, target_col, n_col)
-            if (not target_col in self.past_colors):
-                self.past_colors.append(target_col)  # used to avoid checking bips on past colors
-            
-            if (self.game.check_color()==target_col):
-                reward += STATES['GoodColor']
-                #print "GoodColor reward"
-
-            if (self.countbipcol(target_col)>n_col):
-                reward += STATES['GoalStep']
-                #print "GoalStep reward"
-                self.current_node += 1
-                if (self.current_node==self.RAGoal): #  GOAL
-                    reward += STATES['RAGoal']
-                    #print("  *** RA GOAL *** ")
-                
-            elif (self.countbipothercol(self.past_colors)>0):
-                self.last_node = self.current_node
-                self.current_node = self.RAFail  # FAIL
-                reward += STATES['RAFail']
-                #print("  *** RA FAIL *** ")
-
-        elif (self.current_node==self.RAGoal): #  GOAL
-            pass
-
-        elif (self.current_node==self.RAFail): #  FAIL
-            pass
-
-        return reward
 
 
 
@@ -203,6 +169,8 @@ class Sapientino(object):
         self.trainsessionname = trainsessionname
         self.rows = rows
         self.cols = cols
+        self.differential = False
+        self.colorsensor = False
         
         # Configuration
         self.pause = False # game is paused
@@ -265,6 +233,7 @@ class Sapientino(object):
         
         self.pos_x = 3
         self.pos_y = 2
+        self.pos_th = 90
 
         self.score = 0
         self.cumreward = 0
@@ -290,11 +259,21 @@ class Sapientino(object):
 
         
     def getSizeStateSpace(self):
-        return self.rows * self.cols
+        self.nstates = self.rows * self.cols
+        if (self.differential):
+            self.nstates *= 4
+        if (self.colorsensor):
+            self.nstates *= self.ncolors+1
+        return self.nstates
 
 
     def getstate(self):
-        x = self.pos_x + self.cols * self.pos_y + (self.cols * self.rows) * self.RA.current_node     
+        x = self.pos_x + self.cols * self.pos_y
+        if (self.differential):
+            x += (self.pos_th/90) * (self.rows * self.cols)
+        if (self.colorsensor):
+            x += self.encode_color() * (self.rows * self.cols * 4)
+        x += self.nstates * self.RA.current_node     
         return x
 
 
@@ -304,10 +283,14 @@ class Sapientino(object):
 
     def update_color(self):
         self.countbip += 1
+        colfound = None
         for t in TOKENS:
             if (self.pos_x == t[2] and self.pos_y == t[3]):
                 self.tokenbip[t[0]] += 1 # token id
                 self.colorbip[t[1]] += 1 # color
+                colfound = t[1]
+        #print ("pos %d %d %d - col %r" %(self.pos_x, self.pos_y, self.pos_th, colfound))
+
 
     def check_color(self):
         r = ' '
@@ -316,7 +299,16 @@ class Sapientino(object):
                 r = t[1]
                 break
         return r
+
  
+    def encode_color(self):
+        r = 0
+        for t in TOKENS:
+            r += 1
+            if (self.pos_x == t[2] and self.pos_y == t[3]):
+                break
+        return r
+
         
     def update(self, a):
         
@@ -335,27 +327,78 @@ class Sapientino(object):
             self.firstAction = False
             self.current_reward += STATES['Init']
         
-        if self.command == 0: # moving left
-            self.pos_x -= 1
-            if (self.pos_x < 0):
-                self.pos_x = 0 
-                self.current_reward += STATES['Hit']
-        elif self.command == 1:  # moving right
-            self.pos_x += 1
-            if (self.pos_x >= self.cols):
-                self.pos_x = self.cols-1
-                self.current_reward += STATES['Hit']
-        elif self.command == 2:  # moving up
-            self.pos_y += 1
-            if (self.pos_y >= self.rows):
-                self.pos_y = self.rows-1
-                self.current_reward += STATES['Hit']
-        elif self.command == 3:  # moving down
-            self.pos_y -= 1
-            if (self.pos_y< 0):
-                self.pos_y = 0 
-                self.current_reward += STATES['Hit']
-        elif self.command == 4:  # bip
+
+        if (not self.differential):
+            # omni directional motion
+            if self.command == 0: # moving left
+                self.pos_x -= 1
+                if (self.pos_x < 0):
+                    self.pos_x = 0 
+                    self.current_reward += STATES['Hit']
+            elif self.command == 1:  # moving right
+                self.pos_x += 1
+                if (self.pos_x >= self.cols):
+                    self.pos_x = self.cols-1
+                    self.current_reward += STATES['Hit']
+            elif self.command == 2:  # moving up
+                self.pos_y += 1
+                if (self.pos_y >= self.rows):
+                    self.pos_y = self.rows-1
+                    self.current_reward += STATES['Hit']
+            elif self.command == 3:  # moving down
+                self.pos_y -= 1
+                if (self.pos_y< 0):
+                    self.pos_y = 0 
+                    self.current_reward += STATES['Hit']
+        else:
+            # differential motion
+            if self.command == 0: # turn left
+                self.pos_th += 90
+                if (self.pos_th >= 360):
+                    self.pos_th -= 360
+                #print ("left") 
+            elif self.command == 1:  # turn right
+                self.pos_th -= 90
+                if (self.pos_th < 0):
+                    self.pos_th += 360 
+                #print ("right") 
+            elif (self.command == 2 or self.command == 3):
+                dx = 0
+                dy = 0
+                if (self.pos_th == 0): # right
+                    dx = 1
+                elif (self.pos_th == 90): # up
+                    dy = 1
+                elif (self.pos_th == 180): # left
+                    dx = -1
+                elif (self.pos_th == 270): # down
+                    dy = -1
+                if (self.command == 3):  # backward
+                    dx = -dx
+                    dy = -dy
+                    #print ("backward") 
+                #else:
+                    #print ("forward") 
+        
+                self.pos_x += dx
+                if (self.pos_x >= self.cols):
+                    self.pos_x = self.cols-1
+                    self.current_reward += STATES['Hit']
+                if (self.pos_x < 0):
+                    self.pos_x = 0 
+                    self.current_reward += STATES['Hit']
+                self.pos_y += dy
+                if (self.pos_y >= self.rows):
+                    self.pos_y = self.rows-1
+                    self.current_reward += STATES['Hit']
+                if (self.pos_y < 0):
+                    self.pos_y = 0 
+                    self.current_reward += STATES['Hit']
+
+
+        #print ("pos %d %d %d" %(self.pos_x, self.pos_y, self.pos_th))
+
+        if self.command == 4:  # bip
             self.update_color()
             if (self.check_color()!=' '):
                 pass
@@ -368,7 +411,13 @@ class Sapientino(object):
 
         self.current_reward += STATES['Alive']
 
-        self.current_reward += self.RA.update()
+
+        if (self.differential):
+            RAr = self.RA.update(a)  # consider also turn actions
+        else:
+            RAr = self.RA.update()
+
+        self.current_reward += RAr
         
         # check if episode finished
         if self.goal_reached():
@@ -560,9 +609,25 @@ class Sapientino(object):
         dx = int(self.offx + self.pos_x * self.size_square)
         dy = int(self.offy + (self.rows-self.pos_y-1) * self.size_square)
         pygame.draw.circle(self.screen, pygame.color.THECOLORS['orange'], [dx+self.size_square/2, dy+self.size_square/2], 2*self.radius, 0)
+
+        # agent orientation
+
+        ox = 0
+        oy = 0
+        if (self.pos_th == 0): # right
+            ox = self.radius
+        elif (self.pos_th == 90): # up
+            oy = -self.radius
+        elif (self.pos_th == 180): # left
+            ox = -self.radius
+        elif (self.pos_th == 270): # down
+            oy = self.radius
+
+        pygame.draw.circle(self.screen, pygame.color.THECOLORS['black'], [dx+self.size_square/2+ox, dy+self.size_square/2+oy], 5, 0)
+
         pygame.display.update()
 
-        
+
     def quit(self):
         self.resfile.close()
         pygame.quit()

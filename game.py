@@ -61,6 +61,19 @@ def loadGameModule():
         elif (args.game=='Sapientino2'):
             mod = importlib.import_module('Sapientino')
             game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
+        elif (args.game=='Sapientino2D'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
+            game.differential = True
+        elif (args.game=='Sapientino2C'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
+            game.colorsensor = True
+        elif (args.game=='Sapientino2DC'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
+            game.differential = True
+            game.colorsensor = True
         elif (args.game=='Sapientino2X'):
             mod = importlib.import_module('Sapientino')
             game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=2)
@@ -270,8 +283,9 @@ def evaluate(game, agent, n): # evaluate best policy n times (no updates)
             run = game.input()
             execution_step(game, agent)
             game.draw()
-            time.sleep(game.sleeptime)
+            time.sleep(game.sleeptime)        
         game.print_report(printall=True)
+        time.sleep(3)
         i += 1
     agent.optimal = False
 

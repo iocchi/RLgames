@@ -15,11 +15,11 @@ orange = [180,100,20]
 STATES = {
     'Init':0,
     'Alive':0,
-    'Dead':-10,
-    'NotMoving':-1,
+    'Dead':0,
+    'NotMoving':0,
     'Score':1000,  
-    'Higher':10,  
-    'Hit':-5,        
+    'Higher':0,  # towards higher values of (x+y)g 
+    'Hit':0,        
 }
 
 
@@ -61,6 +61,7 @@ class SimpleGrid(object):
         self.offy = 100
         self.radius = 5
 
+        self.action_names = ['--','<-','->','^','v'] # 0: not moving, 1: left, 2: right, 3: up, 4: down        
 
         if (self.cols>10):
             self.win_width += self.size_square * (self.cols-10)
@@ -88,6 +89,7 @@ class SimpleGrid(object):
         print('Number of states: %d' %ns)
         print('Number of actions: %d' %self.nactions)
         self.agent.init(ns, self.nactions) # 1 for RA not used here
+        self.agent.set_action_names(self.action_names)
 
 
         
@@ -210,10 +212,8 @@ class SimpleGrid(object):
                     self.isAuto = not self.isAuto
                 elif event.key == pygame.K_s:
                     self.sleeptime = 1.0
-                    self.agent.debug = False
                 elif event.key == pygame.K_d:
                     self.sleeptime = 0.07
-                    self.agent.debug = False
                 elif event.key == pygame.K_f:
                     self.sleeptime = 0.005
                     self.agent.debug = False

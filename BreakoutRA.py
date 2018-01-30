@@ -32,9 +32,9 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':1000,       # goal of reward automa
+            'RAGoal':200,       # goal of reward automa
             'RAFail':0,         # fail of reward automa
-            'GoodBrick':100,      # good brick removed for next RA state
+            'GoodBrick':10,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
         }
         self.goalreached = 0 # number of RA goals reached for statistics
