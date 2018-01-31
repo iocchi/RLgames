@@ -155,7 +155,7 @@ def load(fname, game, agent):
             #raise
 
             
-def writeinfo(trainfilename,game,agent,init=True):
+def writeinfo(trainfilename,game,agent,init=True,exptime=0):
     global optimalPolicyFound
     infofile = open("data/"+trainfilename +".info","a+")
     allinfofile = open("data/all.info","a+")
@@ -189,8 +189,10 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("last score:       %d\n" %(game.score))
         infofile.write("last reward:      %.2f\n" %(game.cumreward))
         infofile.write("last n. actions:  %d\n\n" %(game.numactions))
-        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions))
-        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions))
+        infofile.write("exp. time:  %d s\n\n" %(exptime))
+
+        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions,exptime))
+        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions,exptime))
     
     infofile.flush()
     infofile.close()
@@ -216,6 +218,11 @@ def learn(game, agent):
     run = True
     last_goalreached = False
     next_optimal = False
+    iter_goal = 0 # iteration in which first goal policy if found
+
+    # timing the experiment
+    exstart = time.time()
+
     if (game.iteration>0 and not game.debug): # try an optimal run
         next_optimal = True
         game.iteration -= 1
@@ -252,9 +259,15 @@ def learn(game, agent):
             time.sleep(game.sleeptime)
 
         # end of experiment
-        if (agent.optimal and agent.gamma==1 and game.goal_reached()):
-            run = False
-            optimalPolicyFound = True
+        if (agent.optimal and game.goal_reached()):
+            if (agent.gamma==1):
+                run = False
+                optimalPolicyFound = True
+            elif (iter_goal==0):
+                iter_goal = game.iteration
+            elif (game.iteration>int(1.5*iter_goal)):
+                run = False
+                optimalPolicyFound = True
 
         last_goalreached = game.goal_reached()
 
@@ -266,6 +279,11 @@ def learn(game, agent):
             for a in range(0,game.nactions):
                 print("Q[%d]" %a)
                 print("       ",agent.Q[a].get_weights())
+
+    exend = time.time()
+    return  exend - exstart   # experiment time [seconds]
+
+
 
 
 # evaluation process
@@ -349,8 +367,8 @@ if __name__ == "__main__":
     if (args.eval):
         evaluate(game, agent, 10)
     else:    
-        learn(game, agent)
-        writeinfo(trainfilename,game,agent,init=False)
+        et = learn(game, agent)
+        writeinfo(trainfilename,game,agent,init=False,exptime=et)
 
     print("Experiment terminated !!!\n")
 
