@@ -32,7 +32,7 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':1000,       # goal of reward automa
+            'RAGoal':10000,       # goal of reward automa
             'RAFail':0,         # fail of reward automa
             'GoodBrick':10,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
@@ -300,7 +300,7 @@ class BreakoutNRA(BreakoutN):
         if (self.iteration%numiter==0):
             #self.doSave()
             print('----------------------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %.1f | RA %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print("%s %6d/%4d avg last 100: reward %.1f | RA %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
             print('----------------------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
