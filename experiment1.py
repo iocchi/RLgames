@@ -59,11 +59,13 @@ maxtime = 1200
 
 maxtime = 2400
 
-doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
-doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+gamma = 0.99
+
+doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 5) 
+doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 5) 
 
 
-agent = 'Q'
+
 
 #doExperiment('Sapientino','2',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
 

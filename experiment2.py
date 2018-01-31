@@ -46,14 +46,17 @@ cols = 4
 
 maxtime = 600
 
-doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
+#doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
 
 maxtime = 120
 
 #doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
 
+maxtime = 120
 
+#doExperiment('Breakout','NRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
 
+doExperiment('Breakout','BFNRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
 
 
 #maxtime = 1200

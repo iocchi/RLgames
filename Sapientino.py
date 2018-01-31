@@ -496,8 +496,9 @@ class Sapientino(object):
             self.hiscore = self.score
             s += ' HISCORE '
             toprint = True
-        if self.cumreward > self.hireward:
-            self.hireward = self.cumreward
+        if (self.cumreward > self.hireward):
+            if self.agent.optimal:
+                self.hireward = self.cumreward
             s += ' HIREWARD '
             toprint = True
 

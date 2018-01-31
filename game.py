@@ -58,6 +58,10 @@ def loadGameModule():
         elif (args.game=='BreakoutNRAX'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='BreakoutBFNRAX'):
+            mod = importlib.import_module('BreakoutRA')
+            game = mod.BreakoutNRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game.fire_enabled = True
         elif (args.game=='Sapientino2'):
             mod = importlib.import_module('Sapientino')
             game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
@@ -197,20 +201,22 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("goal reward:      %.2f\n" %(game.cumreward))
         infofile.write("goal n. actions:  %d\n" %(game.numactions))
         infofile.write("highest reward:   %.2f\n" %(game.hireward))
+        infofile.write("highest score:    %d\n" %(game.hiscore))
         infofile.write("elapsed time:     %d\n\n" %(game.elapsedtime))
 
-        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,%d,%d,%.2f,%d,%.2f,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward,game.numactions,game.hireward,game.elapsedtime))
-        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,%d,%d,%.2f,%d,%.2f,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward,game.numactions,game.hireward,game.elapsedtime))
+        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,%d,%d,%.2f,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward, game.numactions,game.hireward,game.hiscore,game.elapsedtime))
+        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,%d,%d,%.2f,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward, game.numactions,game.hireward,game.hiscore,game.elapsedtime))
     else:
         infofile.write("last iteration:   %d\n" %(game.iteration))
         infofile.write("last score:       %d\n" %(game.score))
         infofile.write("last reward:      %.2f\n" %(game.cumreward))
         infofile.write("last n. actions:  %d\n" %(game.numactions))
         infofile.write("highest reward:   %.2f\n" %(game.hireward))
+        infofile.write("highest score:    %d\n" %(game.hiscore))
         infofile.write("elapsed time:     %d\n\n" %(game.elapsedtime))
 
-        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d,%.2f,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions,game.hireward,game.elapsedtime))
-        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d,%.2f,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions,game.hireward,game.elapsedtime))
+        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions,game.hireward,game.hiscore,game.elapsedtime))
+        allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f,,,,,%d,%d,%.2f,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae, game.iteration,game.score,game.cumreward,game.numactions,game.hireward,game.hiscore,game.elapsedtime))
     
     infofile.flush()
     infofile.close()
