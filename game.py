@@ -80,6 +80,19 @@ def loadGameModule():
         elif (args.game=='Sapientino3'):
             mod = importlib.import_module('Sapientino')
             game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+        elif (args.game=='Sapientino3D'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+        elif (args.game=='Sapientino3C'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.colorsensor = True
+        elif (args.game=='Sapientino3DC'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+            game.colorsensor = True
         elif (args.game=='Sapientino3X'):
             mod = importlib.import_module('Sapientino')
             game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=3)
