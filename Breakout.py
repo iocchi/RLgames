@@ -105,6 +105,7 @@ class Breakout(object):
         self.hireward = -1000000
         self.vscores = []
         self.resfile = open("data/"+self.trainsessionname +".dat","a+")
+        self.elapsedtime = 0 # elapsed time for this experiment
 
         self.win_width = int((block_width+block_xdistance) * self.brick_cols + block_xdistance )
         self.win_height = 480
@@ -493,7 +494,7 @@ class Breakout(object):
             #self.doSave()
             pgoal = float(self.ngoalreached*100)/numiter
             print('-----------------------------------------------------------------------')
-            print("%s %6d avg last 100: reward %.1f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, float(self.cumreward100/100), float(self.cumscore100)/100, pgoal))
+            print("%s %6d/%4d avg last 100: reward %.1f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100/100), float(self.cumscore100)/100, pgoal))
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0

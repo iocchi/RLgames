@@ -52,6 +52,7 @@ class SimpleGrid(object):
         self.hiscore = 0
         self.hireward = -1000000
         self.resfile = open("data/"+self.trainsessionname +".dat","a+")
+        self.elapsedtime = 0 # elapsed time for this experiment
 
         self.win_width = 480
         self.win_height = 520
