@@ -44,16 +44,6 @@ class RewardAutoma(object):
         self.RAFail = self.nRAstates+1        
         self.goalreached = 0 # number of RA goals reached for statistics
         self.reset()
-
-    def OLD__init__(self, ncol, nvisitpercol):
-        # RA states
-        self.ncolors = ncol
-        self.nvisitpercol = nvisitpercol
-        self.nRAstates = self.nvisitpercol*self.ncolors+2  # number of RA states
-        self.RAGoal = self.nRAstates-2
-        self.RAFail = self.nRAstates-1        
-        self.goalreached = 0 # number of RA goals reached for statistics
-        self.reset()
         
     def init(self, game):
         self.game = game
@@ -64,21 +54,6 @@ class RewardAutoma(object):
         self.past_colors = []
         self.consecutive_turns = 0 # number of consecutive turn actions
 
-
-#    def countbipcol(self,col):
-#        if col in self.game.colorbip:
-#            return self.game.colorbip[col]
-#        else:
-#            return 0
-
-#    def countbipothercol(self,scol):
-#        r = 0
-#        for c in self.game.colorbip:
-#            if (not c in scol):
-#                r += self.game.colorbip[c]
-#        return r
-
-
     def encode_tokenbip(self):
         c = 0
         b = 1
@@ -86,7 +61,6 @@ class RewardAutoma(object):
             c = c + self.game.tokenbip[t[0]] * b
             b *= 2
         return c
-
 
     # RewardAutoma Transition
     def update(self, a=None): # last action executed
@@ -418,6 +392,13 @@ class Sapientino(object):
             RAr = self.RA.update()
 
         self.current_reward += RAr
+
+        # set score
+        RAnode = self.RA.current_node
+        if (RAnode==self.RA.RAFail):
+            RAnode = self.RA.last_node
+        self.score = self.countbip # RAnode
+
         
         # check if episode finished
         if self.goal_reached():
@@ -508,12 +489,6 @@ class Sapientino(object):
             ch = '*'
             toprint = True
       
-        RAnode = self.RA.current_node
-        if (RAnode==self.RA.RAFail):
-            RAnode = self.RA.last_node
-        self.score = self.countbip # RAnode
-
-
         s = 'Iter %6d, sc: %3d, na: %4d, r: %8.2f, mem: %d %c' %(self.iteration, self.score,self.numactions, self.cumreward, len(self.agent.Q), ch)
 
         if self.score > self.hiscore:
@@ -551,7 +526,7 @@ class Sapientino(object):
     def draw(self):
         self.screen.fill(pygame.color.THECOLORS['white'])
 
-        score_label = self.myfont.render(str(self.RA.current_node), 100, pygame.color.THECOLORS['black'])
+        score_label = self.myfont.render(str(self.score), 100, pygame.color.THECOLORS['black'])
         self.screen.blit(score_label, (20, 10))
 
         #count_label = self.myfont.render(str(self.paddle_hit_count), 100, pygame.color.THECOLORS['brown'])
@@ -569,7 +544,8 @@ class Sapientino(object):
             cmd = 'v'
         elif self.command==4:
             cmd = 'x'
-        s = '%d %s %d' %(self.prev_state,cmd,x)
+        #s = '%d %s %d' %(self.prev_state,cmd,x)
+        s = '%s' %(cmd,)
         count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
         self.screen.blit(count_label, (60, 10))
         

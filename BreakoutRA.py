@@ -32,7 +32,7 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':200,       # goal of reward automa
+            'RAGoal':1000,       # goal of reward automa
             'RAFail':0,         # fail of reward automa
             'GoodBrick':10,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
@@ -225,7 +225,7 @@ class BreakoutNRA(BreakoutN):
             'Dead':0,
             'PaddleNotMoving':0,
             'Scores':0,    # brick removed
-            'Hit':1,       # paddle hit
+            'Hit':0,       # paddle hit
             'Goal':0,      # level completed
         }
 

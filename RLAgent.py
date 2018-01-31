@@ -227,8 +227,8 @@ class RLAgent(object):
         if (self.lambdae>0):
             self.setEligibility(x,a)
 
-        if (abs(r)<0.001): # r small, no updates
-            return
+        #if (abs(r)<0.001): # r small, no updates
+        #    return
 
         if (self.debug):
             print("*** Q update %d with r: %f ***" %(x,r))
@@ -387,14 +387,8 @@ class RLAgent(object):
             print "Q[%d] = %.3f" %(x_kn,q_kn)
             print "delta = ",delta
 
-        if (abs(delta)<0.001):
-            return
-
-        # option for intermediate positive rewards ???
-        #if (delta < 0):
-        #    print("delta < 0 !!!")
-        #    self.error = True
-
+        #if (abs(delta)<0.001):
+        #    return
 
         if (self.lambdae>0):
             self.updateEligibility(x_kn,a_kn,self.alpha,delta)
