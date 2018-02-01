@@ -11,13 +11,13 @@ def doExperiment(game, gameext, agent, gamma, epsilon, lambdae, alpha, nstep, ni
     gamecfg = '%s%s' %(game,gameext) 
     basetrainfilename = '%s%s_%s' %(gameshortname, gameext, agentshortname)
     if (gamma<1):
-        basetrainfilename = basetrainfilename + '_g0%d' %(int(gamma*100))
+        basetrainfilename = basetrainfilename + '_g0%2d' %(int(gamma*100))
     if (epsilon>0):
-        basetrainfilename = basetrainfilename + '_e0%d' %(int(epsilon*100))
+        basetrainfilename = basetrainfilename + '_e0%2d' %(int(epsilon*100))
     if (lambdae>0):
-        basetrainfilename = basetrainfilename + '_l0%d' %(int(lambdae*100))
+        basetrainfilename = basetrainfilename + '_l0%2d' %(int(lambdae*100))
     if (alpha>0):
-        basetrainfilename = basetrainfilename + '_a0%d' %(int(alpha*100))
+        basetrainfilename = basetrainfilename + '_a0%2d' %(int(alpha*100))
     if (nstep>1):
         basetrainfilename = basetrainfilename + '_n%d' %(nstep)
 
@@ -52,6 +52,17 @@ maxtime = 1200
 #doExperiment('Sapientino','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 6, 7) 
 #doExperiment('Sapientino','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 6, 7) 
 
+#doExperiment('Sapientino','2',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
+
+#doExperiment('Sapientino','2C',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+
+#doExperiment('Sapientino','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
+
+#doExperiment('Sapientino','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+
+
+# Sapientino 3
+
 maxtime = 1200
 
 #doExperiment('Sapientino','3',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
@@ -61,30 +72,31 @@ maxtime = 3000
 gamma = 0.9
 alpha = 0.1
 
-#doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 5) 
+doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 2) 
 #doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 5) 
 
-maxtime = 1200
+maxtime = 2400
+gamma = 0.9
 epsilon = 0.1
+alpha = 0.1
 
 doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
 doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
 
-maxtime = 1800
+maxtime = 2400
 gamma = 0.99
+epsilon = 0.1
+alpha = 0.1
+
+doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
+doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
+
+maxtime = 2400
+gamma = 0.99
+epsilon = 0.1
 alpha = 0.01
 
-doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
-doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
-
-
-#doExperiment('Sapientino','2',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
-
-#doExperiment('Sapientino','2C',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
-
-#doExperiment('Sapientino','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
-
-#doExperiment('Sapientino','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
-
+doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 2) 
+doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
 
 
