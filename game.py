@@ -145,7 +145,7 @@ def save():
     if game is not None and agent is not None and (not args.eval):
         # filename = trainfilename +"_%05d" % (self.iteration)
         filename = 'data/'+trainfilename
-        savedata = [int(game.iteration), int(game.hiscore), int(game.hireward), int(game.elapsedtime), agent.savedata()]
+        savedata = [int(game.iteration), int(game.hiscore), float(game.hireward), int(game.elapsedtime), agent.savedata()]
         np.savez(filename, iter = savedata[0], hiscore = savedata[1], hireward = savedata[2], elapsedtime = savedata[3], agentdata = savedata[4])
         print("Data saved successfully on file %s\n\n\n" %filename)
 
@@ -165,7 +165,7 @@ def load(fname, game, agent):
         try:
             game.iteration = int(data['iter'])
             game.hiscore = int(data['hiscore'])
-            game.hireward = int(data['hireward'])
+            game.hireward = float(data['hireward'])
             game.elapsedtime = int(data['elapsedtime'])
             agent.loaddata(data['agentdata'])
         except:

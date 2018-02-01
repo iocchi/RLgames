@@ -53,6 +53,7 @@ class RewardAutoma(object):
         self.last_node = self.current_node
         self.past_colors = []
         self.consecutive_turns = 0 # number of consecutive turn actions
+        self.countupdates = 0 # count state transitions (for the score)
 
     def encode_tokenbip(self):
         c = 0
@@ -87,6 +88,7 @@ class RewardAutoma(object):
         if (self.current_node != self.RAFail):
             self.current_node = self.encode_tokenbip()
 
+            #print("  -- encode tokenbip: %d" %self.current_node)
             # Check rule
             # nvisitpercol
             c = np.zeros(self.ncolors)
@@ -113,6 +115,7 @@ class RewardAutoma(object):
                         break
 
             if (self.last_node != self.current_node):
+                #print "  ++ changed state ++"
                 if (self.current_node == self.RAFail):
                     reward += STATES['RAFail']
                 #elif (self.last_id_colvisited != kc): # new state in which color has been visited right amunt of time
@@ -120,9 +123,13 @@ class RewardAutoma(object):
                 #    reward += STATES['GoalStep']
                 else: # new state good for the goal
                     reward += STATES['GoalStep']
+                    self.countupdates += 1
                 if (self.current_node == self.RAGoal): #  GOAL
                     reward += STATES['RAGoal']
                     #print("RAGoal")
+
+        #print("  -- RA reward %d" %(reward))
+
 
         return reward
 
@@ -398,7 +405,8 @@ class Sapientino(object):
         RAnode = self.RA.current_node
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
-        self.score = self.countbip # RAnode
+
+        self.score = self.RA.countupdates
 
         
         # check if episode finished
@@ -417,7 +425,10 @@ class Sapientino(object):
 
         #print " ** Update end ",self.getstate(), " prev ",self.prev_state
 
-        
+        #if (self.finished):
+        #    print("  -- final reward %d" %(self.cumreward))            
+
+
 
 
     def input(self):
