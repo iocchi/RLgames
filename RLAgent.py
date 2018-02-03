@@ -227,9 +227,6 @@ class RLAgent(object):
         if (self.lambdae>0):
             self.setEligibility(x,a)
 
-        #if (abs(r)<0.001): # r small, no updates
-        #    return
-
         if (self.debug):
             print("*** Q update %d with r: %f ***" %(x,r))
         
@@ -368,6 +365,10 @@ class RLAgent(object):
         a_kn = ep[1]
         g = self.rreturn(kn, self.nstepsupdates) # n-steps return from state x_{kn}
 
+        #if (abs(g)<0.001): # small values, no updates
+        #    return
+
+
         if (self.debug):
             print "return_pre = ",g
 
@@ -387,7 +388,7 @@ class RLAgent(object):
             print "Q[%d] = %.3f" %(x_kn,q_kn)
             print "delta = ",delta
 
-        #if (abs(delta)<0.001):
+        #if (abs(delta)<0.001):  # time optimization
         #    return
 
         if (self.lambdae>0):

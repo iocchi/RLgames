@@ -122,8 +122,9 @@ class RewardAutoma(object):
                 #    self.last_id_colvisited = kc
                 #    reward += STATES['GoalStep']
                 else: # new state good for the goal
-                    reward += STATES['GoalStep']
                     self.countupdates += 1
+                    #reward += STATES['GoalStep']
+                    reward += self.countupdates * STATES['GoalStep']
                 if (self.current_node == self.RAGoal): #  GOAL
                     reward += STATES['RAGoal']
                     #print("RAGoal")
@@ -504,7 +505,8 @@ class Sapientino(object):
         s = 'Iter %6d, sc: %3d, na: %4d, r: %8.2f, mem: %d %c' %(self.iteration, self.score,self.numactions, self.cumreward, len(self.agent.Q), ch)
 
         if self.score > self.hiscore:
-            self.hiscore = self.score
+            if self.agent.optimal:
+                self.hiscore = self.score
             s += ' HISCORE '
             toprint = True
         if (self.cumreward > self.hireward):
