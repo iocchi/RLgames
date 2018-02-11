@@ -38,6 +38,8 @@ class RewardAutoma(object):
             'WrongBrick':0      # wrong brick removed for next RA state
         }
         self.goalreached = 0 # number of RA goals reached for statistics
+        self.visits = {} # number of visits for each state
+        self.success = {} # number of good transitions for each state
         self.reset()
         
     def init(self, game):
@@ -46,6 +48,11 @@ class RewardAutoma(object):
     def reset(self):
         self.current_node = 0
         self.last_node = self.current_node
+        self.countupdates = 0 # count state transitions (for the score)
+        if (self.current_node in self.visits):
+            self.visits[self.current_node] += 1
+        else:
+            self.visits[self.current_node] = 1
 
 
     # check if a column is free (used by RA)
@@ -60,12 +67,13 @@ class RewardAutoma(object):
 
     # RewardAutoma Transition
     def update(self):
+        reward = 0
+        state_changed = False
+
         # RA disabled
         if (self.brick_cols==0):
-            return 0
+            return (reward, state_changed)
             
-        reward = 0
-        
         for b in self.game.last_brikcsremoved:
             if b.i == self.current_node:
                 reward += self.STATES['GoodBrick']
@@ -80,9 +88,11 @@ class RewardAutoma(object):
 
         if (self.current_node<self.brick_cols): # 0 ... brick_cols
             if f[self.current_node]:
+                state_changed = True
+                self.countupdates += 1
                 self.last_node = self.current_node
                 self.current_node += 1
-                reward += self.STATES['RAGoal']
+                reward += self.STATES['RAGoal'] * self.countupdates
                 #print("  -- RA state transition to %d, " %(self.current_node))
                 if (self.current_node==self.RAGoal):
                     # print("  <<< RA GOAL >>>")
@@ -103,8 +113,32 @@ class RewardAutoma(object):
         elif (self.current_node==self.RAFail): #  FAIL
             pass
 
-        return reward
+        if (state_changed):
+            if (self.current_node in self.visits):
+                self.visits[self.current_node] += 1
+            else:
+                self.visits[self.current_node] = 1
 
+            if (self.current_node != self.RAFail):
+                #print "Success for last_node ",self.last_node
+                if (self.last_node in self.success):
+                    self.success[self.last_node] += 1
+                else:
+                    self.success[self.last_node] = 1
+
+
+        return (reward, state_changed)
+
+
+    def current_successrate(self):
+        s = 0.0
+        v = 1.0
+        if (self.current_node in self.success):
+            s = float(self.success[self.current_node])
+        if (self.current_node in self.visits):
+            v = float(self.visits[self.current_node])
+        #print "   -- success rate: ",s," / ",v
+        return s/v
 
 
 
@@ -124,6 +158,17 @@ class BreakoutSRA(BreakoutS):
             'Goal':0,     # level completed
         }
 
+    def savedata(self):
+         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success]
+
+         
+    def loaddata(self,data):
+         self.iteration = data[0]
+         self.hiscore = data[1]
+         self.hireward = data[2]
+         self.elapsedtime = data[3]
+         self.RA.visits = data[4]
+         self.RA.success = data[5]
 
     def setStateActionSpace(self):
         super(BreakoutSRA, self).setStateActionSpace()
@@ -229,6 +274,18 @@ class BreakoutNRA(BreakoutN):
             'Goal':0,      # level completed
         }
 
+    def savedata(self):
+         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success]
+
+         
+    def loaddata(self,data):
+         self.iteration = data[0]
+         self.hiscore = data[1]
+         self.hireward = data[2]
+         self.elapsedtime = data[3]
+         self.RA.visits = data[4]
+         self.RA.success = data[5]
+
 
     def setStateActionSpace(self):
         super(BreakoutNRA, self).setStateActionSpace()
@@ -243,10 +300,22 @@ class BreakoutNRA(BreakoutN):
     def reset(self):
         super(BreakoutNRA, self).reset()
         self.RA.reset()
+        self.RA_exploration()
+
+    def RA_exploration(self):
+        #print "RA state: ",self.RA.current_node
+        success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
+        #print "RA exploration policy: current state success rate ",success_rate
+        er = random.random()
+        self.agent.partialoptimal = (er<success_rate)
+        #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
 
     def update(self, a):
         super(BreakoutNRA, self).update(a)
-        self.current_reward += self.RA.update()
+        (RAr, state_changed) = self.RA.update()
+        if (state_changed):
+            self.RA_exploration()
+        self.current_reward += RAr
         if (self.RA.current_node==self.RA.RAFail):
             self.finished = True
          

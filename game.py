@@ -145,8 +145,8 @@ def save():
     if game is not None and agent is not None and (not args.eval):
         # filename = trainfilename +"_%05d" % (self.iteration)
         filename = 'data/'+trainfilename
-        savedata = [int(game.iteration), int(game.hiscore), float(game.hireward), int(game.elapsedtime), agent.savedata()]
-        np.savez(filename, iter = savedata[0], hiscore = savedata[1], hireward = savedata[2], elapsedtime = savedata[3], agentdata = savedata[4])
+        savedata = [game.savedata(), agent.savedata()]
+        np.savez(filename, gamedata = savedata[0], agentdata = savedata[1])
         print("Data saved successfully on file %s\n\n\n" %filename)
 
         
@@ -163,10 +163,7 @@ def load(fname, game, agent):
 
     if data is not None:
         try:
-            game.iteration = int(data['iter'])
-            game.hiscore = int(data['hiscore'])
-            game.hireward = float(data['hireward'])
-            game.elapsedtime = int(data['elapsedtime'])
+            game.loaddata(data['gamedata'])
             agent.loaddata(data['agentdata'])
         except:
             print("Can't load data from input file, wrong format.")
@@ -237,7 +234,7 @@ def execution_step(game, agent):
 
 
 # learning process
-def learn(game, agent, maxtime=-1):
+def learn(game, agent, maxtime=-1, stopongoal=False):
     global optimalPolicyFound
     
     run = True
@@ -288,7 +285,7 @@ def learn(game, agent, maxtime=-1):
         # end of experiment
         if (agent.optimal and game.goal_reached()):
             optimalPolicyFound = True
-            if (agent.gamma==1):
+            if (agent.gamma==1 or stopongoal):
                 run = False
             #elif (iter_goal==0):
             #    iter_goal = game.iteration
@@ -319,6 +316,10 @@ def evaluate(game, agent, n): # evaluate best policy n times (no updates)
     i=0
     run = True
     game.sleeptime = 0.05
+    if (game.gui_visible):
+        game.sleeptime = 0.5
+        game.pause = True
+        
     while (i<n and run):
         game.reset()
         game.draw()
@@ -327,10 +328,22 @@ def evaluate(game, agent, n): # evaluate best policy n times (no updates)
         agent.optimal = True
         while (run and not game.finished):
             run = game.input()
+            if game.pause:
+                time.sleep(1)
+                continue
             execution_step(game, agent)
             game.draw()
             time.sleep(game.sleeptime)        
         game.print_report(printall=True)
+        n=3
+        i=0
+        while (i<n):
+            time.sleep(1)
+            game.input()
+            if game.pause:
+                time.sleep(1)
+            i += 1
+
         time.sleep(3)
         i += 1
     agent.optimal = False
@@ -356,6 +369,7 @@ if __name__ == "__main__":
     parser.add_argument('--gui', help='GUI shown at start [default: hidden]', action='store_true')
     parser.add_argument('--sound', help='Sound enabled', action='store_true')
     parser.add_argument('--eval', help='Evaluate best policy', action='store_true')
+    parser.add_argument('--stopongoal', help='Stop experiment when goal is reached', action='store_true')
     #parser.add_argument('--enableRA', help='enable Reward Automa', action='store_true')
     #parser.add_argument('-maxVfu', type=int, help='max visits for forward update of RA-Q tables [default: 0]', default=0)
 
@@ -396,7 +410,7 @@ if __name__ == "__main__":
     if (args.eval):
         evaluate(game, agent, 10)
     else:    
-        et = learn(game, agent, args.maxtime)
+        et = learn(game, agent, args.maxtime, args.stopongoal)
         writeinfo(trainfilename,game,agent,init=False)
 
     print("Experiment terminated !!!\n")

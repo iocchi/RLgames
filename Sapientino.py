@@ -22,12 +22,12 @@ TOKENS = [ ['r1', COLORS[0], 0, 0],  ['r2', 'red', 1, 1], ['r3', 'red', 6, 3],
 STATES = {
     'Init':0,
     'Alive':0,
-    'Dead':0,
+    'Dead':-10,
     'Score':0,
     'Hit':0,
     'GoodColor':0,
     'GoalStep':100,
-    'RAFail':0,
+    'RAFail':-10,
     'RAGoal':100
 }
 
@@ -43,8 +43,10 @@ class RewardAutoma(object):
         self.RAGoal = self.nRAstates
         self.RAFail = self.nRAstates+1        
         self.goalreached = 0 # number of RA goals reached for statistics
+        self.visits = {} # number of visits for each state
+        self.success = {} # number of good transitions for each state
         self.reset()
-        
+
     def init(self, game):
         self.game = game
         
@@ -54,6 +56,10 @@ class RewardAutoma(object):
         self.past_colors = []
         self.consecutive_turns = 0 # number of consecutive turn actions
         self.countupdates = 0 # count state transitions (for the score)
+        if (self.current_node in self.visits):
+            self.visits[self.current_node] += 1
+        else:
+            self.visits[self.current_node] = 1
 
     def encode_tokenbip(self):
         c = 0
@@ -66,6 +72,7 @@ class RewardAutoma(object):
     # RewardAutoma Transition
     def update(self, a=None): # last action executed
         reward = 0
+        state_changed = False
         self.last_node = self.current_node
 
         # check consecutive turns in differential mode
@@ -84,6 +91,7 @@ class RewardAutoma(object):
                 self.current_node = self.RAFail  # FAIL
                 reward += STATES['RAFail']
                 #print("  *** RA FAIL (two bips) *** ")
+
 
         if (self.current_node != self.RAFail):
             self.current_node = self.encode_tokenbip()
@@ -114,7 +122,9 @@ class RewardAutoma(object):
                         self.current_node = self.RAFail
                         break
 
+
             if (self.last_node != self.current_node):
+                state_changed = True
                 #print "  ++ changed state ++"
                 if (self.current_node == self.RAFail):
                     reward += STATES['RAFail']
@@ -131,9 +141,31 @@ class RewardAutoma(object):
 
         #print("  -- RA reward %d" %(reward))
 
+        if (state_changed):
+            if (self.current_node in self.visits):
+                self.visits[self.current_node] += 1
+            else:
+                self.visits[self.current_node] = 1
 
-        return reward
+            if (self.current_node != self.RAFail):
+                #print "Success for last_node ",self.last_node
+                if (self.last_node in self.success):
+                    self.success[self.last_node] += 1
+                else:
+                    self.success[self.last_node] = 1
+        
+        return (reward, state_changed)
 
+
+    def current_successrate(self):
+        s = 0.0
+        v = 1.0
+        if (self.current_node in self.success):
+            s = float(self.success[self.current_node])
+        if (self.current_node in self.visits):
+            v = float(self.visits[self.current_node])
+        #print "   -- success rate: ",s," / ",v
+        return s/v
 
 
 
@@ -211,7 +243,19 @@ class Sapientino(object):
         self.agent.set_action_names(self.action_names)
 
 
-        
+    def savedata(self):
+         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success]
+
+         
+    def loaddata(self,data):
+         self.iteration = data[0]
+         self.hiscore = data[1]
+         self.hireward = data[2]
+         self.elapsedtime = data[3]
+         self.RA.visits = data[4]
+         self.RA.success = data[5]
+
+
     def reset(self):
         
         self.pos_x = 3
@@ -239,6 +283,9 @@ class Sapientino(object):
             self.colorbip[t[1]] = 0
         self.countbip=0
         self.RA.reset()
+
+        # RA exploration
+        self.RA_exploration()
 
         
     def getSizeStateSpace(self):
@@ -292,6 +339,13 @@ class Sapientino(object):
                 break
         return r
 
+    def RA_exploration(self):
+        #print "RA state: ",self.RA.current_node
+        success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
+        #print "RA exploration policy: current state success rate ",success_rate
+        er = random.random()
+        self.agent.partialoptimal = (er<success_rate)
+        #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
         
     def update(self, a):
         
@@ -396,11 +450,15 @@ class Sapientino(object):
 
 
         if (self.differential):
-            RAr = self.RA.update(a)  # consider also turn actions
+            (RAr,state_changed) = self.RA.update(a)  # consider also turn actions
         else:
-            RAr = self.RA.update()
+            (RAr,state_changed) = self.RA.update()
 
         self.current_reward += RAr
+
+        # RA exploration
+        if (state_changed):
+            self.RA_exploration()
 
         # set score
         RAnode = self.RA.current_node
@@ -515,13 +573,16 @@ class Sapientino(object):
             s += ' HIREWARD '
             toprint = True
 
+        numiter = 100
+
+        if (self.iteration%numiter==0):
+            toprint = True
+
         if (toprint):
             print(s)
-
         
         self.cumreward100 += self.cumreward
         self.cumscore100 += self.score
-        numiter = 100
         if (self.iteration%numiter==0):
             #self.doSave()
             pgoal = float(self.ngoalreached*100)/numiter

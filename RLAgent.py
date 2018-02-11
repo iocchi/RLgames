@@ -19,6 +19,7 @@ class RLAgent(object):
         self.gamma = 1.0
         self.epsilon = -1 #  -1: adaptive
         self.optimal = False
+        self.partialoptimal = False
         self.episode = []
         self.iteration = 0
         self.debug = False
@@ -177,7 +178,7 @@ class RLAgent(object):
         #if (self.debug):
         #    print " .. random  ",ar," < epsilon ",epsilon
         
-        if ((not self.optimal) and ar<epsilon):
+        if ((not self.optimal) and (not self.partialoptimal) and ar<epsilon):
             # Random action
             com_command = random.randint(0,self.nactions-1)
             #if (self.debug):
@@ -208,7 +209,7 @@ class RLAgent(object):
         return com_command
 
         
-    def decision(self, x):      
+    def decision(self, x):
         a = self.choose_action(x)
         if self.debug:
             print "+++ Q [%d] = " %(x),

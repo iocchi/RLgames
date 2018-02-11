@@ -4,25 +4,28 @@ import os
 import thread
 import time
 
-def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, expid_from, exp_id_to):
+def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, expid_from, exp_id_to):
 
     gameshortname = game[0]
     agentshortname = agent[0]
     gamecfg = '%s%s' %(game,gameext) 
     basetrainfilename = '%s%d%d%s_%s' %(gameshortname, rows, cols, gameext, agentshortname)
     if (gamma<1):
-        basetrainfilename = basetrainfilename + '_g0%d' %(int(gamma*100))
+        basetrainfilename = basetrainfilename + '_g%04d' %(int(gamma*1000))
     if (epsilon>0):
-        basetrainfilename = basetrainfilename + '_e0%d' %(int(epsilon*100))
+        basetrainfilename = basetrainfilename + '_e%03d' %(int(epsilon*100))
     if (lambdae>0):
-        basetrainfilename = basetrainfilename + '_l0%d' %(int(lambdae*100))
+        basetrainfilename = basetrainfilename + '_l%03d' %(int(lambdae*100))
     if (alpha>0):
-        basetrainfilename = basetrainfilename + '_a0%d' %(int(alpha*100))
+        basetrainfilename = basetrainfilename + '_a%03d' %(int(alpha*100))
     if (nstep>1):
-        basetrainfilename = basetrainfilename + '_n%d' %(nstep)
+        basetrainfilename = basetrainfilename + '_n%03d' %(nstep)
+    str_stopongoal = ""
+    if (stopongoal):
+        str_stopongoal = "--stopongoal"
 
     for i in range(expid_from, exp_id_to+1):
-        cmd = "xterm -geometry 100x20+0+20 -e \"python game.py %s %s %s_%02d -rows %d -cols %d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d\" " %(gamecfg,agent,basetrainfilename,i,rows,cols, gamma,epsilon,lambdae,alpha,nstep,niter,maxtime)
+        cmd = "xterm -geometry 100x20+0+20 -e \"python game.py %s %s %s_%02d -rows %d -cols %d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s\" " %(gamecfg,agent,basetrainfilename,i,rows,cols, gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
         # use -hold and & at the end for parallel execution and monitoring
         print cmd
         os.system(cmd)
@@ -36,44 +39,59 @@ gamma = 0.99
 epsilon = 0.2
 lambdae = -1
 alpha = 0.1
-nstep = 500
+nstep = 200
 niter = -1
+stopongoal = False
 
 rows = 4
 cols = 4
         
 # main
 
-maxtime = 600
+stopongoal = False
 
-#doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 1) 
+maxtime = 300
 
-maxtime = 120
+#doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
+#doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
 
-#doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
 
-maxtime = 120
+cols = 5
+maxtime = 1200
+gamma = 0.999
 
-#doExperiment('Breakout','NRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+#stopongoal = True
 
-doExperiment('Breakout','BFNRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+#doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 4, 4) 
+#doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 2) 
+
+maxtime = 7200
+cols = 6
+
+doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 2) 
+#doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 2) 
+
+
+#doExperiment('Breakout','NRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+
+#doExperiment('Breakout','BFNRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 #maxtime = 1200
 
-#doExperiment('Breakout','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 7) 
+#doExperiment('Breakout','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 7) 
 
-#doExperiment('Breakout','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 7) 
+#doExperiment('Breakout','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 7) 
 
 agent = 'Q'
 
-#doExperiment('Breakout','2',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
+#doExperiment('Breakout','2',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 3) 
 
-#doExperiment('Breakout','2C',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+#doExperiment('Breakout','2C',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
-#doExperiment('Breakout','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 2, 3) 
+#doExperiment('Breakout','2D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 3) 
 
-#doExperiment('Breakout','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, 1, 3) 
+#doExperiment('Breakout','2DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 
