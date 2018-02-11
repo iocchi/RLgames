@@ -51,6 +51,7 @@ class Breakout(object):
     def __init__(self, brick_rows=3, brick_cols=3, trainsessionname='test'):
 
         self.agent = None
+        self.RA = None
         self.isAuto = True
         self.gui_visible = False
         self.sound_enabled = False
@@ -138,6 +139,14 @@ class Breakout(object):
         self.agent.init(self.nstates, self.nactions)
         self.agent.set_action_names(self.action_names)
 
+    def savedata(self):
+         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime]
+         
+    def loaddata(self,data):
+         self.iteration = data[0]
+         self.hiscore = data[1]
+         self.hireward = data[2]
+         self.elapsedtime = data[3]
     
     def initBricks(self):
         self.bricks = []
@@ -457,8 +466,9 @@ class Breakout(object):
         return self.command
 
     def getreward(self):
-        r = self.current_reward        
-        if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
+        r = self.current_reward
+        failed = self.RA is not None and self.RA.current_node==self.RA.RAFail 
+        if (self.current_reward>0 and failed):  # FAIL RA state
             r = 0
         self.cumreward += self.gamman * r
         self.gamman *= self.agent.gamma
