@@ -1,3 +1,11 @@
+#
+#  This file is provided just for educational purposes 
+#  and its development is not aligned with other code in this package.
+#  
+#  The RLAgent with proper parameter nstep should be used instead of this class.
+#
+
+
 #!/usr/bin/python
 
 import pygame, sys
@@ -22,6 +30,7 @@ class MCAgent(object):
         self.nstepsupdates = 0 # n-steps updates NOT USED HERE
         self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)  NOT USED HERE
         self.name = 'RLMC'
+        self.error = False
 
     def init(self, nstates, nactions):
         self.Q = np.zeros((nstates,nactions))
@@ -36,7 +45,9 @@ class MCAgent(object):
     def reset(self):
         self.episode = []
         
-    
+    def set_action_names(self, an):
+        self.action_names = an
+
         
     def savedata(self):
          return [self.Q, self.pi, self.Rsum, self.Rcnt]
