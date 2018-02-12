@@ -467,8 +467,8 @@ class Breakout(object):
 
     def getreward(self):
         r = self.current_reward
-        failed = self.RA is not None and self.RA.current_node==self.RA.RAFail 
-        if (self.current_reward>0 and failed):  # FAIL RA state
+        failed = self.RA is not None and self.RA.current_node==self.RA.RAFail  # FAIL RA state
+        if (self.current_reward>0 and failed):  
             r = 0
         self.cumreward += self.gamman * r
         self.gamman *= self.agent.gamma
