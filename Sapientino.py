@@ -193,10 +193,12 @@ class Sapientino(object):
         self.sleeptime = 0.0
         self.command = 0
         self.iteration = 0
+        self.score = 0
         self.cumreward = 0
         self.cumreward100 = 0 # cumulative reward for statistics
         self.cumscore100 = 0 
         self.ngoalreached = 0
+        self.numactions = 0 # number of actions in this run
         
         self.hiscore = 0
         self.hireward = -1000000

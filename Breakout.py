@@ -88,12 +88,16 @@ class Breakout(object):
         self.init_ball_speed_x = 2
         self.init_ball_speed_y = 5
         self.accy = 1.00
+        self.score = 0
+        self.ball_hit_count = 0
+        self.paddle_hit_count = 0
         self.command = 0
         self.iteration = 0
         self.cumreward = 0
         self.cumscore100 = 0 # cumulative score for statistics
         self.cumreward100 = 0 # cumulative reward for statistics
         self.ngoalreached = 0 # number of goals reached for stats
+        self.numactions = 0 # number of actions in this run
 
         self.action_names = ['--','<-','->','o'] # stay, left, right, fire
 
