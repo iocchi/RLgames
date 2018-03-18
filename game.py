@@ -100,6 +100,9 @@ def loadGameModule():
         elif (args.game=='Sapientino3X'):
             mod = importlib.import_module('Sapientino')
             game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=3)
+        elif (args.game=='Minecraft'):
+            mod = importlib.import_module(args.game)
+            game = mod.Minecraft(trainsessionname=trainfilename)
         else:
             print("ERROR: game %s not found." %args.game)
             sys.exit(1)
@@ -241,9 +244,7 @@ def learn(game, agent, maxtime=-1, stopongoal=False):
         next_optimal = True
         game.iteration -= 1
 
-
     while (run and (args.niter<0 or game.iteration<=args.niter) and not game.userquit):
-
         game.reset() # increment game.iteration
         game.draw()
         time.sleep(game.sleeptime)
@@ -252,20 +253,18 @@ def learn(game, agent, maxtime=-1, stopongoal=False):
             next_optimal = False
         while (run and not game.finished):
             run = game.input()
+            if (not run):
+                break
             if game.pause:
                 time.sleep(1)
                 continue
-            try:
-                execution_step(game, agent)
-                if (agent.error):
-                    game.pause = True
-                    agent.debug = True
-                    agent.error = False
-                game.draw()
-                time.sleep(game.sleeptime)
-            except KeyboardInterrupt:
-                print("User quit")
-                run = False
+            execution_step(game, agent)
+            if (agent.error):
+                game.pause = True
+                agent.debug = True
+                agent.error = False
+            game.draw()
+            time.sleep(game.sleeptime)
 
         # episode finished
         if (game.finished): 
@@ -296,9 +295,7 @@ def learn(game, agent, maxtime=-1, stopongoal=False):
             for a in range(0,game.nactions):
                 print("Q[%d]" %a)
                 print("       ",agent.Q[a].get_weights())
-
-
-
+    
 
 # evaluation process
 def evaluate(game, agent, n): # evaluate best policy n times (no updates)
@@ -398,11 +395,17 @@ if __name__ == "__main__":
     # learning or evaluation process
     if (args.eval):
         evaluate(game, agent, 10)
-    else:    
-        learn(game, agent, args.maxtime, args.stopongoal)
+    else:
+        try:
+            learn(game, agent, args.maxtime, args.stopongoal)
+        except KeyboardInterrupt:
+            print("User quit")
+
         writeinfo(trainfilename,game,agent,init=False)
 
     print("Experiment terminated !!!\n")
-
+    #print('saving ...')
+    #save()
+    print('Game over')
     game.quit()
 
