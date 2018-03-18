@@ -15,17 +15,17 @@ class RLAgent(object):
 
     def __init__(self):
         self.command = 0
-        self.alpha = 0.5 # -1: adative
         self.gamma = 1.0
         self.epsilon = -1 #  -1: adaptive
+        self.alpha = 0.5 # -1: adative
+        self.nstepsupdates = 0 # n-steps updates 
+        self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
         self.optimal = False
         self.partialoptimal = False
         self.episode = []
         self.iteration = 0
         self.debug = False
         self.name = 'RL'
-        self.nstepsupdates = 0 # n-steps updates 
-        self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
         self.sparse = False
         self.Qapproximation = False
         self.error = False
@@ -52,6 +52,13 @@ class RLAgent(object):
 
         self.etraces = {} # eligibility traces map
         self.nactions = nactions
+        
+        print("Agent: %s" %self.name)
+        print("  gamma: %f" %self.gamma)
+        print("  epsilon: %f" %self.epsilon)
+        print("  alpha: %f" %self.alpha)
+        print("  nsteps: %d" %self.nstepsupdates)
+        print("  lambda: %f" %self.lambdae)
 
     def set_action_names(self, an):
         self.action_names = an

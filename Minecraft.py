@@ -22,12 +22,14 @@ gold = [230, 215, 80]
 
 
 
-ACTION_NAMES = ['<-','->','^','v','g','u'] 
-# 0: left, 1: right, 2: up, 3: down, 4: get, 5: use
+ACTION_NAMES = ['<-','->','^','v','g','u','b','a'] 
+# 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6 ...: use crafted tools
 
 RESOURCES = ['wood', 'grass', 'iron', 'gold', 'gem' ]  # for get actions
 TOOLS = ['toolshed', 'workbench', 'factory', 'bridge', 'axe'] # for use actions
 CRAFT = ['plank', 'stick', 'cloth', 'rope', 'bridge', 'bed', 'axe', 'shears' ] # makeable tools
+
+CRAFTEDTOOLS = ['bridge','axe'] # usable and crafted tools
 
 LOCATIONS = [ ('wood',brown,1,1), ('grass',green,4,3), ('iron',grey,5,5), ('gold',gold,1,6), ('gem',lblue,8,1),
     ('toolshed',dbrown,2,4), ('workbench',dgreen,6,3), ('factory',dgrey,4,7) ]
@@ -81,6 +83,8 @@ class Minecraft(object):
         self.sleeptime = 0.0
         self.command = 0
         self.iteration = 0
+        self.score = 0
+        self.numactions = 0
         self.cumreward = 0
         self.cumreward100 = 0 # cum reward for statistics
         self.cumscore100 = 0 
@@ -101,6 +105,11 @@ class Minecraft(object):
 
         self.action_names = ACTION_NAMES
         self.locations = LOCATIONS
+        self.has = {}
+        
+        self.RA_visits = {} # number of visits for each RA state
+        self.RA_success = {} # number of good transitions for each RA state
+
 
         if (self.cols>10):
             self.win_width += self.size_square * (self.cols-10)
@@ -129,7 +138,7 @@ class Minecraft(object):
             pygame.display.iconify()
 
         self.agent = agent
-        self.nactions = 6  # 0: left, 1: right, 2: up, 3: down, 4: get, 5: use
+        self.nactions = 6 + len(CRAFTEDTOOLS)  # 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6 ...: use crafted tools
         ns = self.rows * self.cols * self.ntaskstates()
         print('Number of REWARD_STATES: %d' %ns)
         print('Number of actions: %d' %self.nactions)
@@ -143,11 +152,9 @@ class Minecraft(object):
         self.pos_x = 0
         self.pos_y = 0
 
-        # RA state of each sub-task
-        self.task_state = {}
-        for t in TASKS.keys():
-            self.task_state[t]=0
-        self.actionlocation = []
+        self.reset_tasks()
+        for t in CRAFTEDTOOLS:
+            self.has[t] = False
         
         self.score = 0
         self.cumreward = 0
@@ -163,9 +170,32 @@ class Minecraft(object):
         self.iteration += 1
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
+        
+        self.current_RA_state = 0
+        self.last_RA_state = 0
+        self.state_changed = False
+        
+        # RA exploration
+        self.RA_exploration()
 
         
-        
+    def reset_tasks(self):
+        global TASKS
+        # RA state of each sub-task
+        self.task_state = {}
+        for t in TASKS.keys():
+            self.task_state[t]=0
+        self.actionlocation = []
+
+    def reset_partial_tasks(self):
+        global TASKS
+        # RA state of each sub-task
+        for t in TASKS.keys():
+            if (self.task_state[t] < len(TASKS[t])):
+                #print('reset task %s' %t)
+                self.task_state[t]=0
+        self.actionlocation = []
+
     def encode_task_state(self):
         global TASKS
         r = 0
@@ -181,19 +211,19 @@ class Minecraft(object):
 
 
     def goal_reached(self):
-        return False
+        return self.score==10
         
     def savedata(self):
-         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime]
-         #, self.RA.visits, self.RA.success]
+        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime,
+            self.RA_visits, self.RA_success]
 
     def loaddata(self,data):
          self.iteration = data[0]
          self.hiscore = data[1]
          self.hireward = data[2]
          self.elapsedtime = data[3]
-         #self.RA.visits = data[4]
-         #self.RA.success = data[5]
+         self.RA_visits = data[4]
+         self.RA_success = data[5]
 
     def itemat(self, x, y): # which item is in this location
         r = None
@@ -224,9 +254,20 @@ class Minecraft(object):
             r = self.check_action('use',what)
         return r
 
+    def dousetool(self, it):
+        what = CRAFTEDTOOLS[it]
+        if not self.isAuto:
+            print "use: ",what
+        if (not self.has[what]):
+            r = REWARD_STATES['BadUse']
+        else:    
+            r = self.check_action('use',what)
+        return r
+
         
     def check_action(self,a,what):  # a = 'get' or 'use'
         r = 0 # reward to return
+        self.state_changed = False # if RA state is changed
         act = a+"_"+what
         #if not self.isAuto:
         #print("checking action %s" %act)
@@ -240,18 +281,53 @@ class Minecraft(object):
                 self.task_state[t] += 1 # go to next task state
                 r += REWARD_STATES['TaskProgress']
                 if (self.task_state[t] == len(tl)):
-                    print("!!!Task %s completed!!!" %t)
+                    if not self.isAuto:
+                        print("!!!Task %s completed!!!" %t)
+                    v = t.split('_') 
+                    self.has[v[1]] = True
                     r += REWARD_STATES['TaskComplete']
+                    self.state_changed = True
                     self.score += 1
+                    self.reset_partial_tasks()
         #print('   ... reward %d' %r)
         return r 
         
+    def current_successrate(self):
+        s = 0.0
+        v = 1.0
+        if (self.current_RA_state in self.RA_success):
+            s = float(self.RA_success[self.current_RA_state])
+        if (self.current_RA_state in self.RA_visits):
+            v = float(self.RA_visits[self.current_RA_state])
+        #print "   -- success rate: ",s," / ",v
+        return s/v
         
+    def RA_exploration(self):
+        # update success/visit
+        self.current_RA_state = self.encode_task_state()
+        if (self.current_RA_state in self.RA_visits):
+            self.RA_visits[self.current_RA_state] += 1
+        else:
+            self.RA_visits[self.current_RA_state] = 1
+
+        if (self.last_RA_state in self.RA_success):
+            self.RA_success[self.last_RA_state] += 1
+        else:
+            self.RA_success[self.last_RA_state] = 1
+        self.last_RA_state = self.current_RA_state
+    
+        #print "RA state: ",self.RA.current_node
+        success_rate = max(min(self.current_successrate(),0.9),0.1)
+        #print "RA exploration policy: current state success rate ",success_rate
+        er = random.random()
+        self.agent.partialoptimal = (er<success_rate)
+        #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
+
         
     def update(self, a):
         
         self.command = a
-
+        
         self.prev_state = self.getstate() # remember previous state
         
         #print " == Update start ",self.prev_state," action",self.command 
@@ -292,16 +368,22 @@ class Minecraft(object):
         elif self.command == 5:  # use
             r = self.douse()            
             self.current_reward += r
+        elif self.command >= 6 and self.command < 6+len(CRAFTEDTOOLS):  # use crafted tools
+            r = self.dousetool(self.command-6)            
+            self.current_reward += r
 
-                
         self.current_reward += REWARD_STATES['Alive']
-                
+
+        # RA exploration        
+        if (self.state_changed):  # when task completed
+            self.RA_exploration()
+
         # check if episode terminated
         if self.goal_reached():
             self.current_reward += REWARD_STATES['Score']
             self.ngoalreached += 1
             self.finished = True
-        if (self.numactions>(self.cols+self.rows)*2):
+        if (self.numactions>300): #(self.cols+self.rows)*3):
             self.current_reward += REWARD_STATES['Dead']
             self.finished = True
 
@@ -329,7 +411,10 @@ class Minecraft(object):
                     self.usercommand = 4
                 elif event.key == pygame.K_u: # use action
                     self.usercommand = 5
-                    self.isPressed = True
+                elif event.key == pygame.K_b: # use bridge
+                    self.usercommand = 6
+                elif event.key == pygame.K_x: # use axe
+                    self.usercommand = 7
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
                     print("Game paused: %s" %self.pause)
@@ -420,13 +505,22 @@ class Minecraft(object):
         count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
         self.screen.blit(count_label, (60, 10))
         
+        sinv = ''
+        for t in TASKS.keys():
+            if (self.task_state[t] == len(TASKS[t])):
+                sinv += '*'
+            else:
+                sinv += '-'
+            
+        inv_label = self.myfont.render(sinv, 100, pygame.color.THECOLORS['blue'])
+        self.screen.blit(inv_label, (200, 10))
 
         if self.isAuto is True:
             auto_label = self.myfont.render("Auto", 100, pygame.color.THECOLORS['red'])
-            self.screen.blit(auto_label, (self.win_width-200, 10))
+            self.screen.blit(auto_label, (self.win_width-160, 10))
         if (self.agent.optimal):
             opt_label = self.myfont.render("Best", 100, pygame.color.THECOLORS['red'])
-            self.screen.blit(opt_label, (self.win_width-100, 10))
+            self.screen.blit(opt_label, (self.win_width-80, 10))
 
         # grid
         for i in range (0,self.cols+1):
