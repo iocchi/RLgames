@@ -11,7 +11,7 @@ def doExperiment(game, gameext, agent, gamma, epsilon, lambdae, alpha, nstep, ni
     gamecfg = '%s%s' %(game,gameext) 
     basetrainfilename = '%s%s_%s' %(gameshortname, gameext, agentshortname)
     if (gamma<1):
-        basetrainfilename = basetrainfilename + '_g%02d' %(int(gamma*100))
+        basetrainfilename = basetrainfilename + '_g%03d' %(int(gamma*100))
     if (epsilon>0):
         basetrainfilename = basetrainfilename + '_e%02d' %(int(epsilon*100))
     if (lambdae>0):

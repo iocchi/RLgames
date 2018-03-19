@@ -157,6 +157,7 @@ class Minecraft(object):
             self.has[t] = False
         
         self.score = 0
+        self.gamman = 1.0 # cumulative gamma over time
         self.cumreward = 0
         self.cumscore = 0  
         
@@ -383,7 +384,7 @@ class Minecraft(object):
             self.current_reward += REWARD_STATES['Score']
             self.ngoalreached += 1
             self.finished = True
-        if (self.numactions>300): #(self.cols+self.rows)*3):
+        if (self.numactions>1000): #(self.cols+self.rows)*3):
             self.current_reward += REWARD_STATES['Dead']
             self.finished = True
 
@@ -445,10 +446,10 @@ class Minecraft(object):
         return self.command
 
     def getreward(self):
-        r = self.current_reward
-        self.cumreward += r
+        r = self.current_reward        
+        self.cumreward += self.gamman * r
+        self.gamman *= self.agent.gamma
         return r
-
 
     def print_report(self, printall=False):
         toprint = printall
