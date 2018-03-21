@@ -411,10 +411,10 @@ class Breakout(object):
         #hitbrick = False
         for brick in self.bricks:
             if brick.rect.colliderect(ball_rect):
-                print 'brick hit ',brick.i,brick.j
+                #print 'brick hit ',brick.i,brick.j
                 if ((not self.se_brick is None)):  #pygame.display.get_active() and 
                     self.se_brick.play()
-                    print('self.se_brick.play()')
+                    #print('self.se_brick.play()')
 
                 self.score = self.score + 1
                 self.brick_hit_count += 1

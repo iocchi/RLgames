@@ -52,12 +52,12 @@ cols = 4
 
 gamma = 0.999
 nstep = 200
-
+alpha = 0.25
 
 
 # range of experiments
-idfrom = 26
-idto = 26
+idfrom = 29
+idto = 29
 
 for i in range(1,5):
     maxtime = 300*i
