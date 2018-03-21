@@ -43,8 +43,8 @@ class RewardAutoma(object):
         self.RAGoal = self.nRAstates
         self.RAFail = self.nRAstates+1        
         self.goalreached = 0 # number of RA goals reached for statistics
-        self.visits = {} # number of visits for each state
-        self.success = {} # number of good transitions for each state
+        self.visits = {} # number of visits for each RA state
+        self.success = {} # number of good transitions for each RA state
         self.reset()
 
     def init(self, game):
@@ -185,6 +185,7 @@ class Sapientino(object):
         self.cols = cols
         self.differential = False
         self.colorsensor = False
+        self.motionnoise = True
         
         # Configuration
         self.pause = False # game is paused

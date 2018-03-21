@@ -77,7 +77,7 @@ class Breakout(object):
         }
         
         # Configuration
-        self.deterministic = True
+        self.deterministic = True   # deterministic ball bouncing
         self.simple_state = False   # simple = do not consider paddle x
         self.paddle_normal_bump = True  # only left/right bounces
         self.paddle_complex_bump = False  # straigth/left/right complex bounces
@@ -90,6 +90,7 @@ class Breakout(object):
         self.accy = 1.00
         self.score = 0
         self.ball_hit_count = 0
+        self.brick_hit_count = 0
         self.paddle_hit_count = 0
         self.command = 0
         self.iteration = 0
@@ -172,7 +173,7 @@ class Breakout(object):
         self.ball_speed_x = self.init_ball_speed_x
         self.ball_speed_y = self.init_ball_speed_y
 
-        self.randomAngle()
+        self.randomAngle('i')
 
         self.paddle_x = self.win_width/2
         self.paddle_y = self.win_height-20
@@ -183,6 +184,7 @@ class Breakout(object):
         self.score = 0
         self.ball_hit_count = 0
         self.paddle_hit_count = 0
+        self.brick_hit_count = 0
         self.cumreward = 0
         self.gamman = 1.0 # cumulative gamma over time
 
@@ -267,19 +269,42 @@ class Breakout(object):
 
             self.hitDetect()
 
-            
         #print(" ** Update end - state: %d prev: %d" %(self.getstate(),self.prev_state))
 
-    def randomAngle(self):
+    def randomAngle(self, ev):
+        if (ev=='i'): # init
+            self.randomAngle1()
+        if (ev=='b'): # brick hit
+            self.randomAngle2()
+        if (ev=='i'): # paddle hit
+            self.randomAngle3()
+        
+    def randomAngle1(self):
         if (not self.deterministic):
-            ran = random.randint(0,4)
-            if (abs(self.ball_speed_x)<0.01):
-                self.ball_speed_x = 1
-            self.ball_speed_x = (4 - ran) * self.ball_speed_x/abs(self.ball_speed_x)
-            self.ball_speed_y = self.accy * self.ball_speed_y
-            self.ball_hit_count = 0
+            ran = random.uniform(0.75, 1.5)
+            self.ball_speed_x *= ran
+            #print("random ball_speed_x = %.2f" %self.ball_speed_x)
 
+    def randomAngle2(self):
+        if (not self.deterministic):
+            ran = random.uniform(0.0, 1.0)
+            if (random.uniform(0.0, 1.0) < 0.5):
+                self.ball_speed_x *= -1
+            #print("random ball_speed_x = %.2f" %self.ball_speed_x)
 
+    def randomAngle3(self):
+        if (not self.deterministic):
+            ran = random.uniform(0.0, 1.0)
+            if (random.uniform(0.0, 1.0) < 0.1):
+                self.ball_speed_x *= 0.75
+            elif (random.uniform(0.0, 1.0) > 0.9):
+                self.ball_speed_x *= 1.5
+            sign = self.ball_speed_x/abs(self.ball_speed_x)    
+            self.ball_speed_x = min(self.ball_speed_x,6)*sign
+            self.ball_speed_x = max(self.ball_speed_x,0.5)*sign
+            #print("random ball_speed_x = %.2f" %self.ball_speed_x)
+
+            
     def hitDetect(self):
         ##COLLISION DETECTION
         ball_rect = pygame.Rect(self.ball_x-ball_radius, self.ball_y-ball_radius, ball_radius*2,ball_radius*2) #circles are measured from the center, so have to subtract 1 radius from the x and y
@@ -355,15 +380,18 @@ class Breakout(object):
                 dbp = math.fabs(self.ball_x-(self.paddle_x+paddle_width/2))
                 if (dbp<20):
                     #print 'straight'
-                    self.ball_speed_x = 2*abs(self.ball_speed_x)/self.ball_speed_x
+                    if (self.ball_speed_x!=0):
+                        self.ball_speed_x = 2*abs(self.ball_speed_x)/self.ball_speed_x
                 dbp = math.fabs(self.ball_x-(self.paddle_x+0))
                 if (dbp<20):
                     #print 'left' 
                     self.ball_speed_x = -5
+                    self.randomAngle('p')
                 dbp = math.fabs(self.ball_x-(self.paddle_x+paddle_width))
                 if (dbp<20):
                     #print 'right'
                     self.ball_speed_x = 5
+                    self.randomAngle('p')
                     
             self.ball_speed_y = - abs(self.ball_speed_y)
             self.current_reward += self.STATES['Hit']
@@ -389,6 +417,7 @@ class Breakout(object):
                     print('self.se_brick.play()')
 
                 self.score = self.score + 1
+                self.brick_hit_count += 1
                 self.bricks.remove(brick)
                 self.last_brikcsremoved.append(brick)
                 self.bricksgrid[(brick.i,brick.j)] = 0
@@ -423,8 +452,9 @@ class Breakout(object):
                 self.fire_speedy = 0
                 break
 
-        if self.ball_hit_count > 5:
-            self.randomAngle()
+        if self.brick_hit_count > 0:
+            self.randomAngle('b')
+            self.brick_hit_count = 0
 
 
     def input(self):

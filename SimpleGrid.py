@@ -114,6 +114,17 @@ class SimpleGrid(object):
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
 
+    def savedata(self):
+         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime]
+         #, self.RA.visits, self.RA.success]
+
+    def loaddata(self,data):
+         self.iteration = data[0]
+         self.hiscore = data[1]
+         self.hireward = data[2]
+         self.elapsedtime = data[3]
+         #self.RA.visits = data[4]
+         #self.RA.success = data[5]
         
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y        
@@ -188,24 +199,21 @@ class SimpleGrid(object):
 
 
     def input(self):
-        self.isPressed = False
+    
+        self.usercommand = -1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    self.command = 1
-                    self.isPressed = True
+                    self.usercommand = 1
                 elif event.key == pygame.K_RIGHT:
-                    self.command = 2
-                    self.isPressed = True
+                    self.usercommand = 2
                 elif event.key == pygame.K_UP:
-                    self.command = 3
-                    self.isPressed = True
+                    self.usercommand = 3
                 elif event.key == pygame.K_DOWN:
-                    self.command = 4
-                    self.isPressed = True
+                    self.usercommand = 4
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
                     print("Game paused: %s" %self.pause)
@@ -228,12 +236,14 @@ class SimpleGrid(object):
                     self.userquit = True
                     print("User quit !!!")
                     
-        if not self.isPressed:
-            self.command = 0
-
         return True
 
     def getUserAction(self):
+        while (self.usercommand<0 and not self.isAuto):
+            self.input()
+            time.sleep(0.2)
+        if (not self.isAuto):
+            self.command = self.usercommand
         return self.command
 
     def getreward(self):

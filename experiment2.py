@@ -25,12 +25,13 @@ def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alph
         str_stopongoal = "--stopongoal"
 
     for i in range(expid_from, exp_id_to+1):
-        cmd = "xterm -geometry 120x20+0+20 -e \"python game.py %s %s %s_%02d -rows %d -cols %d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s\" " %(gamecfg,agent,basetrainfilename,i,rows,cols, gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
+        cmd = "python game.py %s %s %s_%02d -rows %d -cols %d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s" %(gamecfg,agent,basetrainfilename,i,rows,cols, gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
+        xterm_cmd = 'xterm -geometry 100x20+0+20 -e "%s" ' %(cmd)
         # use -hold and & at the end for parallel execution and monitoring
         print cmd
         os.system(cmd)
         #thread.start_new_thread( os.system, (cmd,) )
-        time.sleep(1)
+        time.sleep(2)
 
 
 
@@ -49,19 +50,24 @@ stopongoal = False
 rows = 4
 cols = 4
 
-gamma = 0.99
+gamma = 0.999
 nstep = 200
 
-maxtime = 600
+
 
 # range of experiments
-idfrom = 1
-idto = 5
+idfrom = 26
+idto = 26
 
-doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
-doExperiment('Breakout','NRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+for i in range(1,5):
+    maxtime = 300*i
+    doExperiment('Breakout','NDNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
 
-doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
-doExperiment('Breakout','BFNRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+#doExperiment('Breakout','NRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+
+maxtime = 180
+
+#doExperiment('Breakout','BFNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+#doExperiment('Breakout','BFNRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
 
 
