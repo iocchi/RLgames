@@ -43,6 +43,10 @@ def loadGameModule():
         elif (args.game=='BreakoutNRA'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+        elif (args.game=='BreakoutNDNRA'):
+            mod = importlib.import_module('BreakoutRA')
+            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
+            game.deterministic = False
         elif (args.game=='BreakoutFNRA'):
             mod = importlib.import_module('BreakoutRA')
             game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)

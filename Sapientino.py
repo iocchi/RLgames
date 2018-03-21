@@ -185,6 +185,7 @@ class Sapientino(object):
         self.cols = cols
         self.differential = False
         self.colorsensor = False
+        self.motionnoise = True
         
         # Configuration
         self.pause = False # game is paused
