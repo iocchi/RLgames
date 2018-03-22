@@ -54,7 +54,7 @@ class Breakout(object):
         self.RA = None
         self.isAuto = True
         self.gui_visible = False
-        self.sound_enabled = False
+        self.sound_enabled = True
         self.fire_enabled = False
         self.userquit = False
         self.optimalPolicyUser = False  # optimal policy set by user
@@ -132,8 +132,12 @@ class Breakout(object):
         
         
     def init(self, agent):  # init after creation (uses args set from cli)
+
+        print('init ', self.sound_enabled)
+        self.sound_enabled = True
         if (self.sound_enabled):
-            self.se_brick = pygame.mixer.Sound('sound/brick_hit.wav')
+            self.se_brick = pygame.mixer.Sound('brick_hit.wav')
+            print('self.se_brick loaded')
             self.se_wall = pygame.mixer.Sound('sound/wall_hit.wav')
             self.se_paddle = pygame.mixer.Sound('sound/paddle_hit.wav')
         if (not self.gui_visible):
@@ -408,8 +412,10 @@ class Breakout(object):
         for brick in self.bricks:
             if brick.rect.colliderect(ball_rect):
                 #print 'brick hit ',brick.i,brick.j
-                if (pygame.display.get_active() and (not self.se_wall is None)):
+                if ((not self.se_brick is None)):  #pygame.display.get_active() and 
                     self.se_brick.play()
+                    #print('self.se_brick.play()')
+
                 self.score = self.score + 1
                 self.brick_hit_count += 1
                 self.bricks.remove(brick)

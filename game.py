@@ -305,7 +305,7 @@ def learn(game, agent, maxtime=-1, stopongoal=False):
 def evaluate(game, agent, n): # evaluate best policy n times (no updates)
     i=0
     run = True
-    game.sleeptime = 0.05
+    game.sleeptime = 0.01
     if (game.gui_visible):
         game.sleeptime = 0.5
         game.pause = True
@@ -325,16 +325,16 @@ def evaluate(game, agent, n): # evaluate best policy n times (no updates)
             game.draw()
             time.sleep(game.sleeptime)        
         game.print_report(printall=True)
-        n=3
-        i=0
-        while (i<n):
-            time.sleep(1)
-            game.input()
-            if game.pause:
+        if (game.gui_visible):
+            n=3
+            j=0
+            while (j<n):
                 time.sleep(1)
-            i += 1
-
-        time.sleep(3)
+                game.input()
+                if game.pause:
+                    time.sleep(1)
+                j += 1
+            time.sleep(3)
         i += 1
     agent.optimal = False
 
