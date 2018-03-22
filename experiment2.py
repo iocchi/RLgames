@@ -39,7 +39,7 @@ agent = 'Sarsa'
 gamma = 0.99
 epsilon = 0.2
 lambdae = -1
-alpha = 0.1
+
 nstep = 200
 niter = -1
 stopongoal = False
@@ -52,15 +52,15 @@ cols = 4
 
 gamma = 0.999
 nstep = 200
-
+alpha = -1
 
 
 # range of experiments
-idfrom = 26
-idto = 26
+idfrom = 31
+idto = 31
 
-for i in range(1,5):
-    maxtime = 300*i
+for i in range(1,11):
+    maxtime = 600*i
     doExperiment('Breakout','NDNRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
 
 #doExperiment('Breakout','NRAX', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
