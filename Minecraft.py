@@ -54,8 +54,10 @@ REWARD_STATES = {
     'Dead':0,
     'Score':1000,
     'Hit':0,        
-    'BadGet':-1,        
-    'BadUse':-2, 
+    'Forward':0,        
+    'Turn':0,        
+    'BadGet':0,        
+    'BadUse':0, 
     'TaskProgress':100,
     'TaskComplete':1000
 }
@@ -80,6 +82,8 @@ class Minecraft(object):
         self.pause = False # game is paused
         self.debug = False
         
+        self.differential = False
+        
         self.sleeptime = 0.0
         self.command = 0
         self.iteration = 0
@@ -89,6 +93,11 @@ class Minecraft(object):
         self.cumreward100 = 0 # cum reward for statistics
         self.cumscore100 = 0 
         self.ngoalreached = 0
+        
+        self.nactionlimit = 1000
+        self.ntaskactionslimit = 100
+        self.turnslimit = 4 # max consecutive turns allowed
+        self.useslimit = 5 # max consecutive uses allowed
         
         self.hiscore = 0
         self.hireward = -1000000
@@ -107,9 +116,9 @@ class Minecraft(object):
         self.locations = LOCATIONS
         self.has = {}
         
+        
         self.RA_visits = {} # number of visits for each RA state
         self.RA_success = {} # number of good transitions for each RA state
-
 
         if (self.cols>10):
             self.win_width += self.size_square * (self.cols-10)
@@ -137,6 +146,10 @@ class Minecraft(object):
         if (not self.gui_visible):
             pygame.display.iconify()
 
+        if self.differential:
+            self.nactionlimit *= 5
+            #self.ntaskactionslimit *= 4
+            
         self.agent = agent
         self.nactions = 6 + len(CRAFTEDTOOLS)  # 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6 ...: use crafted tools
         ns = self.rows * self.cols * self.ntaskstates()
@@ -149,9 +162,15 @@ class Minecraft(object):
     def reset(self):
         global TASKS
         
+        random.seed()
+        
         self.pos_x = 0
         self.pos_y = 0
-
+        self.pos_th = 90
+        self.consecutive_turns = 0
+        self.consecutive_uses = 0
+        
+        
         self.reset_tasks()
         for t in CRAFTEDTOOLS:
             self.has[t] = False
@@ -168,12 +187,13 @@ class Minecraft(object):
         self.finished = False # episode finished
         self.newstate = True # new state reached
         self.numactions = 0 # number of actions in this episode
+        self.ntaskactions = 0 # number of actions for this task-part of episode 
         self.iteration += 1
 
         self.agent.optimal = self.optimalPolicyUser or (self.iteration%100)==0 # False #(random.random() < 0.5)  # choose greedy action selection for the entire episode
         
         self.current_RA_state = 0
-        self.last_RA_state = 0
+        self.last_RA_state = -1
         self.state_changed = False
         
         # RA exploration
@@ -187,6 +207,7 @@ class Minecraft(object):
         for t in TASKS.keys():
             self.task_state[t]=0
         self.actionlocation = []
+        self.ntaskactions = 0
 
     def reset_partial_tasks(self):
         global TASKS
@@ -207,9 +228,13 @@ class Minecraft(object):
         return r
         
     def getstate(self):
-        x = self.pos_x + self.cols * self.pos_y + self.cols * self.rows * self.encode_task_state()     
-        return x
-
+        x = self.pos_x + self.cols * self.pos_y 
+        n = (self.rows * self.cols)
+        if (self.differential):
+            x += (self.pos_th/90) * n
+            n *= 4
+        x += n * self.encode_task_state()     
+        return x        
 
     def goal_reached(self):
         return self.score==10
@@ -288,6 +313,7 @@ class Minecraft(object):
                     self.has[v[1]] = True
                     r += REWARD_STATES['TaskComplete']
                     self.state_changed = True
+                    #print("state changed")
                     self.score += 1
                     self.reset_partial_tasks()
         #print('   ... reward %d' %r)
@@ -300,18 +326,19 @@ class Minecraft(object):
             s = float(self.RA_success[self.current_RA_state])
         if (self.current_RA_state in self.RA_visits):
             v = float(self.RA_visits[self.current_RA_state])
-        #print "   -- success rate: ",s," / ",v
+        #print "   -- state %d - success rate: %f / %f" %(self.current_RA_state,s,v)
         return s/v
         
     def RA_exploration(self):
         # update success/visit
+        #print("update success/visit")
         self.current_RA_state = self.encode_task_state()
         if (self.current_RA_state in self.RA_visits):
             self.RA_visits[self.current_RA_state] += 1
         else:
             self.RA_visits[self.current_RA_state] = 1
 
-        if (self.last_RA_state in self.RA_success):
+        if (self.last_RA_state>=0 and self.last_RA_state in self.RA_success):
             self.RA_success[self.last_RA_state] += 1
         else:
             self.RA_success[self.last_RA_state] = 1
@@ -336,58 +363,126 @@ class Minecraft(object):
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
         #print('self.current_reward = 0')
         self.numactions += 1 # total number of actions axecuted in this episode
-        
+        self.ntaskactions += 1
         # while (self.prev_state == self.getstate()):
         
         if (self.firstAction):
             self.firstAction = False
             self.current_reward += REWARD_STATES['Init']
         
-        if self.command == 0:  # moving left
-            self.pos_x -= 1
-            if (self.pos_x < 0):
-                self.pos_x = 0 
-                self.current_reward += REWARD_STATES['Hit']
-        elif self.command == 1:  # moving right
-            self.pos_x += 1
-            if (self.pos_x >= self.cols):
-                self.pos_x = self.cols-1
-                self.current_reward += REWARD_STATES['Hit']
-        elif self.command == 2:  # moving up
-            self.pos_y += 1
-            if (self.pos_y >= self.rows):
-                self.pos_y = self.rows-1
-                self.current_reward += REWARD_STATES['Hit']
-        elif self.command == 3:  # moving down
-            self.pos_y -= 1
-            if (self.pos_y< 0):
-                self.pos_y = 0 
-                self.current_reward += REWARD_STATES['Hit']
-        elif self.command == 4:  # get
+        if (not self.differential):
+            if self.command == 0:  # moving left
+                self.pos_x -= 1
+                if (self.pos_x < 0):
+                    self.pos_x = 0 
+                    self.current_reward += REWARD_STATES['Hit']
+            elif self.command == 1:  # moving right
+                self.pos_x += 1
+                if (self.pos_x >= self.cols):
+                    self.pos_x = self.cols-1
+                    self.current_reward += REWARD_STATES['Hit']
+            elif self.command == 2:  # moving up
+                self.pos_y += 1
+                if (self.pos_y >= self.rows):
+                    self.pos_y = self.rows-1
+                    self.current_reward += REWARD_STATES['Hit']
+            elif self.command == 3:  # moving down
+                self.pos_y -= 1
+                if (self.pos_y< 0):
+                    self.pos_y = 0 
+                    self.current_reward += REWARD_STATES['Hit']
+
+        else:
+            # differential motion
+            if self.command == 0: # turn left
+                self.pos_th += 90
+                if (self.pos_th >= 360):
+                    self.pos_th -= 360
+                #print ("left") 
+                self.consecutive_turns += 1
+                self.current_reward += REWARD_STATES['Turn']
+            elif self.command == 1:  # turn right
+                self.pos_th -= 90
+                if (self.pos_th < 0):
+                    self.pos_th += 360 
+                #print ("right")
+                self.consecutive_turns += 1
+                self.current_reward += REWARD_STATES['Turn']
+            elif (self.command == 2 or self.command == 3):
+                dx = 0
+                dy = 0
+                if (self.pos_th == 0): # right
+                    dx = 1
+                elif (self.pos_th == 90): # up
+                    dy = 1
+                elif (self.pos_th == 180): # left
+                    dx = -1
+                elif (self.pos_th == 270): # down
+                    dy = -1
+                if (self.command == 3):  # backward
+                    dx = -dx
+                    dy = -dy
+                    #print ("backward") 
+                else:
+                    #print ("forward")
+                    self.current_reward += REWARD_STATES['Forward']
+                self.consecutive_turns = 0
+                self.consecutive_uses = 0
+
+                self.pos_x += dx
+                if (self.pos_x >= self.cols):
+                    self.pos_x = self.cols-1
+                    self.current_reward += REWARD_STATES['Hit']
+                if (self.pos_x < 0):
+                    self.pos_x = 0 
+                    self.current_reward += REWARD_STATES['Hit']
+                self.pos_y += dy
+                if (self.pos_y >= self.rows):
+                    self.pos_y = self.rows-1
+                    self.current_reward += REWARD_STATES['Hit']
+                if (self.pos_y < 0):
+                    self.pos_y = 0 
+                    self.current_reward += REWARD_STATES['Hit']        
+                
+                
+                
+        if self.command == 4:  # get
             r = self.doget() 
             self.current_reward += r
+            self.consecutive_uses += 1
         elif self.command == 5:  # use
             r = self.douse()            
             self.current_reward += r
+            self.consecutive_uses += 1
         elif self.command >= 6 and self.command < 6+len(CRAFTEDTOOLS):  # use crafted tools
             r = self.dousetool(self.command-6)            
             self.current_reward += r
-
+            self.consecutive_uses += 1
+            
         self.current_reward += REWARD_STATES['Alive']
 
         # RA exploration        
         if (self.state_changed):  # when task completed
             self.RA_exploration()
+            self.state_changed = False
 
         # check if episode terminated
         if self.goal_reached():
             self.current_reward += REWARD_STATES['Score']
             self.ngoalreached += 1
             self.finished = True
-        if (self.numactions>1000): #(self.cols+self.rows)*3):
+            
+        if (self.numactions>self.nactionlimit):
             self.current_reward += REWARD_STATES['Dead']
             self.finished = True
 
+        if (self.consecutive_turns>self.turnslimit or self.consecutive_uses>self.useslimit or self.ntaskactions > self.ntaskactionslimit):
+            if (self.agent.optimal):
+                #self.finished = True
+                pass
+            elif (self.agent.partialoptimal):
+                self.agent.partialoptimal = False
+                
         #print " ** Update end ",self.getstate(), " prev ",self.prev_state
         
 
@@ -522,6 +617,9 @@ class Minecraft(object):
         if (self.agent.optimal):
             opt_label = self.myfont.render("Best", 100, pygame.color.THECOLORS['red'])
             self.screen.blit(opt_label, (self.win_width-80, 10))
+        elif (self.agent.partialoptimal):
+            opt_label = self.myfont.render("PB", 100, pygame.color.THECOLORS['red'])
+            self.screen.blit(opt_label, (self.win_width-80, 10))
 
         # grid
         for i in range (0,self.cols+1):
@@ -543,13 +641,27 @@ class Minecraft(object):
             if ((u,v) in self.actionlocation):
                 pygame.draw.rect(self.screen, pygame.color.THECOLORS['black'], (dx+15,dy+15,self.size_square-30,self.size_square-30))
 
-        # agent
+        # agent position
         dx = int(self.offx + self.pos_x * self.size_square)
         dy = int(self.offy + (self.rows-self.pos_y-1) * self.size_square)
 
         pygame.draw.circle(self.screen, orange, [dx+self.size_square//2, dy+self.size_square//2], 2*self.radius, 0)
 
-             
+
+        # agent orientation
+
+        ox = 0
+        oy = 0
+        if (self.pos_th == 0): # right
+            ox = self.radius
+        elif (self.pos_th == 90): # up
+            oy = -self.radius
+        elif (self.pos_th == 180): # left
+            ox = -self.radius
+        elif (self.pos_th == 270): # down
+            oy = self.radius
+
+        pygame.draw.circle(self.screen, pygame.color.THECOLORS['black'], [dx+self.size_square/2+ox, dy+self.size_square/2+oy], 5, 0)
         
          
         pygame.display.update()
