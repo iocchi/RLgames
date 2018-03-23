@@ -107,6 +107,10 @@ def loadGameModule():
         elif (args.game=='Minecraft'):
             mod = importlib.import_module(args.game)
             game = mod.Minecraft(trainsessionname=trainfilename)
+        elif (args.game=='MinecraftD'):
+            mod = importlib.import_module('Minecraft')
+            game = mod.Minecraft(trainsessionname=trainfilename)
+            game.differential = True
         else:
             print("ERROR: game %s not found." %args.game)
             sys.exit(1)
@@ -244,7 +248,7 @@ def learn(game, agent, maxtime=-1, stopongoal=False):
 
     if (maxtime>0 and game.elapsedtime >= maxtime):
         run = False
-    elif (game.iteration>0 and not game.debug): # try an optimal run
+    elif (game.iteration>0 and game.iteration<100 and not game.debug): # try an optimal run
         next_optimal = True
         game.iteration -= 1
 

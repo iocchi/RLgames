@@ -210,8 +210,8 @@ class RLAgent(object):
                     
             else:
                 com_command = va
-                #if (self.debug):
-                #    print " .. best choice ",com_command
+            #if (self.debug):
+            #    print " .. best choice ",com_command
 
         return com_command
 
