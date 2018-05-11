@@ -172,6 +172,9 @@ class RLAgent(object):
 
     def choose_action(self, x):  # choose action from state x
 
+        if (x is None):
+            print('ERROR!!! Choose action from invalid state!!!')
+
         if (self.epsilon < 0):
             maxIter = 10000
             s = self.iteration #getSumVisits(x)
@@ -195,7 +198,7 @@ class RLAgent(object):
             # Choose the action that maximizes expected reward.            
             self.best_action = True
             Qa = self.getQA(x)
-            va = np.argmax(Qa)            
+            va = np.argmax(Qa)
             maxs = [i for i,v in enumerate(Qa) if v == Qa[va]]
             #print " ... Qa = ",Qa,"  va = ",va,"  maxs = ",maxs
             if len(maxs) > 1:
@@ -380,9 +383,10 @@ class RLAgent(object):
         if (self.debug):
             print "return_pre = ",g
 
-        Qx2 = self.getActionValue(x2)
+        Qx2 = 0
         # if not at the end of the episode
         if (not x2 is None and x_kn!=x2):
+            Qx2 = self.getActionValue(x2)
             g += math.pow(self.gamma, self.nstepsupdates) * Qx2 # expected value in next state
 
         q_kn = self.getQ(x_kn,a_kn)
