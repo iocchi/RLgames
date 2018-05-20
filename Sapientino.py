@@ -598,7 +598,7 @@ class Sapientino(object):
 
         sys.stdout.flush()
         
-        self.resfile.write("%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions))
+        self.resfile.write("%d,%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
         self.resfile.flush()
 
 

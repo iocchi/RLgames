@@ -250,7 +250,8 @@ class BreakoutSRA(BreakoutS):
         sys.stdout.flush()
         
         self.vscores.append(self.score)
-        self.resfile.write("%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions))
+        #self.resfile.write("%d,%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
+        self.resfile.write("%d,%d,%d,%d,%d,%d,%d\n" % (self.iteration, self.elapsedtime, RAnode, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
         self.resfile.flush()
 
 
@@ -380,7 +381,8 @@ class BreakoutNRA(BreakoutN):
         sys.stdout.flush()
         
         self.vscores.append(self.score)
-        self.resfile.write("%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions))
+        #self.resfile.write("%d,%d,%d,%d,%d\n" % (RAnode, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
+        self.resfile.write("%d,%d,%d,%d,%d,%d,%d\n" % (self.iteration, self.elapsedtime, RAnode, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
         self.resfile.flush()
 
 
