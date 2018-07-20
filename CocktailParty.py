@@ -36,14 +36,10 @@ LOCATIONS = [ ('coke',red,1,1), ('beer',gold,2,3),
 
 
 TASKS = { 
-    'serve_coke_john': ['get_coke', 'deliver_john'],
-    'serve_coke_mary': ['get_coke', 'deliver_mary'],
-    'serve_beer_john': ['get_beer', 'deliver_john'],
-    'serve_beer_mary': ['get_beer', 'deliver_mary'],
-    'serve_chips_john': ['get_chips', 'deliver_john'],
-    'serve_chips_mary': ['get_chips', 'deliver_mary'],
-    'serve_biscuits_john': ['get_biscuits', 'deliver_john'],
-    'serve_biscuits_mary': ['get_biscuits', 'deliver_mary']
+    'serve_drink_john': [ ['get_coke', 'deliver_john'], ['get_beer', 'deliver_john'] ],
+    'serve_drink_mary': [ ['get_coke', 'deliver_mary'], ['get_beer', 'deliver_mary'] ],
+    'serve_snack_john': [ ['get_chips', 'deliver_john'], ['get_biscuits', 'deliver_john'] ],
+    'serve_snack_mary': [ ['get_chips', 'deliver_mary'], ['get_biscuits', 'deliver_mary'] ]
 }
 
 REWARD_STATES = {
@@ -129,17 +125,21 @@ class CocktailParty(object):
         #allows for holding of key
         #pygame.key.set_repeat(1,0)
 
-        # self.reset()
+        # self.reset()  called by game engine
 
         self.screen = pygame.display.set_mode([self.win_width,self.win_height])
         self.myfont = pygame.font.SysFont("Arial",  30)
+
         
     def ntaskstates(self):
         global TASKS
         r = 1
         for t in TASKS.keys():
-            r *= len(TASKS[t])+1
+            tl = TASKS[t]
+            for l in tl: 
+                r *= len(l)+1
         return r
+
         
     def init(self, agent):  # init after creation (uses args set from cli)
         if (not self.gui_visible):
@@ -161,8 +161,6 @@ class CocktailParty(object):
 
 
     def reset(self):
-        global TASKS
-        
         random.seed()
         
         self.pos_x = 0
@@ -204,26 +202,42 @@ class CocktailParty(object):
         # RA state of each sub-task
         self.task_state = {}
         for t in TASKS.keys():
-            self.task_state[t]=0
+            tl = TASKS[t]
+            i = 0
+            for l in tl:
+                self.task_state[(t,i)]=0
+                i += 1
         self.actionlocation = []
         self.ntaskactions = 0
+        self.taskscompleted = []
 
     def reset_partial_tasks(self):
         global TASKS
         # RA state of each sub-task
         for t in TASKS.keys():
-            if (self.task_state[t] < len(TASKS[t])):
-                #print('reset task %s' %t)
-                self.task_state[t]=0
+            ltl = TASKS[t]
+            i = 0
+            for tl in ltl:
+                if t in self.taskscompleted:
+                    self.task_state[(t,i)]=len(tl)
+                elif self.task_state[(t,i)] < len(tl):
+                    #print('reset task %s' %t)
+                    self.task_state[(t,i)]=0
+                i += 1
         self.actionlocation = []
+
 
     def encode_task_state(self):
         global TASKS
         r = 0
         b = 1
         for t in TASKS.keys():
-            r += b * self.task_state[t]
-            b *= len(TASKS[t])+1
+            tl = TASKS[t]
+            i = 0
+            for l in tl:
+                r += b * self.task_state[(t,i)]
+                b *= len(l)+1
+                i += 1
 #            print '    ---  encode task state  ',t , self.task_state[t]
 #        print '    ---  encode task state final: ', r
         return r
@@ -307,23 +321,26 @@ class CocktailParty(object):
         #if not self.isAuto:
         #print("checking action %s" %act)
         for t in TASKS.keys():
-            ts = self.task_state[t]
-            tl = TASKS[t] # action list for this task
-            #print('  -- %s' %tl[ts])
-            if (ts<len(tl) and act==tl[ts]):
-                #print('*** good action for %s ***' %t)
-                self.actionlocation.append((self.pos_x, self.pos_y))
-                self.task_state[t] += 1 # go to next task state
-                r += REWARD_STATES['TaskProgress']
-                if (self.task_state[t] == len(tl)):
-                    if not self.isAuto:
-                        print("!!!Task %s completed!!!" %t)
-                    #v = t.split('_')  ???
-                    r += REWARD_STATES['TaskComplete']
-                    self.state_changed = True
-                    #print("state changed")
-                    self.score += 1
-                    self.reset_partial_tasks()
+            ltl = TASKS[t]
+            i = 0
+            for tl in ltl: # action list for this task
+                ts = self.task_state[(t,i)]
+                #print('  -- %s' %tl[ts])
+                if (ts<len(tl) and act==tl[ts]):
+                    #print('*** good action for %s ***' %t)
+                    self.actionlocation.append((self.pos_x, self.pos_y))
+                    self.task_state[(t,i)] += 1 # go to next task state
+                    r += REWARD_STATES['TaskProgress']
+                    if (self.task_state[(t,i)] == len(tl)):
+                        if not self.isAuto:
+                            print("!!!Task %s completed!!!" %t)
+                        self.taskscompleted.append(t)
+                        r += REWARD_STATES['TaskComplete']
+                        self.state_changed = True
+                        #print("state changed")
+                        self.score += 1
+                        self.reset_partial_tasks()
+                i += 1
         #print('   ... reward %d' %r)
         return r 
         
@@ -602,10 +619,13 @@ class CocktailParty(object):
         
         sinv = ''
         for t in TASKS.keys():
-            if (self.task_state[t] == len(TASKS[t])):
-                sinv += '*'
-            else:
-                sinv += '-'
+            ltl = TASKS[t]
+            i = 0
+            st = '-'
+            for tl in ltl:
+                if (self.task_state[(t,i)] == len(tl)):
+                    st = '*'
+            sinv += st
             
         inv_label = self.myfont.render(sinv, 100, pygame.color.THECOLORS['blue'])
         self.screen.blit(inv_label, (200, 10))
