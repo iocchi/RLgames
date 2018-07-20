@@ -111,6 +111,13 @@ def loadGameModule():
             mod = importlib.import_module('Minecraft')
             game = mod.Minecraft(trainsessionname=trainfilename)
             game.differential = True
+        elif (args.game=='CP'):
+            mod = importlib.import_module('CocktailParty')
+            game = mod.CocktailParty(trainsessionname=trainfilename)
+        elif (args.game=='CPD'):
+            mod = importlib.import_module('CocktailParty')
+            game = mod.CocktailParty(trainsessionname=trainfilename)
+            game.differential = True
         else:
             print("ERROR: game %s not found." %args.game)
             sys.exit(1)

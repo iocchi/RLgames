@@ -11,6 +11,7 @@ white = [255,255,255]
 grey = [180,180,180]
 dgrey = [120,120,120]
 orange = [180,100,20]
+red = [200,0,0]
 green = [0,200,0]
 lgreen = [60,250,60]
 dgreen = [0,100,0]
@@ -19,33 +20,30 @@ lblue = [80,200,200]
 brown = [140, 100, 40]
 dbrown = [100, 80, 0]
 gold = [230, 215, 80]
+yellow = [210, 250, 80]
 
 
 
-ACTION_NAMES = ['<-','->','^','v','g','u','b','a'] 
-# 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6 ...: use crafted tools
+ACTION_NAMES = ['<-','->','^','v','g','d'] 
+# 0: left, 1: right, 2: up, 3: down, 4: get, 5: deliver
 
-RESOURCES = ['wood', 'grass', 'iron', 'gold', 'gem' ]  # for get actions
-TOOLS = ['toolshed', 'workbench', 'factory', 'bridge', 'axe'] # for use actions
-CRAFT = ['plank', 'stick', 'cloth', 'rope', 'bridge', 'bed', 'axe', 'shears' ] # makeable tools
+RESOURCES = ['coke', 'beer', 'chips', 'biscuits' ]  # for get actions
 
-CRAFTEDTOOLS = ['bridge','axe'] # usable and crafted tools
-
-LOCATIONS = [ ('wood',brown,1,1), ('grass',green,4,3), ('iron',grey,5,5), ('gold',gold,1,6), ('gem',lblue,8,1),
-    ('toolshed',dbrown,2,4), ('workbench',dgreen,6,3), ('factory',dgrey,4,7) ]
+LOCATIONS = [ ('coke',red,1,1), ('beer',gold,2,3), 
+    ('chips',yellow,3,1), ('biscuits',brown,0,3), 
+    ('john',blue,4,2), ('mary',lgreen,1,4) 
+]
 
 
 TASKS = { 
-    'make_plank': ['get_wood', 'use_toolshed'],
-    'make_stick': ['get_wood', 'use_workbench'],
-    'make_cloth': ['get_grass', 'use_factory'],
-    'make_rope':  ['get_grass', 'use_toolshed'],
-    'make_bridge': ['get_iron', 'get_wood', 'use_factory'],
-    'make_bed': ['get_wood', 'use_toolshed', 'get_grass', 'use_workbench'],
-    'make_axe': ['get_wood', 'use_workbench', 'get_iron', 'use_toolshed'],
-    'make_shears': ['get_wood', 'use_workbench', 'get_iron', 'use_workbench'],
-    'get_gold': ['get_iron', 'get_wood', 'use_factory', 'use_bridge'],
-    'get_gem': ['get_wood', 'use_workbench', 'get_iron', 'use_toolshed', 'use_axe']
+    'serve_coke_john': ['get_coke', 'deliver_john'],
+    'serve_coke_mary': ['get_coke', 'deliver_mary'],
+    'serve_beer_john': ['get_beer', 'deliver_john'],
+    'serve_beer_mary': ['get_beer', 'deliver_mary'],
+    'serve_chips_john': ['get_chips', 'deliver_john'],
+    'serve_chips_mary': ['get_chips', 'deliver_mary'],
+    'serve_biscuits_john': ['get_biscuits', 'deliver_john'],
+    'serve_biscuits_mary': ['get_biscuits', 'deliver_mary']
 }
 
 REWARD_STATES = {
@@ -53,20 +51,20 @@ REWARD_STATES = {
     'Alive':0,
     'Dead':0,
     'Score':1000,
-    'Hit':0,        
-    'Forward':0,        
-    'Turn':0,        
+    'Hit':0,
+    'Forward':0,
+    'Turn':0,
     'BadGet':0,        
-    'BadUse':0, 
+    'BadDeliver':0, 
     'TaskProgress':100,
     'TaskComplete':1000
 }
 
 
 
-class Minecraft(object):
+class CocktailParty(object):
 
-    def __init__(self, rows=10, cols=10, trainsessionname='test'):
+    def __init__(self, rows=5, cols=5, trainsessionname='test'):
         global ACTION_NAMES, LOCATIONS
         
         self.agent = None
@@ -112,10 +110,11 @@ class Minecraft(object):
         self.offy = 100
         self.radius = 5
 
+        # state variables
         self.action_names = ACTION_NAMES
+        self.nactions = len(self.action_names)  # 0: left, 1: right, 2: up, 3: down, 4: get, 5: deliver
         self.locations = LOCATIONS
-        self.has = {}
-        
+        self.has = None # None or exactly 1 item
         
         self.RA_visits = {} # number of visits for each RA state
         self.RA_success = {} # number of good transitions for each RA state
@@ -151,10 +150,9 @@ class Minecraft(object):
         if self.differential:
             ns *= 4
             self.nactionlimit *= 5
-            #self.ntaskactionslimit *= 4                    
-
+            #self.ntaskactionslimit *= 4
+            
         self.agent = agent
-        self.nactions = 6 + len(CRAFTEDTOOLS)  # 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6 ...: use crafted tools
         ns *= self.ntaskstates()
         print('Number of states: %d' %ns)
         print('Number of actions: %d' %self.nactions)
@@ -173,10 +171,8 @@ class Minecraft(object):
         self.consecutive_turns = 0
         self.consecutive_uses = 0
         
-        
         self.reset_tasks()
-        for t in CRAFTEDTOOLS:
-            self.has[t] = False
+        self.has = None
         
         self.score = 0
         self.gamman = 1.0 # cumulative gamma over time
@@ -228,19 +224,31 @@ class Minecraft(object):
         for t in TASKS.keys():
             r += b * self.task_state[t]
             b *= len(TASKS[t])+1
+#            print '    ---  encode task state  ',t , self.task_state[t]
+#        print '    ---  encode task state final: ', r
         return r
         
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y 
+#        print '-----'
+#        print (self.pos_x,self.pos_y,self.pos_th/90,self.encode_task_state())
+#        print ' +++ state: ',x
         n = (self.rows * self.cols)
         if (self.differential):
             x += (self.pos_th/90) * n
             n *= 4
-        x += n * self.encode_task_state()     
+        x += n * self.encode_task_state()
+#        print ' +++ state: ',x
+#        print ' === state: ',x,'\n'
         return x        
 
     def goal_reached(self):
-        return self.score==len(TASKS.keys())
+        global TASKS
+        r = self.score==len(TASKS.keys())
+#        print ' --- goal reached - score ', self.score
+#        if r:
+#            print ' --- goal reached!!!'
+        return r
         
     def savedata(self):
         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime,
@@ -262,39 +270,37 @@ class Minecraft(object):
                 break
         return r
 
+
     def doget(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
             print "get: ",what
         if (what==None):
             r = REWARD_STATES['BadGet']
+        elif (self.has!=None):
+            r = REWARD_STATES['BadGet']
         else:
+            self.has = what
             r = self.check_action('get',what)
         return r
     
     
-    def douse(self):
+    def dodeliver(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
             print "use: ",what
         if (what==None):
-            r = REWARD_STATES['BadUse']
-        else:    
-            r = self.check_action('use',what)
+            r = REWARD_STATES['BadDeliver']
+        elif (self.has==None):
+            r = REWARD_STATES['BadDeliver']
+        else:
+            self.has = None
+            r = self.check_action('deliver',what)
         return r
 
-    def dousetool(self, it):
-        what = CRAFTEDTOOLS[it]
-        if not self.isAuto:
-            print "use: ",what
-        if (not self.has[what]):
-            r = REWARD_STATES['BadUse']
-        else:    
-            r = self.check_action('use',what)
-        return r
 
-        
-    def check_action(self,a,what):  # a = 'get' or 'use'
+
+    def check_action(self,a,what):  # a = 'get' or 'deliver'
         r = 0 # reward to return
         self.state_changed = False # if RA state is changed
         act = a+"_"+what
@@ -313,7 +319,6 @@ class Minecraft(object):
                     if not self.isAuto:
                         print("!!!Task %s completed!!!" %t)
                     #v = t.split('_')  ???
-                    self.has[v[1]] = True
                     r += REWARD_STATES['TaskComplete']
                     self.state_changed = True
                     #print("state changed")
@@ -347,7 +352,7 @@ class Minecraft(object):
             self.RA_success[self.last_RA_state] = 1
         self.last_RA_state = self.current_RA_state
     
-        #print "RA state: ",self.RA.current_node
+        #print "RA state: ",self.current_RA_state
         success_rate = max(min(self.current_successrate(),0.9),0.1)
         #print "RA exploration policy: current state success rate ",success_rate
         er = random.random()
@@ -453,12 +458,8 @@ class Minecraft(object):
             r = self.doget() 
             self.current_reward += r
             self.consecutive_uses += 1
-        elif self.command == 5:  # use
-            r = self.douse()            
-            self.current_reward += r
-            self.consecutive_uses += 1
-        elif self.command >= 6 and self.command < 6+len(CRAFTEDTOOLS):  # use crafted tools
-            r = self.dousetool(self.command-6)            
+        elif self.command == 5:  # deliver
+            r = self.dodeliver()            
             self.current_reward += r
             self.consecutive_uses += 1
             
@@ -508,12 +509,8 @@ class Minecraft(object):
                     self.usercommand = 3
                 elif event.key == pygame.K_g: # get action
                     self.usercommand = 4
-                elif event.key == pygame.K_u: # use action
+                elif event.key == pygame.K_u: # deliver action
                     self.usercommand = 5
-                elif event.key == pygame.K_b: # use bridge
-                    self.usercommand = 6
-                elif event.key == pygame.K_x: # use axe
-                    self.usercommand = 7
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
                     print("Game paused: %s" %self.pause)
