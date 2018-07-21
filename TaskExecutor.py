@@ -5,14 +5,13 @@ import random
 import time
 import math
 from math import fabs
-import TaskExecutor
-from TaskExecutor import *
 
 black = [0, 0, 0]
 white = [255,255,255]
 grey = [180,180,180]
 dgrey = [120,120,120]
 orange = [180,100,20]
+red = [200,0,0]
 green = [0,200,0]
 lgreen = [60,250,60]
 dgreen = [0,100,0]
@@ -21,117 +20,12 @@ lblue = [80,200,200]
 brown = [140, 100, 40]
 dbrown = [100, 80, 0]
 gold = [230, 215, 80]
+yellow = [210, 250, 80]
 
 
+class TaskExecutor(object):
 
-ACTION_NAMES = ['<-','->','^','v','g','u','b','x'] 
-# 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6, 7: use crafted tools
-
-MAP_ACTIONS = { 5: 'get', 6: 'use', 7: 'usetool_bridge', 8: 'usetool_axe' }
-
-RESOURCES = ['wood', 'grass', 'iron', 'gold', 'gem' ]  # for get actions
-TOOLS = ['toolshed', 'workbench', 'factory', 'bridge', 'axe'] # for use actions
-CRAFT = ['plank', 'stick', 'cloth', 'rope', 'bridge', 'bed', 'axe', 'shears' ] # makeable tools
-
-CRAFTEDTOOLS = ['bridge','axe'] # usable and crafted tools
-
-LOCATIONS = [ ('wood',brown,1,1), ('grass',green,4,3), ('iron',grey,5,5), 
-    ('gold',gold,1,6), ('gem',lblue,6,1), ('toolshed',dbrown,2,4),
-    ('workbench',dgreen,0,3), ('factory',dgrey,4,6) ]
-
-
-TASKS = { 
-    'make_plank': [ ['get_wood', 'use_toolshed'] ],
-    'make_stick': [ ['get_wood', 'use_workbench'] ],
-    'make_cloth': [ ['get_grass', 'use_factory'] ],
-    'make_rope':  [ ['get_grass', 'use_toolshed'] ],
-    'make_bridge': [ ['get_iron', 'get_wood', 'use_factory'] ],
-    'make_bed': [ ['get_wood', 'use_toolshed', 'get_grass', 'use_workbench'] ],
-    'make_axe': [ ['get_wood', 'use_workbench', 'get_iron', 'use_toolshed'] ],
-    'make_shears': [ ['get_wood', 'use_workbench', 'get_iron', 'use_workbench'] ],
-    'get_gold': [ ['get_iron', 'get_wood', 'use_factory', 'use_bridge'] ],
-    'get_gem': [ ['get_wood', 'use_workbench', 'get_iron', 'use_toolshed', 'use_axe'] ]
-}
-
-REWARD_STATES = {
-    'Init':0,
-    'Alive':0,
-    'Dead':0,
-    'Score':1000,
-    'Hit':0,        
-    'Forward':0,        
-    'Turn':0,        
-    'BadGet':0,        
-    'BadUse':0, 
-    'TaskProgress':100,
-    'TaskComplete':1000
-}
-
-
-class Minecraft(TaskExecutor):
-
-    def __init__(self, rows=7, cols=7, trainsessionname='test'):
-        global ACTION_NAMES, LOCATIONS, TASKS, REWARD_STATES
-        TaskExecutor.__init__(self, rows, cols, trainsessionname)
-        self.locations = LOCATIONS
-        self.action_names = ACTION_NAMES
-        self.tasks = TASKS
-        self.reward_states = REWARD_STATES
-        self.maxitemsheld = 10
-        self.map_actionfns = { 4: self.doget, 5: self.douse,
-            6: self.dousebridge, 7: self.douseaxe }
-
-    def doget(self):
-        what = self.itemat(self.pos_x, self.pos_y)
-        if what!=None and not self.isAuto:
-            print "get: ",what
-            print "has: ",self.has
-            print "maxitem: ",self.maxitemsheld
-        if (what==None):
-            r = self.reward_states['BadGet']
-        elif (len(self.has)==self.maxitemsheld):
-            r = self.reward_states['BadGet']
-        else:
-            if (not what in self.has):
-                self.has.append(what)
-            r = self.check_action_task('get',what)
-        return r
-
-    def douse(self):
-        what = self.itemat(self.pos_x, self.pos_y)
-        if what!=None and not self.isAuto:
-            print "use: ",what
-        if (what==None):
-            r = self.reward_states['BadUse']
-        else:    
-            r = self.check_action_task('use',what)
-        return r
-
-    def dousebridge(self):
-        return self.dousetool('bridge')
-
-    def douseaxe(self):
-        return self.dousetool('axe')
-
-    def dousetool(self, what):
-        tt = 'make_%s' %what
-        if not self.isAuto:
-            print "use: ",what
-        if (not tt in self.taskscompleted):
-            r = self.reward_states['BadUse']
-        else:    
-            r = self.check_action_task('use',what)
-        return r
-
-
-
-
-
-class MinecraftOLD(object):
-
-    def __init__(self, rows=10, cols=10, trainsessionname='test'):
-        global ACTION_NAMES, LOCATIONS
-        
+    def __init__(self, rows=5, cols=5, trainsessionname='test'):
         self.agent = None
         self.isAuto = True
         self.gui_visible = False
@@ -158,9 +52,9 @@ class MinecraftOLD(object):
         self.ngoalreached = 0
         
         self.nactionlimit = 1000
-        self.ntaskactionslimit = 100
-        self.turnslimit = 4 # max consecutive turns allowed
-        self.useslimit = 5 # max consecutive uses allowed
+        self.ntaskactionslimit = 1000
+        self.turnslimit = 10 # max consecutive turns allowed
+        self.useslimit = 100 # max consecutive uses allowed
         
         self.hiscore = 0
         self.hireward = -1000000
@@ -175,10 +69,6 @@ class MinecraftOLD(object):
         self.offy = 100
         self.radius = 5
 
-        self.action_names = ACTION_NAMES
-        self.locations = LOCATIONS
-        self.has = {}
-        
         self.RA_visits = {} # number of visits for each RA state
         self.RA_success = {} # number of good transitions for each RA state
 
@@ -192,17 +82,29 @@ class MinecraftOLD(object):
         #allows for holding of key
         #pygame.key.set_repeat(1,0)
 
-        # self.reset()
+        # self.reset()  called by game engine
 
         self.screen = pygame.display.set_mode([self.win_width,self.win_height])
         self.myfont = pygame.font.SysFont("Arial",  30)
+
+        # to be set by sub-classes
+        #self.locations = LOCATIONS
+        #self.action_names = ACTION_NAMES
+        #self.tasks = TASKS
+        #self.reward_states = REWARD_STATES
+        self.maxitemsheld = 1 # max number of items agent can hold
+
         
+
+
     def ntaskstates(self):
-        global TASKS
         r = 1
-        for t in TASKS.keys():
-            r *= len(TASKS[t])+1
+        for t in self.tasks.keys():
+            tl = self.tasks[t]
+            for l in tl: 
+                r *= len(l)+1
         return r
+
         
     def init(self, agent):  # init after creation (uses args set from cli)
         if (not self.gui_visible):
@@ -213,10 +115,12 @@ class MinecraftOLD(object):
         if self.differential:
             ns *= 4
             self.nactionlimit *= 5
-            #self.ntaskactionslimit *= 4                    
+            #self.ntaskactionslimit *= 4
 
+        # number of actions        
+        self.nactions = len(self.action_names)
+    
         self.agent = agent
-        self.nactions = 6 + len(CRAFTEDTOOLS)  # 0: left, 1: right, 2: up, 3: down, 4: get, 5: use, 6 ...: use crafted tools
         ns *= self.ntaskstates()
         print('Number of states: %d' %ns)
         print('Number of actions: %d' %self.nactions)
@@ -225,8 +129,6 @@ class MinecraftOLD(object):
 
 
     def reset(self):
-        global TASKS
-        
         random.seed()
         
         self.pos_x = 0
@@ -235,10 +137,8 @@ class MinecraftOLD(object):
         self.consecutive_turns = 0
         self.consecutive_uses = 0
         
-        
         self.reset_tasks()
-        for t in CRAFTEDTOOLS:
-            self.has[t] = False
+        self.has = []
         
         self.score = 0
         self.gamman = 1.0 # cumulative gamma over time
@@ -266,43 +166,67 @@ class MinecraftOLD(object):
 
         
     def reset_tasks(self):
-        global TASKS
         # RA state of each sub-task
         self.task_state = {}
-        for t in TASKS.keys():
-            self.task_state[t]=0
+        for t in self.tasks.keys():
+            tl = self.tasks[t]
+            i = 0
+            for l in tl:
+                self.task_state[(t,i)]=0
+                i += 1
         self.actionlocation = []
         self.ntaskactions = 0
+        self.taskscompleted = []
 
     def reset_partial_tasks(self):
-        global TASKS
-        # RA state of each sub-task
-        for t in TASKS.keys():
-            if (self.task_state[t] < len(TASKS[t])):
-                #print('reset task %s' %t)
-                self.task_state[t]=0
+        # reset state of each sub-task
+        for t in self.tasks.keys():
+            ltl = self.tasks[t]
+            i = 0
+            for tl in ltl:
+                if t in self.taskscompleted:
+                    self.task_state[(t,i)]=len(tl)
+                elif self.task_state[(t,i)] < len(tl):
+                    #print('reset task %s' %t)
+                    self.task_state[(t,i)]=0
+                i += 1
         self.actionlocation = []
 
+
     def encode_task_state(self):
-        global TASKS
         r = 0
         b = 1
-        for t in TASKS.keys():
-            r += b * self.task_state[t]
-            b *= len(TASKS[t])+1
+        for t in self.tasks.keys():
+            tl = self.tasks[t]
+            i = 0
+            for l in tl:
+                r += b * self.task_state[(t,i)]
+                b *= len(l)+1
+                i += 1
+#            print '    ---  encode task state  ',t , self.task_state[t]
+#        print '    ---  encode task state final: ', r
         return r
         
     def getstate(self):
         x = self.pos_x + self.cols * self.pos_y 
+#        print '-----'
+#        print (self.pos_x,self.pos_y,self.pos_th/90,self.encode_task_state())
+#        print ' +++ state: ',x
         n = (self.rows * self.cols)
         if (self.differential):
             x += (self.pos_th/90) * n
             n *= 4
-        x += n * self.encode_task_state()     
+        x += n * self.encode_task_state()
+#        print ' +++ state: ',x
+#        print ' === state: ',x,'\n'
         return x        
 
     def goal_reached(self):
-        return self.score==len(TASKS.keys())
+        r = self.score==len(self.tasks.keys())
+#        print ' --- goal reached - score ', self.score
+#        if r:
+#            print ' --- goal reached!!!'
+        return r
         
     def savedata(self):
         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime,
@@ -324,65 +248,40 @@ class MinecraftOLD(object):
                 break
         return r
 
-    def doget(self):
-        what = self.itemat(self.pos_x, self.pos_y)
-        if what!=None and not self.isAuto:
-            print "get: ",what
-        if (what==None):
-            r = REWARD_STATES['BadGet']
-        else:
-            r = self.check_action('get',what)
-        return r
-    
-    def douse(self):
-        what = self.itemat(self.pos_x, self.pos_y)
-        if what!=None and not self.isAuto:
-            print "use: ",what
-        if (what==None):
-            r = REWARD_STATES['BadUse']
-        else:    
-            r = self.check_action('use',what)
-        return r
-
-    def dousetool(self, it):
-        what = CRAFTEDTOOLS[it]
-        if not self.isAuto:
-            print "use: ",what
-        if (not self.has[what]):
-            r = REWARD_STATES['BadUse']
-        else:    
-            r = self.check_action('use',what)
-        return r
-
-        
-    def check_action(self,a,what):  # a = 'get' or 'use'
+    # check if this action progresses any task
+    # check if any task finished and resets other sub-tasks
+    def check_action_task(self,a,what):  
         r = 0 # reward to return
         self.state_changed = False # if RA state is changed
         act = a+"_"+what
-        #if not self.isAuto:
-        #print("checking action %s" %act)
-        for t in TASKS.keys():
-            ts = self.task_state[t]
-            tl = TASKS[t] # action list for this task
-            #print('  -- %s' %tl[ts])
-            if (ts<len(tl) and act==tl[ts]):
-                #print('*** good action for %s ***' %t)
-                self.actionlocation.append((self.pos_x, self.pos_y))
-                self.task_state[t] += 1 # go to next task state
-                r += REWARD_STATES['TaskProgress']
-                if (self.task_state[t] == len(tl)):
+        if not self.isAuto:
+            print("checking action %s" %act)
+        for t in self.tasks.keys():
+            ltl = self.tasks[t]
+            i = 0
+            for tl in ltl: # action list for this task
+                ts = self.task_state[(t,i)]
+                if not self.isAuto:
+                    print('  -- task list: %r status: %d' %(tl,ts))
+                if (ts<len(tl) and act==tl[ts]):
                     if not self.isAuto:
-                        print("!!!Task %s completed!!!" %t)
-                    #v = t.split('_')  ???
-                    self.has[v[1]] = True
-                    r += REWARD_STATES['TaskComplete']
-                    self.state_changed = True
-                    #print("state changed")
-                    self.score += 1
-                    self.reset_partial_tasks()
+                        print('*** good action for %s ***' %t)
+                    self.actionlocation.append((self.pos_x, self.pos_y))
+                    self.task_state[(t,i)] += 1 # go to next task state
+                    r += self.reward_states['TaskProgress']
+                    if (self.task_state[(t,i)] == len(tl)):
+                        if not self.isAuto:
+                            print("!!!Task %s completed!!!" %t)
+                        self.taskscompleted.append(t)
+                        r += self.reward_states['TaskComplete']
+                        self.state_changed = True
+                        #print("state changed")
+                        self.score += 1
+                        self.reset_partial_tasks()
+                i += 1
         #print('   ... reward %d' %r)
         return r 
-        
+
     def current_successrate(self):
         s = 0.0
         v = 1.0
@@ -408,7 +307,7 @@ class MinecraftOLD(object):
             self.RA_success[self.last_RA_state] = 1
         self.last_RA_state = self.current_RA_state
     
-        #print "RA state: ",self.RA.current_node
+        #print "RA state: ",self.current_RA_state
         success_rate = max(min(self.current_successrate(),0.9),0.1)
         #print "RA exploration policy: current state success rate ",success_rate
         er = random.random()
@@ -432,29 +331,29 @@ class MinecraftOLD(object):
         
         if (self.firstAction):
             self.firstAction = False
-            self.current_reward += REWARD_STATES['Init']
+            self.current_reward += self.reward_states['Init']
         
         if (not self.differential):
             if self.command == 0:  # moving left
                 self.pos_x -= 1
                 if (self.pos_x < 0):
                     self.pos_x = 0 
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
             elif self.command == 1:  # moving right
                 self.pos_x += 1
                 if (self.pos_x >= self.cols):
                     self.pos_x = self.cols-1
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
             elif self.command == 2:  # moving up
                 self.pos_y += 1
                 if (self.pos_y >= self.rows):
                     self.pos_y = self.rows-1
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
             elif self.command == 3:  # moving down
                 self.pos_y -= 1
                 if (self.pos_y< 0):
                     self.pos_y = 0 
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
 
         else:
             # differential motion
@@ -464,14 +363,14 @@ class MinecraftOLD(object):
                     self.pos_th -= 360
                 #print ("left") 
                 self.consecutive_turns += 1
-                self.current_reward += REWARD_STATES['Turn']
+                self.current_reward += self.reward_states['Turn']
             elif self.command == 1:  # turn right
                 self.pos_th -= 90
                 if (self.pos_th < 0):
                     self.pos_th += 360 
                 #print ("right")
                 self.consecutive_turns += 1
-                self.current_reward += REWARD_STATES['Turn']
+                self.current_reward += self.reward_states['Turn']
             elif (self.command == 2 or self.command == 3):
                 dx = 0
                 dy = 0
@@ -489,63 +388,60 @@ class MinecraftOLD(object):
                     #print ("backward") 
                 else:
                     #print ("forward")
-                    self.current_reward += REWARD_STATES['Forward']
+                    self.current_reward += self.reward_states['Forward']
                 self.consecutive_turns = 0
                 self.consecutive_uses = 0
 
                 self.pos_x += dx
                 if (self.pos_x >= self.cols):
                     self.pos_x = self.cols-1
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
                 if (self.pos_x < 0):
                     self.pos_x = 0 
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
                 self.pos_y += dy
                 if (self.pos_y >= self.rows):
                     self.pos_y = self.rows-1
-                    self.current_reward += REWARD_STATES['Hit']
+                    self.current_reward += self.reward_states['Hit']
                 if (self.pos_y < 0):
                     self.pos_y = 0 
-                    self.current_reward += REWARD_STATES['Hit']        
-                
-                
-                
-        if self.command == 4:  # get
-            r = self.doget() 
-            self.current_reward += r
-            self.consecutive_uses += 1
-        elif self.command == 5:  # use
-            r = self.douse()            
-            self.current_reward += r
-            self.consecutive_uses += 1
-        elif self.command >= 6 and self.command < 6+len(CRAFTEDTOOLS):  # use crafted tools
-            r = self.dousetool(self.command-6)            
-            self.current_reward += r
-            self.consecutive_uses += 1
-            
-        self.current_reward += REWARD_STATES['Alive']
+                    self.current_reward += self.reward_states['Hit']        
 
-        # RA exploration        
+        if self.command>=4:
+            r = 0
+            if (self.command in self.map_actionfns):
+                # exec action function
+                r = self.map_actionfns[self.command]()
+            else:
+                print('ERROR: action command %d unknown!!!' %self.command)
+            self.current_reward += r
+            self.consecutive_uses += 1
+
+        self.current_reward += self.reward_states['Alive']
+
+        # RA exploration   
         if (self.state_changed):  # when task completed
             self.RA_exploration()
             self.state_changed = False
 
         # check if episode terminated
         if self.goal_reached():
-            self.current_reward += REWARD_STATES['Score']
+            self.current_reward += self.reward_states['Score']
             self.ngoalreached += 1
             self.finished = True
             
         if (self.numactions>self.nactionlimit):
-            self.current_reward += REWARD_STATES['Dead']
+            self.current_reward += self.reward_states['Dead']
             self.finished = True
 
+        # too many consecutive actions
         if (self.consecutive_turns>self.turnslimit or self.consecutive_uses>self.useslimit or self.ntaskactions > self.ntaskactionslimit):
-            if (self.agent.optimal):
-                #self.finished = True
-                pass
-            elif (self.agent.partialoptimal):
-                self.agent.partialoptimal = False
+            self.finished = True
+            #if (self.agent.optimal):
+            #    #self.finished = True
+            #    pass
+            #elif (self.agent.partialoptimal):
+            #    self.agent.partialoptimal = False
                 
         #print " ** Update end ",self.getstate(), " prev ",self.prev_state
         
@@ -567,13 +463,13 @@ class MinecraftOLD(object):
                     self.usercommand = 2
                 elif event.key == pygame.K_DOWN:
                     self.usercommand = 3
-                elif event.key == pygame.K_g: # get action
+                elif event.key == pygame.K_4: # user action
                     self.usercommand = 4
-                elif event.key == pygame.K_u: # use action
+                elif event.key == pygame.K_5: # user action
                     self.usercommand = 5
-                elif event.key == pygame.K_b: # use bridge
+                elif event.key == pygame.K_6: # user action
                     self.usercommand = 6
-                elif event.key == pygame.K_x: # use axe
+                elif event.key == pygame.K_7: # user action
                     self.usercommand = 7
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
@@ -665,11 +561,14 @@ class MinecraftOLD(object):
         self.screen.blit(count_label, (60, 10))
         
         sinv = ''
-        for t in TASKS.keys():
-            if (self.task_state[t] == len(TASKS[t])):
-                sinv += '*'
-            else:
-                sinv += '-'
+        for t in self.tasks.keys():
+            ltl = self.tasks[t]
+            i = 0
+            st = '-'
+            for tl in ltl:
+                if (self.task_state[(t,i)] == len(tl)):
+                    st = '*'
+            sinv += st
             
         inv_label = self.myfont.render(sinv, 100, pygame.color.THECOLORS['blue'])
         self.screen.blit(inv_label, (200, 10))
