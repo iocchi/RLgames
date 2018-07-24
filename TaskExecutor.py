@@ -69,6 +69,7 @@ class TaskExecutor(object):
         self.offy = 100
         self.radius = 5
 
+        self.RA_exploration_enabled = False # experimental ...
         self.RA_visits = {} # number of visits for each RA state
         self.RA_success = {} # number of good transitions for each RA state
 
@@ -250,10 +251,13 @@ class TaskExecutor(object):
 
     # check if this action progresses any task
     # check if any task finished and resets other sub-tasks
-    def check_action_task(self,a,what):  
+    def check_action_task(self,a,what=None):  
         r = 0 # reward to return
         self.state_changed = False # if RA state is changed
-        act = a+"_"+what
+        if (what!=None):
+            act = a+"_"+what
+        else:
+            act = a
         if not self.isAuto:
             print("checking action %s" %act)
         for t in self.tasks.keys():
@@ -293,6 +297,8 @@ class TaskExecutor(object):
         return s/v
         
     def RA_exploration(self):
+        if (not self.RA_exploration_enabled):
+            return
         # update success/visit
         #print("update success/visit")
         self.current_RA_state = self.encode_task_state()
@@ -471,6 +477,10 @@ class TaskExecutor(object):
                     self.usercommand = 6
                 elif event.key == pygame.K_7: # user action
                     self.usercommand = 7
+                elif event.key == pygame.K_8: # user action
+                    self.usercommand = 8
+                elif event.key == pygame.K_9: # user action
+                    self.usercommand = 9
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
                     print("Game paused: %s" %self.pause)
@@ -489,6 +499,9 @@ class TaskExecutor(object):
                 elif event.key == pygame.K_q:
                     self.userquit = True
                     print("User quit !!!")
+
+        if self.usercommand>=self.nactions:
+            self.usercommand = -1
 
         return not self.userquit
 
@@ -554,11 +567,12 @@ class TaskExecutor(object):
         #count_label = self.myfont.render(str(self.paddle_hit_count), 100, pygame.color.THECOLORS['brown'])
         #self.screen.blit(count_label, (70, 10))
 
-        x = self.getstate()
-        cmd = self.action_names[self.command]
-        s = '%d %s' %(x,cmd)
-        count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
-        self.screen.blit(count_label, (60, 10))
+        if self.command<self.nactions:
+            x = self.getstate()
+            cmd = self.action_names[self.command]
+            s = '%d %s' %(x,cmd)
+            count_label = self.myfont.render(s, 100, pygame.color.THECOLORS['brown'])
+            self.screen.blit(count_label, (60, 10))
         
         sinv = ''
         for t in self.tasks.keys():

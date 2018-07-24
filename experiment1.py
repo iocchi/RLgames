@@ -69,17 +69,27 @@ maxtime = 2400
 
 # Sapientino 3
 
-maxtime = 900
+maxtime = 300
 
 #doExperiment('Sapientino','3',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
 #doExperiment('Sapientino','3C',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 nstep = 20
 
-gamma = 0.9
+gamma = 0.99
 alpha = 0.1
 
-#doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
+#doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Sapientino','3Dx',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Sapientino','3DR',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Sapientino','3DxR',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+
+while maxtime<=1200:
+    doExperiment('Sapientino','3Dr',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 4, 6) 
+    doExperiment('Sapientino','3Dxr',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 4, 6) 
+    maxtime += 300
+
+
 #doExperiment('Sapientino','3DC',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
 
 gamma = 0.9

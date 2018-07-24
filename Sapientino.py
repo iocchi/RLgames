@@ -28,7 +28,7 @@ STATES = {
     'GoodColor':0,
     'GoalStep':100,
     'RAFail':-10,
-    'RAGoal':100
+    'RAGoal':1000
 }
 
 # Reward automa
@@ -45,6 +45,7 @@ class RewardAutoma(object):
         self.goalreached = 0 # number of RA goals reached for statistics
         self.visits = {} # number of visits for each RA state
         self.success = {} # number of good transitions for each RA state
+        self.reward_shaping_enabled = False
         self.reset()
 
     def init(self, game):
@@ -133,8 +134,13 @@ class RewardAutoma(object):
                 #    reward += STATES['GoalStep']
                 else: # new state good for the goal
                     self.countupdates += 1
-                    #reward += STATES['GoalStep']
-                    reward += self.countupdates * STATES['GoalStep']
+                    if self.reward_shaping_enabled:
+                        rs = self.reward_shape(self.last_node, self.current_node)
+                        #print ' -- added reward shape F(%d,a,%d) = %f ' %(self.last_node, self.current_node, rs)
+                        reward += rs
+                    else:
+                        #reward += STATES['GoalStep']
+                        reward += self.countupdates * STATES['GoalStep']
                 if (self.current_node == self.RAGoal): #  GOAL
                     reward += STATES['RAGoal']
                     #print("RAGoal")
@@ -168,7 +174,16 @@ class RewardAutoma(object):
         return s/v
 
 
+    # reward shaping function
+    def reward_shape(self, s, snext):
+        egamma = math.pow(0.99, 10) # estimated discount to reach a new RA state
+        return egamma * self.reward_phi(snext) - self.reward_phi(s)
 
+
+    # reward shaping function
+    def reward_phi(self, state):
+        # state = current node (encoding of tokenbip)        
+        return state * 100
 
 
 class Sapientino(object):
@@ -200,7 +215,8 @@ class Sapientino(object):
         self.cumscore100 = 0 
         self.ngoalreached = 0
         self.numactions = 0 # number of actions in this run
-        
+        self.reward_shaping_enabled = False
+
         self.hiscore = 0
         self.hireward = -1000000
         self.resfile = open("data/"+self.trainsessionname +".dat","a+")
@@ -229,6 +245,7 @@ class Sapientino(object):
         
         self.ncolors = ncol
         self.nvisitpercol = nvisitpercol
+        self.RA_exploration_enabled = False
         self.RA = RewardAutoma(self.ncolors, self.nvisitpercol)
         self.RA.init(self)
 
@@ -239,7 +256,14 @@ class Sapientino(object):
 
         self.agent = agent
         self.nactions = 5  # 0: left, 1: right, 2: up, 3: down, 4: bip
-        ns = self.getSizeStateSpace() * self.RA.nRAstates
+
+        self.nstates = self.rows * self.cols
+        if (self.differential):
+            self.nstates *= 4
+        if (self.colorsensor):
+            self.nstates *= self.ncolors+1
+
+        ns = self.nstates * self.RA.nRAstates
         print('Number of states: %d' %ns)
         print('Number of actions: %d' %self.nactions)
         self.agent.init(ns, self.nactions) 
@@ -292,11 +316,6 @@ class Sapientino(object):
 
         
     def getSizeStateSpace(self):
-        self.nstates = self.rows * self.cols
-        if (self.differential):
-            self.nstates *= 4
-        if (self.colorsensor):
-            self.nstates *= self.ncolors+1
         return self.nstates
 
 
@@ -343,6 +362,8 @@ class Sapientino(object):
         return r
 
     def RA_exploration(self):
+        if not self.RA_exploration_enabled:
+            return
         #print "RA state: ",self.RA.current_node
         success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
         #print "RA exploration policy: current state success rate ",success_rate
@@ -490,7 +511,8 @@ class Sapientino(object):
         #if (self.finished):
         #    print("  -- final reward %d" %(self.cumreward))            
 
-
+        if (not self.finished and self.reward_shaping_enabled):
+            self.current_reward += self.reward_shape(self.prev_state, self.getstate())
 
 
     def input(self):
@@ -548,13 +570,23 @@ class Sapientino(object):
         return self.command
 
     def getreward(self):
-        r = self.current_reward        
+        r = self.current_reward
         if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
             r = 0
         self.cumreward += self.gamman * r
         self.gamman *= self.agent.gamma
         return r
 
+    # reward shaping function
+    def reward_shape(self, s, snext):
+        return self.agent.gamma * self.reward_phi(snext) - self.reward_phi(s)
+
+
+    # reward shaping function
+    def reward_phi(self, state):
+        # state = current node (encoding of tokenbip)
+        RAstate = int(state / self.nstates)
+        return RAstate
 
     def print_report(self, printall=False):
         toprint = printall
@@ -598,7 +630,7 @@ class Sapientino(object):
 
         sys.stdout.flush()
         
-        self.resfile.write("%d,%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
+        self.resfile.write("%d,%d,%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal,self.elapsedtime))
         self.resfile.flush()
 
 

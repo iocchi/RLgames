@@ -71,7 +71,7 @@ class CocktailParty(TaskExecutor):
     def dodeliver(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "deliver %r to %s ",self.has,what
+            print "deliver %r to %s " %(self.has,what)
         if (what==None):
             r = self.reward_states['BadDeliver']
         elif (len(self.has)==0):

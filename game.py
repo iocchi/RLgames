@@ -92,6 +92,33 @@ def loadGameModule():
             mod = importlib.import_module('Sapientino')
             game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
             game.differential = True
+        elif (args.game=='Sapientino3DR'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+            game.RA.reward_shaping_enabled = True
+        elif (args.game=='Sapientino3Dr'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+            game.reward_shaping_enabled = True
+        elif (args.game=='Sapientino3Dx'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+            game.RA_exploration_enabled = True
+        elif (args.game=='Sapientino3Dxr'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+            game.RA_exploration_enabled = True
+            game.reward_shaping_enabled = True
+        elif (args.game=='Sapientino3DxR'):
+            mod = importlib.import_module('Sapientino')
+            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
+            game.differential = True
+            game.RA_exploration_enabled = True
+            game.RA.reward_shaping_enabled = True
         elif (args.game=='Sapientino3C'):
             mod = importlib.import_module('Sapientino')
             game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
@@ -107,17 +134,37 @@ def loadGameModule():
         elif (args.game=='Minecraft'):
             mod = importlib.import_module(args.game)
             game = mod.Minecraft(trainsessionname=trainfilename)
+        elif (args.game=='Minecraftx'):
+            mod = importlib.import_module('Minecraft')
+            game = mod.Minecraft(trainsessionname=trainfilename)
+            game.RA_exploration_enabled = True
         elif (args.game=='MinecraftD'):
             mod = importlib.import_module('Minecraft')
             game = mod.Minecraft(trainsessionname=trainfilename)
             game.differential = True
+        elif (args.game=='MinecraftDx'):
+            mod = importlib.import_module('Minecraft')
+            game = mod.Minecraft(trainsessionname=trainfilename)
+            game.differential = True
+            game.RA_exploration_enabled = True
         elif (args.game=='CP'):
             mod = importlib.import_module('CocktailParty')
             game = mod.CocktailParty(trainsessionname=trainfilename)
+        elif (args.game=='CPx'):
+            mod = importlib.import_module('CocktailParty')
+            game = mod.CocktailParty(trainsessionname=trainfilename)
+            game.RA_exploration_enabled = True
         elif (args.game=='CPD'):
             mod = importlib.import_module('CocktailParty')
             game = mod.CocktailParty(trainsessionname=trainfilename)
             game.differential = True
+        elif (args.game=='PP'):
+            mod = importlib.import_module('PickAndPlace')
+            game = mod.PickAndPlace(trainsessionname=trainfilename)
+        elif (args.game=='PPx'):
+            mod = importlib.import_module('PickAndPlace')
+            game = mod.PickAndPlace(trainsessionname=trainfilename)
+            game.RA_exploration_enabled = True
         else:
             print("ERROR: game %s not found." %args.game)
             sys.exit(1)
