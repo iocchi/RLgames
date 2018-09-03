@@ -149,14 +149,18 @@ def loadGameModule():
             game.RA_exploration_enabled = True
         elif (args.game=='CP'):
             mod = importlib.import_module('CocktailParty')
-            game = mod.CocktailParty(trainsessionname=trainfilename)
+            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
+        elif (args.game=='CP1'):
+            mod = importlib.import_module('CocktailParty')
+            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
+            game.setOneTask()
         elif (args.game=='CPx'):
             mod = importlib.import_module('CocktailParty')
-            game = mod.CocktailParty(trainsessionname=trainfilename)
+            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
             game.RA_exploration_enabled = True
         elif (args.game=='CPd'):
             mod = importlib.import_module('CocktailParty')
-            game = mod.CocktailParty(trainsessionname=trainfilename)
+            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
             game.differential = True
         elif (args.game=='CPD'):
             mod = importlib.import_module('CocktailPartyDynamic')
