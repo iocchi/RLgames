@@ -12,6 +12,7 @@ grey = [180,180,180]
 dgrey = [120,120,120]
 orange = [180,100,20]
 red = [200,0,0]
+pink = [250, 150, 150]
 green = [0,200,0]
 lgreen = [60,250,60]
 dgreen = [0,100,0]
@@ -40,7 +41,10 @@ class TaskExecutor(object):
         self.debug = False
         
         self.differential = False
-        
+        self.initial_pos_x = 0
+        self.initial_pos_y = 0
+        self.initial_pos_th = 90
+
         self.sleeptime = 0.0
         self.command = 0
         self.iteration = 0
@@ -132,9 +136,9 @@ class TaskExecutor(object):
     def reset(self):
         random.seed()
         
-        self.pos_x = 0
-        self.pos_y = 0
-        self.pos_th = 90
+        self.pos_x = self.initial_pos_x
+        self.pos_y = self.initial_pos_y
+        self.pos_th = self.initial_pos_th
         self.consecutive_turns = 0
         self.consecutive_uses = 0
         
@@ -339,27 +343,18 @@ class TaskExecutor(object):
             self.firstAction = False
             self.current_reward += self.reward_states['Init']
         
+        newposx = self.pos_x
+        newposy = self.pos_y
+
         if (not self.differential):
             if self.command == 0:  # moving left
-                self.pos_x -= 1
-                if (self.pos_x < 0):
-                    self.pos_x = 0 
-                    self.current_reward += self.reward_states['Hit']
+                newposx = self.pos_x - 1
             elif self.command == 1:  # moving right
-                self.pos_x += 1
-                if (self.pos_x >= self.cols):
-                    self.pos_x = self.cols-1
-                    self.current_reward += self.reward_states['Hit']
+                newposx = self.pos_x + 1
             elif self.command == 2:  # moving up
-                self.pos_y += 1
-                if (self.pos_y >= self.rows):
-                    self.pos_y = self.rows-1
-                    self.current_reward += self.reward_states['Hit']
+                newposy = self.pos_y + 1
             elif self.command == 3:  # moving down
-                self.pos_y -= 1
-                if (self.pos_y< 0):
-                    self.pos_y = 0 
-                    self.current_reward += self.reward_states['Hit']
+                newposy = self.pos_y - 1
 
         else:
             # differential motion
@@ -397,21 +392,28 @@ class TaskExecutor(object):
                     self.current_reward += self.reward_states['Forward']
                 self.consecutive_turns = 0
                 self.consecutive_uses = 0
+                newposx = self.pos_x + dx
+                newposy = self.pos_y + dy
 
-                self.pos_x += dx
-                if (self.pos_x >= self.cols):
-                    self.pos_x = self.cols-1
-                    self.current_reward += self.reward_states['Hit']
-                if (self.pos_x < 0):
-                    self.pos_x = 0 
-                    self.current_reward += self.reward_states['Hit']
-                self.pos_y += dy
-                if (self.pos_y >= self.rows):
-                    self.pos_y = self.rows-1
-                    self.current_reward += self.reward_states['Hit']
-                if (self.pos_y < 0):
-                    self.pos_y = 0 
-                    self.current_reward += self.reward_states['Hit']        
+        if (newposx < 0):
+            newposx = 0 
+            self.current_reward += self.reward_states['Hit']
+        if (newposx >= self.cols):
+            newposx = self.cols-1
+            self.current_reward += self.reward_states['Hit']
+        if (newposy >= self.rows):
+            newposy = self.rows-1
+            self.current_reward += self.reward_states['Hit']
+        if (newposy< 0):
+            newposy = 0 
+            self.current_reward += self.reward_states['Hit']
+
+        if self.itemat(newposx,newposy)=='obstacle':
+            self.current_reward += self.reward_states['Hit']
+        else:
+            self.pos_x = newposx
+            self.pos_y = newposy
+
 
         if self.command>=4:
             r = 0

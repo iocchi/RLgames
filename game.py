@@ -154,10 +154,17 @@ def loadGameModule():
             mod = importlib.import_module('CocktailParty')
             game = mod.CocktailParty(trainsessionname=trainfilename)
             game.RA_exploration_enabled = True
-        elif (args.game=='CPD'):
+        elif (args.game=='CPd'):
             mod = importlib.import_module('CocktailParty')
             game = mod.CocktailParty(trainsessionname=trainfilename)
             game.differential = True
+        elif (args.game=='CPD'):
+            mod = importlib.import_module('CocktailPartyDynamic')
+            game = mod.CocktailParty(trainsessionname=trainfilename)
+            game.differential = False
+        elif (args.game=='CPR'):
+            mod = importlib.import_module('CocktailPartyROS')
+            game = mod.CocktailParty(trainsessionname=trainfilename)
         elif (args.game=='PP'):
             mod = importlib.import_module('PickAndPlace')
             game = mod.PickAndPlace(trainsessionname=trainfilename)
