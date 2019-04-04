@@ -4,7 +4,13 @@ Examples of use of RL agents for different games.
 
 You can select a game, a RL algorithm and the training file. Learning mode will train the agent, evaluation mode (with option ``--eval``) will execute the current best policy.
 
+### Requirements
 
+The code requires Python 2.7.
+
+To install the requirements:
+
+    python2 -m pip install -r requirements.txt
 
 ### How to use
 

@@ -26,7 +26,7 @@ def doExperiment(game, gameext, agent, gamma, epsilon, lambdae, alpha, nstep, ni
         str_stopongoal = "--stopongoal"
 
     for i in range(expid_from, exp_id_to+1):
-        cmd = "python game.py %s %s %s_%02d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s" %(gamecfg,agent,basetrainfilename,i,gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
+        cmd = "python2 game.py %s %s %s_%02d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s" %(gamecfg,agent,basetrainfilename,i,gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
         xterm_cmd = 'xterm -geometry 100x20+0+20 -e "%s" ' %(cmd)
         # use -hold and & at the end for parallel execution and monitoring
         print cmd

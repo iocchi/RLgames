@@ -134,7 +134,6 @@ class Breakout(object):
     def init(self, agent):  # init after creation (uses args set from cli)
 
         print('init ', self.sound_enabled)
-        self.sound_enabled = True
         if (self.sound_enabled):
             self.se_brick = pygame.mixer.Sound('brick_hit.wav')
             print('self.se_brick loaded')
