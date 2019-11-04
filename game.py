@@ -17,147 +17,97 @@ game = None
 agent = None
 
 
+GAMES = {
+    'SimpleGrid':  [ "importlib.import_module('SimpleGrid').SimpleGrid", None ],
+    'BreakoutS':   [ "importlib.import_module('Breakout').BreakoutS", None ],
+    'BreakoutFS':  [ "importlib.import_module('Breakout').BreakoutS", 
+                     "game.fire_enabled = True" ],
+    'BreakoutN':   [ "importlib.import_module('Breakout').BreakoutN", None ],
+    'BreakoutSRA':   [ "importlib.import_module('BreakoutRA').BreakoutSRA", None ],
+    'BreakoutSRAX':   [ "importlib.import_module('BreakoutRA').BreakoutSRAExt", None ],
+    'BreakoutNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", None ],
+    'BreakoutNDNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA",
+                         "game.deterministic = False" ],
+    'BreakoutFNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA",
+                         "game.fire_enabled = True" ],  
+    'BreakoutNRAX':   [ "importlib.import_module('BreakoutRA').BreakoutNRAExt", None ],  
+    'BreakoutFNRAX':   [ "importlib.import_module('BreakoutRA').BreakoutNRAExt",
+                         "game.fire_enabled = True" ],  
+    'Sapientino2':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=2" ],  
+    'Sapientino2D':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=2\ngame.differential = True\n" ],  
+    'Sapientino2C':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=2\ngame.colorsensor = True\n" ],  
+    'Sapientino2DC':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=2\ngame.differential = True\ngame.colorsensor = True\n" ],  
+    'Sapientino2X':   [ "importlib.import_module('Sapientino').SapientinoExt", 
+                       "game.nvisitpercol=2" ],  
+
+    'Sapientino3':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3" ],  
+    'Sapientino3D':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\n" ],  
+
+
+    'Sapientino3C':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.colorsensor = True\n" ],  
+    'Sapientino3DC':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.colorsensor = True\n" ],  
+    'Sapientino3X':   [ "importlib.import_module('Sapientino').SapientinoExt", 
+                       "game.nvisitpercol=3" ],  
+    'Sapientino3DR':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.RA.reward_shaping_enabled = True" ],  
+    'Sapientino3Dr':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.reward_shaping_enabled = True" ],  
+    'Sapientino3Dx':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.RA_exploration_enabled = True" ],  
+    'Sapientino3Dxr':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.RA_exploration_enabled = True\ngame.reward_shaping_enabled = True" ],  
+    'Sapientino3DxR':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.RA_exploration_enabled = True\ngame.RA.reward_shaping_enabled = True" ],  
+
+    'Minecraft':   [ "importlib.import_module('Minecraft').Minecraft", None], 
+    'Minecraftx':   [ "importlib.import_module('Minecraft').Minecraft", 
+                      "game.RA_exploration_enabled = True" ], 
+    'MinecraftD':   [ "importlib.import_module('Minecraft').Minecraft", 
+                      "game.differential = True" ], 
+    'MinecraftDx':   [ "importlib.import_module('Minecraft').Minecraft", 
+                      "game.differential = True\ngame.RA_exploration_enabled = True" ], 
+
+
+    'CP':   [ "importlib.import_module('CocktailParty').CocktailParty", None], 
+    'CP1':   [ "importlib.import_module('CocktailParty').CocktailParty", 
+               "game.setOneTask()"], 
+    'CPx':   [ "importlib.import_module('CocktailParty').CocktailParty", 
+               "game.RA_exploration_enabled = True"], 
+    'CPD':   [ "importlib.import_module('CocktailParty').CocktailParty", 
+               "game.differential = True"], 
+    'CPdyn':   [ "importlib.import_module('CocktailPartyDynamic').CocktailParty", 
+               "game.differential = False"], 
+    'CPros':   [ "importlib.import_module('CocktailPartyROS').CocktailParty", 
+               "game.differential = False"], 
+
+
+    'PP':   [ "importlib.import_module('PickAndPlace').PickAndPlace", None], 
+    'PPx':   [ "importlib.import_module('PickAndPlace').PickAndPlace", 
+               "game.RA_exploration_enabled = True" ], 
+
+}
+
+
 
 def loadGameModule():
     print("Loading game %s" %args.game)
     try:
-        if (args.game=='SimpleGrid'):
-            mod = importlib.import_module(args.game)
-            game = mod.SimpleGrid(args.rows, args.cols, trainfilename)
-        elif (args.game=='BreakoutS'):
-            mod = importlib.import_module('Breakout')
-            game = mod.BreakoutS(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutFS'):
-            mod = importlib.import_module('Breakout')
-            game = mod.BreakoutS(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-            game.fire_enabled = True
-        elif (args.game=='BreakoutN'):
-            mod = importlib.import_module('Breakout')
-            game = mod.BreakoutN(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutSRA'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutSRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutSRAX'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutSRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutNRA'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutNDNRA'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-            game.deterministic = False
-        elif (args.game=='BreakoutFNRA'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-            game.fire_enabled = True
-            game.init_ball_speed_y = 0
-        elif (args.game=='BreakoutBFNRA'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-            game.fire_enabled = True
-        elif (args.game=='BreakoutNRA1'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRA(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename, RAenabled=False)
-        elif (args.game=='BreakoutNRAX'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-        elif (args.game=='BreakoutBFNRAX'):
-            mod = importlib.import_module('BreakoutRA')
-            game = mod.BreakoutNRAExt(brick_rows=args.rows, brick_cols=args.cols, trainsessionname=trainfilename)
-            game.fire_enabled = True
-        elif (args.game=='Sapientino2'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
-        elif (args.game=='Sapientino2D'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
-            game.differential = True
-        elif (args.game=='Sapientino2C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
-            game.colorsensor = True
-        elif (args.game=='Sapientino2DC'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=2)
-            game.differential = True
-            game.colorsensor = True
-        elif (args.game=='Sapientino2X'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=2)
-        elif (args.game=='Sapientino3'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-        elif (args.game=='Sapientino3D'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-        elif (args.game=='Sapientino3DR'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-            game.RA.reward_shaping_enabled = True
-        elif (args.game=='Sapientino3Dr'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-            game.reward_shaping_enabled = True
-        elif (args.game=='Sapientino3Dx'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-            game.RA_exploration_enabled = True
-        elif (args.game=='Sapientino3Dxr'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-            game.RA_exploration_enabled = True
-            game.reward_shaping_enabled = True
-        elif (args.game=='Sapientino3DxR'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-            game.RA_exploration_enabled = True
-            game.RA.reward_shaping_enabled = True
-        elif (args.game=='Sapientino3C'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.colorsensor = True
-        elif (args.game=='Sapientino3DC'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.Sapientino(trainsessionname=trainfilename, nvisitpercol=3)
-            game.differential = True
-            game.colorsensor = True
-        elif (args.game=='Sapientino3X'):
-            mod = importlib.import_module('Sapientino')
-            game = mod.SapientinoExt(trainsessionname=trainfilename, nvisitpercol=3)
-        elif (args.game=='Minecraft'):
-            mod = importlib.import_module(args.game)
-            game = mod.Minecraft(trainsessionname=trainfilename)
-        elif (args.game=='Minecraftx'):
-            mod = importlib.import_module('Minecraft')
-            game = mod.Minecraft(trainsessionname=trainfilename)
-            game.RA_exploration_enabled = True
-        elif (args.game=='MinecraftD'):
-            mod = importlib.import_module('Minecraft')
-            game = mod.Minecraft(trainsessionname=trainfilename)
-            game.differential = True
-        elif (args.game=='MinecraftDx'):
-            mod = importlib.import_module('Minecraft')
-            game = mod.Minecraft(trainsessionname=trainfilename)
-            game.differential = True
-            game.RA_exploration_enabled = True
-        elif (args.game=='CP'):
-            mod = importlib.import_module('CocktailParty')
-            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
-        elif (args.game=='CP1'):
-            mod = importlib.import_module('CocktailParty')
-            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
-            game.setOneTask()
-        elif (args.game=='CPx'):
-            mod = importlib.import_module('CocktailParty')
-            game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
-            game.RA_exploration_enabled = True
+        game = eval(GAMES[args.game][0])(args.rows, args.cols, trainfilename)
+        if GAMES[args.game][1] is not None:
+            exec(GAMES[args.game][1])
+
+        if True:
+            pass
+
+
         elif (args.game=='CPd'):
             mod = importlib.import_module('CocktailParty')
             game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)
@@ -186,31 +136,25 @@ def loadGameModule():
     return game
 
 
+
+AGENTS = {
+
+    'Q': [ "importlib.import_module('RLAgent').QAgent", None ],
+    'Sarsa': [ "importlib.import_module('RLAgent').SarsaAgent", None ],
+    'SarsaLin': [ "importlib.import_module('RLAgent').SarsaAgent", 
+                  "agent.Qapproximation = True" ],
+    'MC': [ "importlib.import_module('RLMCAgent').MCAgent", None ],
+}
+
+
 def loadAgentModule():
     print("Loading agent "+args.agent)
     try:
-        if (args.agent=='Q'):
-            modname = 'RLAgent'
-            mod = importlib.import_module(modname)
-            agent = mod.QAgent()
-        elif (args.agent=='Sarsa'):
-            modname = 'RLAgent'
-            mod = importlib.import_module(modname)
-            agent = mod.SarsaAgent()
-        elif (args.agent=='SarsaLin'):
-            modname = 'RLAgent'
-            mod = importlib.import_module(modname)
-            agent = mod.SarsaAgent()
-            agent.Qapproximation = True
-        elif (args.agent=='MC'):
-            modname = 'RLMCAgent'
-            mod = importlib.import_module(modname)
-            agent = mod.MCAgent()
-        else:
-            print("ERROR: agent %s not found." %modname)
-            sys.exit(1)
+        agent = eval(AGENTS[args.agent][0])()
+        if AGENTS[args.agent][1] is not None:
+            exec(AGENTS[args.agent][1])
     except:
-        print("ERROR: agent %s not found." %modname)
+        print("ERROR: agent %s not found." %args.agent)
         raise
         sys.exit(1)
     return agent
@@ -230,7 +174,7 @@ def load(fname, game, agent):
     data = None
     try:
         fn = 'data/'+str(fname)+'.npz'
-        data = np.load(fn)
+        data = np.load(fn, allow_pickle=True)  # for Python3
         s = "Data loaded from " + fn + " successfully."
         print(s)
     except IOError:
@@ -241,7 +185,8 @@ def load(fname, game, agent):
         try:
             game.loaddata(data['gamedata'])
             agent.loaddata(data['agentdata'])
-        except:
+        except Exception as e:
+            print(e)
             print("Can't load data from input file, wrong format.")
             #raise
 

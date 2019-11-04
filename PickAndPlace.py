@@ -53,7 +53,7 @@ class PickAndPlace(TaskExecutor):
     def dopick(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "pick: ",what
+            print("pick: ",what)
         if (what!='item'):
             r = self.reward_states['BadPick']
         elif (len(self.has)==self.maxitemsheld):
@@ -66,7 +66,7 @@ class PickAndPlace(TaskExecutor):
     def doplace(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "place %r to %s " %(self.has,what)
+            print("place %r to %s " %(self.has,what))
         if (what==None):
             r = self.reward_states['BadPlace']
         elif (len(self.has)==0):
@@ -79,7 +79,7 @@ class PickAndPlace(TaskExecutor):
     def dohome(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "home to %s " %what
+            print("home to %s " %what)
         if (what!='home'):
             r = self.reward_states['BadHome']
         else:

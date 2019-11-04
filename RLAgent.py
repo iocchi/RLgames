@@ -9,7 +9,7 @@ try:
     from keras.models import Sequential
     from keras.layers import Dense, Activation
 except:
-    print 'Install keras if you want to use function approximation'
+    print('Install keras if you want to use function approximation')
 
 class RLAgent(object):
 
@@ -142,7 +142,7 @@ class RLAgent(object):
             self.setVisits(x,a,self.getVisits(x,a)+1)
         else:
             self.Visits[x,a] += 1
-        # print "Visits ",x," <- ",self.Visits[x,:]
+        # print("Visits ",x," <- ",self.Visits[x,:])
 
     def getVisits(self, x, a):
         if (self.Qapproximation):
@@ -180,19 +180,19 @@ class RLAgent(object):
             s = self.iteration #getSumVisits(x)
             p = min(float(s)/maxIter, 1.0)
             epsilon = 0.9 * (1.0 - p) + 0.1
-            #print "  -- iter = ",s,"  -- epsilon = ",epsilon
+            #print("  -- iter = %d  -- epsilon = %f" %(s,epsilon))
         else:
             epsilon = self.epsilon
         self.best_action = False
         ar = random.random()
         #if (self.debug):
-        #    print " .. random  ",ar," < epsilon ",epsilon
+        #    print(" .. random %f < epsilon = %f" %(ar,epsilon))
         
         if ((not self.optimal) and (not self.partialoptimal) and ar<epsilon):
             # Random action
             com_command = random.randint(0,self.nactions-1)
             #if (self.debug):
-            #    print " .. random choice ",com_command
+            #    print(" .. random choice ",com_command)
 
         else:
             # Choose the action that maximizes expected reward.            
@@ -200,7 +200,7 @@ class RLAgent(object):
             Qa = self.getQA(x)
             va = np.argmax(Qa)
             maxs = [i for i,v in enumerate(Qa) if v == Qa[va]]
-            #print " ... Qa = ",Qa,"  va = ",va,"  maxs = ",maxs
+            #print(" ... Qa = ",Qa,"  va = ",va,"  maxs = ",maxs)
             if len(maxs) > 1:
                 #if self.command in maxs:
                 #    com_command = self.command
@@ -209,12 +209,12 @@ class RLAgent(object):
                 else:
                     com_command = random.choice(maxs)
                     #if (self.debug):
-                    #    print " .. action choice among ",maxs," : ",com_command
+                    #    print(" .. action choice among ",maxs," : ",com_command)
                     
             else:
                 com_command = va
             #if (self.debug):
-            #    print " .. best choice ",com_command
+            #    print(" .. best choice ",com_command)
 
         return com_command
 
@@ -222,7 +222,7 @@ class RLAgent(object):
     def decision(self, x):
         a = self.choose_action(x)
         if self.debug:
-            print "+++ Q [%d] = " %(x),
+            print("+++ Q [%d] = " %(x), end='')
             self.printQA(self.getQA(x))
             c=' '
             if (self.best_action):
@@ -256,7 +256,7 @@ class RLAgent(object):
                 self.updateQ_n(kn,None) # update state-action n-steps back
                 kn += 1
         self.episode = []
-        #print "reset e"
+        #print("reset e")
         self.etraces = {} # eligibility taces map
 
 
@@ -292,7 +292,7 @@ class RLAgent(object):
     def updateEligibility(self, x, a, alpha, delta):
     
         if (self.debug):
-            print "  updating e: %d %d ..." %(x,a), " -  etraces: %d " %(len(self.etraces))
+            print("  updating e: %d %d ... -  etraces: %d " %(x,a,len(self.etraces)))
         for e in self.etraces:
             # update Q table
             if (delta!=0):
@@ -301,15 +301,15 @@ class RLAgent(object):
                 q = alpha * delta * self.etraces[e]
                 self.addQ(e[0],e[1],q)
                 if (self.debug):
-                    #print "  -- e ",e," ",self.etraces[e]
-                    #print "  -- e x:",e[0]," a:",e[1]
-                    #print "  -- alpha: ",alpha,"  delta: ", delta
-                    #print "  -- Q(e) = ", self.getQ(e[0],e[1])
-                    print "  -e- Q[%d] = " %(e[0]),
+                    #print("  -- e ",e," ",self.etraces[e])
+                    #print("  -- e x:",e[0]," a:",e[1])
+                    #print("  -- alpha: ",alpha,"  delta: ", delta)
+                    #print("  -- Q(e) = ", self.getQ(e[0],e[1]))
+                    print("  -e- Q[%d] = " %(e[0]), end='')
                     self.printQA(self.getQA(e[0]))
-                    print
+                    print('')
         if (self.debug):
-            print "++\n"
+            print("++\n")
         # clear traces after update
         #self.etraces = {}
 
@@ -328,8 +328,8 @@ class RLAgent(object):
         delta = r + self.gamma * vQa - prev_Q
 
         if (self.debug):
-            print ' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,' prev_Q: ', prev_Q, '  vQa: ', vQa
-            print ' == Q update Q ',x,',',a,' <-  ...  Q ',x2,' = ', vQa
+            print(' == ',x,' A: ',a,' -> r: ',r,' -> ',x2,' prev_Q: ', prev_Q, '  vQa: ', vQa)
+            print(' == Q update Q ',x,',',a,' <-  ...  Q ',x2,' = ', vQa)
         
         if (self.lambdae>0):
             self.updateEligibility(x,a,self.alpha,delta)
@@ -360,13 +360,13 @@ class RLAgent(object):
         # x2 = next state after last action
 
         #if (self.debug):
-        #    print "updateQ_n ",kn, " optimal = ",self.optimal
+        #    print("updateQ_n ",kn, " optimal = ",self.optimal)
         
         if (self.optimal):  # executing best policy, no updates
             return
 
         #if (self.debug):
-        #    print "debug updateQ_n ... ",kn
+        #    print("debug updateQ_n ... ",kn)
 
         if (kn<0):  # kn not valid
             return
@@ -381,7 +381,7 @@ class RLAgent(object):
 
 
         if (self.debug):
-            print "return_pre = ",g
+            print("return_pre = ",g)
 
         Qx2 = 0
         # if not at the end of the episode
@@ -393,12 +393,12 @@ class RLAgent(object):
         delta = (g - q_kn)
 
         if (self.debug):
-            print "debug updateQ_n "
-            print "x_kn = ",x_kn, "  a_kn = ",a_kn, "x2 = ",x2
-            print "Q[%d] = %.3f" %(x2,Qx2)
-            print "return_complete = ",g
-            print "Q[%d] = %.3f" %(x_kn,q_kn)
-            print "delta = ",delta
+            print("debug updateQ_n ")
+            print("x_kn = ",x_kn, "  a_kn = ",a_kn, "x2 = ",x2)
+            print("Q[%d] = %.3f" %(x2,Qx2))
+            print("return_complete = ",g)
+            print("Q[%d] = %.3f" %(x_kn,q_kn))
+            print("delta = ",delta)
 
         #if (abs(delta)<0.001):  # time optimization
         #    return
@@ -415,10 +415,10 @@ class RLAgent(object):
 
 
     def printQA(self, qv):
-        print "[ ",
+        print("[ ", end='')
         for a in qv:
-            print "%.3f "%a,
-        print "]",
+            print("%.3f "%a, end='')
+        print("]", end='')
 
 
 

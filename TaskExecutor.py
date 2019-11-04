@@ -639,7 +639,7 @@ class TaskExecutor(object):
         elif (self.pos_th == 270): # down
             oy = self.radius
 
-        pygame.draw.circle(self.screen, pygame.color.THECOLORS['black'], [dx+self.size_square/2+ox, dy+self.size_square/2+oy], 5, 0)
+        pygame.draw.circle(self.screen, pygame.color.THECOLORS['black'], [int(dx+self.size_square/2+ox), int(dy+self.size_square/2+oy)], 5, 0)
         
          
         pygame.display.update()

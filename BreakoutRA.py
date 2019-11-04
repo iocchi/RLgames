@@ -186,7 +186,7 @@ class BreakoutSRA(BreakoutS):
 
     def update(self, a):
         super(BreakoutSRA, self).update(a)
-        self.current_reward += self.RA.update()
+        self.current_reward += self.RA.update()[0]
         if (self.RA.current_node==self.RA.RAFail):
             self.finished = True
          
