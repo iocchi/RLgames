@@ -5,11 +5,6 @@ import time
 import math
 from math import fabs
 
-try:
-    from keras.models import Sequential
-    from keras.layers import Dense, Activation
-except:
-    print('Install keras if you want to use function approximation')
 
 class RLAgent(object):
 
@@ -29,9 +24,16 @@ class RLAgent(object):
         self.sparse = False
         self.Qapproximation = False
         self.error = False
+        self.SA_failure = [] # memory state-action failures
         
     def init(self, nstates, nactions):
         if (self.Qapproximation):
+            try:
+                from keras.models import Sequential
+                from keras.layers import Dense, Activation
+            except:
+                print('Install keras if you want to use function approximation')
+
             self.Q = {}
             for a in range(0,nactions):
                 self.Q[a] = Sequential()
@@ -190,9 +192,9 @@ class RLAgent(object):
         
         if ((not self.optimal) and (not self.partialoptimal) and ar<epsilon):
             # Random action
-            com_command = random.randint(0,self.nactions-1)
+            chosen_a = random.randint(0,self.nactions-1)
             #if (self.debug):
-            #    print(" .. random choice ",com_command)
+            #    print(" .. random choice ",chosen_a)
 
         else:
             # Choose the action that maximizes expected reward.            
@@ -203,20 +205,32 @@ class RLAgent(object):
             #print(" ... Qa = ",Qa,"  va = ",va,"  maxs = ",maxs)
             if len(maxs) > 1:
                 #if self.command in maxs:
-                #    com_command = self.command
+                #    chosen_a = self.command
                 if self.optimal:
-                    com_command = maxs[0]
+                    chosen_a = maxs[0]
                 else:
-                    com_command = random.choice(maxs)
+                    chosen_a = random.choice(maxs)
                     #if (self.debug):
-                    #    print(" .. action choice among ",maxs," : ",com_command)
+                    #    print(" .. action choice among ",maxs," : ",chosen_a)
                     
             else:
-                com_command = va
+                chosen_a = va
             #if (self.debug):
-            #    print(" .. best choice ",com_command)
+            #    print(" .. best choice ",chosen_a)
 
-        return com_command
+
+        # check state-action failures
+
+        if (x,chosen_a) in self.SA_failure:
+            # check non-failure actions for this state
+            nfa = []
+            for ai in range(0,self.nactions):
+                if (x,ai) not in self.SA_failure:
+                    nfa.append(ai)
+            if (len(nfa)>0):
+                chosen_a = random.choice(nfa)            
+
+        return chosen_a
 
         
     def decision(self, x):
@@ -230,8 +244,11 @@ class RLAgent(object):
             print(" -  Decision %s %s" %(self.action_names[a],c))
         return a
 
-
+    # result of execution of action
     def notify(self, x, a, r, x2):
+
+        if (r<0 and (x,a) not in self.SA_failure):
+            self.SA_failure.append((x,a))   # new state-action failure
 
         self.episode.append((x,a,r))
 

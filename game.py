@@ -54,6 +54,8 @@ GAMES = {
                        "game.nvisitpercol=3\ngame.colorsensor = True\n" ],  
     'Sapientino3DC':   [ "importlib.import_module('Sapientino').Sapientino", 
                        "game.nvisitpercol=3\ngame.differential = True\ngame.colorsensor = True\n" ],  
+    'Sapientino3O':   [ "importlib.import_module('Sapientino').Sapientino", 
+                        "game.nvisitpercol=3\ngame.RA_exploration_enabled = True" ],  
     'Sapientino3X':   [ "importlib.import_module('Sapientino').SapientinoExt", 
                        "game.nvisitpercol=3" ],  
     'Sapientino3DR':   [ "importlib.import_module('Sapientino').Sapientino", 
@@ -100,14 +102,17 @@ GAMES = {
 def loadGameModule():
     print("Loading game %s" %args.game)
     try:
+        if 'Sapientino' in args.game:
+            args.rows = 5 
+            args.cols = 7
         game = eval(GAMES[args.game][0])(args.rows, args.cols, trainfilename)
         if GAMES[args.game][1] is not None:
             exec(GAMES[args.game][1])
+            print("%s %d" %(str(GAMES[args.game][0]), game.nvisitpercol))
+
 
         if True:
             pass
-
-
         elif (args.game=='CPd'):
             mod = importlib.import_module('CocktailParty')
             game = mod.CocktailParty(trainsessionname=trainfilename,rows=args.rows,cols=args.cols)

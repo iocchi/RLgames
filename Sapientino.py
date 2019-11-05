@@ -102,7 +102,7 @@ class RewardAutoma(object):
             # nvisitpercol
             c = np.zeros(self.ncolors)
             kc = -1
-            #print self.game.colorbip
+            #print(self.game.colorbip)
             for i in range(len(COLORS)):
                 if (self.game.colorbip[COLORS[i]]>self.nvisitpercol):
                     self.current_node = self.RAFail
@@ -126,7 +126,7 @@ class RewardAutoma(object):
 
             if (self.last_node != self.current_node):
                 state_changed = True
-                #print "  ++ changed state ++"
+                #print("  ++ changed state ++")
                 if (self.current_node == self.RAFail):
                     reward += STATES['RAFail']
                 #elif (self.last_id_colvisited != kc): # new state in which color has been visited right amunt of time
@@ -136,7 +136,7 @@ class RewardAutoma(object):
                     self.countupdates += 1
                     if self.reward_shaping_enabled:
                         rs = self.reward_shape(self.last_node, self.current_node)
-                        #print ' -- added reward shape F(%d,a,%d) = %f ' %(self.last_node, self.current_node, rs)
+                        #print(' -- added reward shape F(%d,a,%d) = %f ' %(self.last_node, self.current_node, rs))
                         reward += rs
                     else:
                         #reward += STATES['GoalStep']
@@ -154,7 +154,7 @@ class RewardAutoma(object):
                 self.visits[self.current_node] = 1
 
             if (self.current_node != self.RAFail):
-                #print "Success for last_node ",self.last_node
+                #print("Success for last_node ",self.last_node)
                 if (self.last_node in self.success):
                     self.success[self.last_node] += 1
                 else:
@@ -170,7 +170,7 @@ class RewardAutoma(object):
             s = float(self.success[self.current_node])
         if (self.current_node in self.visits):
             v = float(self.visits[self.current_node])
-        #print "   -- success rate: ",s," / ",v
+        #print("   -- success rate: ",s," / ",v)
         return s/v
 
 
@@ -198,6 +198,8 @@ class Sapientino(object):
         self.trainsessionname = trainsessionname
         self.rows = rows
         self.cols = cols
+        self.nvisitpercol = nvisitpercol
+        self.ncolors = ncol
         self.differential = False
         self.colorsensor = False
         self.motionnoise = True
@@ -237,17 +239,13 @@ class Sapientino(object):
         if (self.rows>10):
             self.win_height += self.size_square * (self.rows-10)
 
+        self.RA_exploration_enabled = False  # Use options to speed-up learning process
+
         pygame.init()
         pygame.display.set_caption('Sapientino')
 
         self.screen = pygame.display.set_mode([self.win_width,self.win_height])
         self.myfont = pygame.font.SysFont("Arial",  30)
-        
-        self.ncolors = ncol
-        self.nvisitpercol = nvisitpercol
-        self.RA_exploration_enabled = False
-        self.RA = RewardAutoma(self.ncolors, self.nvisitpercol)
-        self.RA.init(self)
 
         
     def init(self, agent):  # init after creation (uses args set from cli)
@@ -256,6 +254,9 @@ class Sapientino(object):
 
         self.agent = agent
         self.nactions = 5  # 0: left, 1: right, 2: up, 3: down, 4: bip
+
+        self.RA = RewardAutoma(self.ncolors, self.nvisitpercol)
+        self.RA.init(self)
 
         self.nstates = self.rows * self.cols
         if (self.differential):
@@ -268,20 +269,24 @@ class Sapientino(object):
         print('Number of actions: %d' %self.nactions)
         self.agent.init(ns, self.nactions) 
         self.agent.set_action_names(self.action_names)
+      
 
 
     def savedata(self):
-         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success]
+        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success, self.agent.SA_failure ]
 
          
     def loaddata(self,data):
-         self.iteration = data[0]
-         self.hiscore = data[1]
-         self.hireward = data[2]
-         self.elapsedtime = data[3]
-         self.RA.visits = data[4]
-         self.RA.success = data[5]
-
+        self.iteration = data[0]
+        self.hiscore = data[1]
+        self.hireward = data[2]
+        self.elapsedtime = data[3]
+        self.RA.visits = data[4]
+        self.RA.success = data[5]
+        try:
+            self.agent.SA_failure = data[6]
+        except:
+            pass
 
     def reset(self):
         
@@ -364,12 +369,12 @@ class Sapientino(object):
     def RA_exploration(self):
         if not self.RA_exploration_enabled:
             return
-        #print "RA state: ",self.RA.current_node
+        #print("RA state: ",self.RA.current_node)
         success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
-        #print "RA exploration policy: current state success rate ",success_rate
+        #print("RA exploration policy: current state success rate ",success_rate)
         er = random.random()
         self.agent.partialoptimal = (er<success_rate)
-        #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
+        #print("RA exploration policy: optimal ",self.agent.partialoptimal, "\n")
         
     def update(self, a):
         
@@ -377,7 +382,7 @@ class Sapientino(object):
 
         self.prev_state = self.getstate() # remember previous state
         
-        # print " == Update start ",self.prev_state," action",self.command 
+        # print(" == Update start ",self.prev_state," action",self.command)
         
         self.current_reward = 0 # accumulate reward over all events happened during this action until next different state
         self.numactions += 1 # total number of actions axecuted in this episode
@@ -465,7 +470,7 @@ class Sapientino(object):
                 pass
                 #self.current_reward += STATES['Score']
                 #if self.debug:
-                #    print "bip on color"
+                #    print("bip on color")
             else:
                 white_bip = True
 
@@ -506,7 +511,7 @@ class Sapientino(object):
             self.current_reward += STATES['Dead']
             self.finished = True
 
-        #print " ** Update end ",self.getstate(), " prev ",self.prev_state
+        #print(" ** Update end ",self.getstate(), " prev ",self.prev_state)
 
         #if (self.finished):
         #    print("  -- final reward %d" %(self.cumreward))            
@@ -536,7 +541,7 @@ class Sapientino(object):
                     self.usercommand = 4
                 elif event.key == pygame.K_SPACE:
                     self.pause = not self.pause
-                    print "Game paused: ",self.pause
+                    print("Game paused: ",self.pause)
                 elif event.key == pygame.K_a:
                     self.isAuto = not self.isAuto
                 elif event.key == pygame.K_s:
@@ -553,10 +558,10 @@ class Sapientino(object):
                     #self.agent.debug = False
                 elif event.key == pygame.K_o:
                     self.optimalPolicyUser = not self.optimalPolicyUser
-                    print "Best policy: ",self.optimalPolicyUser
+                    print("Best policy: ",self.optimalPolicyUser)
                 elif event.key == pygame.K_q:
                     self.userquit = True
-                    print "User quit !!!"
+                    print("User quit !!!")
 
         return True
 
@@ -695,7 +700,7 @@ class Sapientino(object):
         # agent position
         dx = int(self.offx + self.pos_x * self.size_square)
         dy = int(self.offy + (self.rows-self.pos_y-1) * self.size_square)
-        pygame.draw.circle(self.screen, pygame.color.THECOLORS['orange'], [dx+self.size_square/2, dy+self.size_square/2], 2*self.radius, 0)
+        pygame.draw.circle(self.screen, pygame.color.THECOLORS['orange'], [int(dx+self.size_square/2), int(dy+self.size_square/2)], 2*self.radius, 0)
 
         # agent orientation
 
@@ -710,7 +715,7 @@ class Sapientino(object):
         elif (self.pos_th == 270): # down
             oy = self.radius
 
-        pygame.draw.circle(self.screen, pygame.color.THECOLORS['black'], [dx+self.size_square/2+ox, dy+self.size_square/2+oy], 5, 0)
+        pygame.draw.circle(self.screen, pygame.color.THECOLORS['black'], [int(dx+self.size_square/2+ox), int(dy+self.size_square/2+oy)], 5, 0)
 
         pygame.display.update()
 
@@ -757,12 +762,12 @@ class SapientinoExt(Sapientino):
         else:
             bx = 0
         cx = self.currentcolor()
-        #print '  extended state bx %d cx %d ' %(bx,cx)
+        #print('  extended state bx %d cx %d ' %(bx,cx))
         x = x + self.origns * bx + (self.origns * self.bip_ns) * cx
         return x
 
 
-        
+
 class SapientinoExt2(Sapientino):
 
     def __init__(self, rows=5, cols=7, trainsessionname='test', ncol=7, nvisitpercol=2):
