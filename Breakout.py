@@ -148,13 +148,17 @@ class Breakout(object):
         self.agent.set_action_names(self.action_names)
 
     def savedata(self):
-         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime]
+        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.agent.SA_failure]
          
     def loaddata(self,data):
-         self.iteration = data[0]
-         self.hiscore = data[1]
-         self.hireward = data[2]
-         self.elapsedtime = data[3]
+        self.iteration = data[0]
+        self.hiscore = data[1]
+        self.hireward = data[2]
+        self.elapsedtime = data[3]
+        try:
+            self.agent.SA_failure = data[6]
+        except:
+            print('WARNING: Cannot load SA_failure data')
     
     def initBricks(self):
         self.bricks = []

@@ -25,10 +25,10 @@ def doExperiment(game, gameext, agent, gamma, epsilon, lambdae, alpha, nstep, ni
         str_stopongoal = "--stopongoal"
 
     for i in range(expid_from, exp_id_to+1):
-        cmd = "xterm -geometry 100x20+0+20 -e \"python3 game.py %s %s %s_%02d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s\" " %(gamecfg,agent,basetrainfilename,i,gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
-        # use -hold and & at the end for parallel execution and monitoring
+        cmd = "python3 game.py %s %s %s_%02d -gamma %f -epsilon %f -lambdae %f -alpha %f -nstep %d -niter %d -maxtime %d %s" %(gamecfg,agent,basetrainfilename,i,gamma,epsilon,lambdae,alpha,nstep,niter,maxtime,str_stopongoal)
         print(cmd)
-        os.system(cmd)
+        os.system('xterm -geometry 100x20+0+20 -e "'+cmd+'"')
+        # use -hold and & at the end for parallel execution and monitoring
         time.sleep(1)
 
 
@@ -42,9 +42,9 @@ nstep = 100
 niter = -1
 stopongoal = False
         
-# main
+# Sapientino 2
 
-maxtime = 600
+maxtime = 120
 nstep = 20
 
 #doExperiment('Sapientino','2',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 3) 
@@ -66,20 +66,37 @@ maxtime = 2400
 
 # Sapientino 3
 
-maxtime = 150
-
-# normal
-doExperiment('Sapientino','3',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-
-# with options
-doExperiment('Sapientino','3O',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-
+gamma = 0.9
+epsilon = 0.2
+alpha = 0.1
 nstep = 20
 
-gamma = 0.99
-alpha = 0.1
+maxtime = 300
 
-#doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+# normal
+doExperiment('Sapientino','3',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
+
+# with options
+doExperiment('Sapientino','3O',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
+
+
+gamma = 0.9
+epsilon = 0.2
+alpha = 0.1
+nstep = 200
+
+maxtime = 600
+
+# differential
+#doExperiment('Sapientino','3D',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
+
+# differential with options
+#doExperiment('Sapientino','3DO',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 1) 
+
+
+
+
+
 #doExperiment('Sapientino','3Dx',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 #doExperiment('Sapientino','3DR',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 #doExperiment('Sapientino','3DxR',agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
