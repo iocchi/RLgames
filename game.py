@@ -149,6 +149,7 @@ AGENTS = {
     'SarsaLin': [ "importlib.import_module('RLAgent').SarsaAgent", 
                   "agent.Qapproximation = True" ],
     'MC': [ "importlib.import_module('RLMCAgent').MCAgent", None ],
+    'RMax': [ "importlib.import_module('RMaxAgent').RMaxAgent", None ],
 }
 
 
