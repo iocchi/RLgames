@@ -37,6 +37,7 @@ class RewardAutoma(object):
             'GoodBrick':10,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
         }
+
         self.goalreached = 0 # number of RA goals reached for statistics
         self.visits = {} # number of visits for each state
         self.success = {} # number of good transitions for each state
@@ -129,7 +130,6 @@ class RewardAutoma(object):
 
         return (reward, state_changed)
 
-
     def current_successrate(self):
         s = 0.0
         v = 1.0
@@ -157,18 +157,24 @@ class BreakoutSRA(BreakoutS):
             'Hit':0,        # paddle hit
             'Goal':0,     # level completed
         }
+        self.RA_exploration_enabled = False  # Use options to speed-up learning process
+        self.report_str = ''
 
     def savedata(self):
-         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success]
+        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success, self.agent.SA_failure]
 
          
     def loaddata(self,data):
-         self.iteration = data[0]
-         self.hiscore = data[1]
-         self.hireward = data[2]
-         self.elapsedtime = data[3]
-         self.RA.visits = data[4]
-         self.RA.success = data[5]
+        self.iteration = data[0]
+        self.hiscore = data[1]
+        self.hireward = data[2]
+        self.elapsedtime = data[3]
+        self.RA.visits = data[4]
+        self.RA.success = data[5]
+        try:
+            self.agent.SA_failure = data[6]
+        except:
+            print('WARNING: Cannot load SA_failure data')
 
     def setStateActionSpace(self):
         super(BreakoutSRA, self).setStateActionSpace()
@@ -183,10 +189,14 @@ class BreakoutSRA(BreakoutS):
     def reset(self):
         super(BreakoutSRA, self).reset()
         self.RA.reset()
+        self.RA_exploration()
 
     def update(self, a):
         super(BreakoutSRA, self).update(a)
-        self.current_reward += self.RA.update()[0]
+        (RAr, state_changed) = self.RA.update()
+        if (state_changed):
+            self.RA_exploration()
+        self.current_reward += RAr
         if (self.RA.current_node==self.RA.RAFail):
             self.finished = True
          
@@ -239,8 +249,9 @@ class BreakoutSRA(BreakoutS):
         numiter = 100
         if (self.iteration%numiter==0):
             #self.doSave()
+            self.report_str = "%s %6d/%4d avg last 100: reward %.1f | RA %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter)
             print('-----------------------------------------------------------------------')
-            print("%s %6d/%4d avg last 100: reward %.1f | RA %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            print(self.report_str)
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
@@ -255,6 +266,19 @@ class BreakoutSRA(BreakoutS):
         self.resfile.flush()
 
 
+    def RA_exploration(self):
+        if not self.RA_exploration_enabled:
+            return
+        #print("RA state: ",self.RA.current_node)
+        success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
+        #print("RA exploration policy: current state success rate ",success_rate)
+        er = random.random()
+        self.agent.option_enabled = (er<success_rate)
+        #print("RA exploration policy: optimal ",self.agent.partialoptimal, "\n")
+
+
+
+
 
 class BreakoutNRA(BreakoutN):
 
@@ -263,6 +287,8 @@ class BreakoutNRA(BreakoutN):
         RA_cols = 0
         if (RAenabled):
             RA_cols = brick_cols
+        self.RA_exploration_enabled = False  # Use options to speed-up learning process
+
         self.RA = RewardAutoma(RA_cols)
         self.RA.init(self)
         self.STATES = {
@@ -302,14 +328,6 @@ class BreakoutNRA(BreakoutN):
         super(BreakoutNRA, self).reset()
         self.RA.reset()
         self.RA_exploration()
-
-    def RA_exploration(self):
-        #print "RA state: ",self.RA.current_node
-        success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
-        #print "RA exploration policy: current state success rate ",success_rate
-        er = random.random()
-        self.agent.partialoptimal = (er<success_rate)
-        #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
 
     def update(self, a):
         super(BreakoutNRA, self).update(a)
@@ -385,6 +403,15 @@ class BreakoutNRA(BreakoutN):
         self.resfile.write("%d,%d,%d,%d,%d,%d,%d\n" % (self.iteration, self.elapsedtime, RAnode, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
         self.resfile.flush()
 
+    def RA_exploration(self):
+        if not self.RA_exploration_enabled:
+            return
+        #print("RA state: ",self.RA.current_node)
+        success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
+        #print("RA exploration policy: current state success rate ",success_rate)
+        er = random.random()
+        self.agent.option_enabled = (er<success_rate)
+        #print("RA exploration policy: optimal ",self.agent.partialoptimal, "\n")
 
 
 

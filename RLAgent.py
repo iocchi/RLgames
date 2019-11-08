@@ -16,7 +16,7 @@ class RLAgent(object):
         self.nstepsupdates = 0 # n-steps updates 
         self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
         self.optimal = False
-        self.partialoptimal = False
+        self.option_enabled = False # whether to exploit options
         self.episode = []
         self.iteration = 0
         self.debug = False
@@ -190,7 +190,7 @@ class RLAgent(object):
         #if (self.debug):
         #    print(" .. random %f < epsilon = %f" %(ar,epsilon))
         
-        if ((not self.optimal) and (not self.partialoptimal) and ar<epsilon):
+        if ((not self.optimal) and (not self.option_enabled) and ar<epsilon):
             # Random action
             chosen_a = random.randint(0,self.nactions-1)
             #if (self.debug):

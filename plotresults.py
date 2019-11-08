@@ -5,42 +5,124 @@ import matplotlib.pyplot as plt
 import sys
 import argparse
 
-# global vectors
-
-sv = None  # score vector
-rv = None  # reward vector
-gv = None  # goal reached vector
-ov = None  # optimal (no exploration) vector
-
 
 def loaddata(filename):
-    global sv,rv,gv,ov
-
-    fname = str(filename).replace('.dat','')
-    fname = fname.replace('data/','')
-    a = np.loadtxt('data/' + fname + '.dat', delimiter=",")
 
     try:
+        fname = str(filename).replace('.dat','')
+        fname = fname.replace('data/','')
+        a = np.loadtxt('data/' + fname + '.dat', delimiter=",")
+    except:
+        print("Error in loading file ",fname)
+        sys.exit(1)
+
+    try:
+        tm = a[:,1]  # time vector
         sv = a[:,2]  # score vector
         rv = a[:,3]  # reward vector
         gv = a[:,4]  # goal reached vector
-        ov = a[:,6]  # optimal (no exploration) vector
+#        ov = a[:,6]  # optimal (no exploration) vector
     except: # old version
         sv = a[:,0]  # score vector
         rv = a[:,1]  # reward vector
         gv = a[:,2]  # goal reached vector
-        ov = a[:,4]  # optimal (no exploration) vector
+        tm = range(0,len(rv))
+#        ov = a[:,4]  # optimal (no exploration) vector
+
+    return tm, rv, fname
 
 
 
-def plot1(fname):
+def getplotdata(tm,data):
+    x = [] # x axis vector
+    y = [] # y axis vector 
+    ytop = []  # confidence interval (top-edge)
+    ybot = []  # confidence interval (bottom-edge)
+
+    n = len(data)
+    d = int(n/100) # size of interval
+
+    for i in range(0,int(n/d)):
+        di = data[i*d:min(n,(i+1)*d)]
+        ti = tm[i*d:min(n,(i+1)*d)]
+        x.append(np.mean(ti))
+        y.append(np.mean(di))
+        ytop.append(np.mean(di)+np.std(di))
+        ybot.append(np.mean(di)-np.std(di))
+
+    return x,y,ytop,ybot
+
+
+def showplots(xx,yy,yytop,yybot,yylabel,save):
+
+    colors = ['r','b','g','yellow','cyan','magenta']
+    
+    yymax = max(max(l) for l in yytop)
+
+    plt.ylim(ymin = 0, ymax = yymax*1.15)
+    plt.title("Average reward")
+    plt.xlabel('Time')
+    plt.ylabel('Avg Reward')
+
+    for i in range(0,len(xx)):
+        plt.fill_between(xx[i], yytop[i], yybot[i], facecolor=colors[i], alpha=0.25)
+        plt.plot(xx[i],yy[i],colors[i],label=yylabel[i])
+
+    if save:
+        plt.savefig('fig/test.png')
+
+    plt.legend()
+    plt.show()
+
+
+def plotdata(datafiles, save):
+    xx = []
+    yy = []
+    yytop = []
+    yybot = []
+    yylabel = []
+
+    for f in datafiles:
+        tm,rv,fname = loaddata(f)
+        x,y,ytop,ybot = getplotdata(tm,rv)
+        xx += [x]
+        yy += [y]
+        yytop += [ytop]
+        yybot += [ybot]
+        yylabel += [fname]
+
+    showplots(xx,yy,yytop,yybot,yylabel,save)
+
+
+
+# main
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Plot results')
+    #parser.add_argument('file', type=str, help='File name with data')
+    #parser.add_argument('--reward', help='plot reward', action='store_true')
+    #parser.add_argument('--score', help='plot score', action='store_true')
+    parser.add_argument('--save', help='save figure on file', action='store_true')
+
+    parser.add_argument('-datafiles', nargs='+', help='[Required] Data files to plot', required=True)
+
+    args = parser.parse_args()
+
+    plotdata(args.datafiles, args.save)
+
+
+
+##### OLD STUFF #####
+
+def plot1(fname,save):
     global sv,rv,gv
 
     plt.plot(sv,'b')
     plt.title(fname)
     plt.xlabel('Iteration')
     plt.ylabel('Score')
-    # plt.savefig('fig/'+fname+'_s.png')
+    if save:
+        plt.savefig('fig/'+fname+'_s.png')
     plt.show()
 
     top = 0
@@ -49,7 +131,8 @@ def plot1(fname):
     plt.title(fname)
     plt.xlabel('Iteration')
     plt.ylabel('Reward')
-    #plt.savefig('fig/'+fname+'_r.png')
+    if save:
+        plt.savefig('fig/'+fname+'_r.png')
     plt.show()
 
     plt.ylim(ymin = -0.2, ymax = 1.2)
@@ -57,12 +140,13 @@ def plot1(fname):
     plt.title(fname)
     plt.xlabel('Iteration')
     plt.ylabel('Goal')
-    #plt.savefig('fig/'+fname+'_g.png'
+    if save:
+        plt.savefig('fig/'+fname+'_g.png')
     plt.show()
 
 
 
-def plotavg(fname):
+def plotavg(fname, save):
     global sv,rv,gv
 
     maxscore = max(sv)
@@ -105,7 +189,8 @@ def plotavg(fname):
     plt.title(fname+" - Average score")
     plt.xlabel('Iteration')
     plt.ylabel('Avg Score')
-    # plt.savefig('fig/'+fname+'_as.png')
+    if save:
+        plt.savefig('fig/'+fname+'_as.png')
     plt.show()
 
     rrmax = max(rrtop)
@@ -116,7 +201,8 @@ def plotavg(fname):
     plt.plot(xx,rr,'r')
     plt.xlabel('Iteration')
     plt.ylabel('Avg Reward')
-    # plt.savefig('fig/'+fname+'_ar.png')
+    if save:
+        plt.savefig('fig/'+fname+'_ar.png')
     plt.show()
 
     #plt.ylim(ymin = -0.2, ymax = 1.2)
@@ -124,7 +210,8 @@ def plotavg(fname):
     plt.plot(xx,gg,'g')
     plt.xlabel('Iteration')
     plt.ylabel('% Goals')
-    #plt.savefig('fig/'+fname+'_pg.png')
+    if save:
+        plt.savefig('fig/'+fname+'_pg.png')
     plt.show()
 
     if False:
@@ -144,29 +231,4 @@ def plotavg(fname):
         plt.ylabel('Reward')
         # plt.savefig('fig/'+fname+'_ar.png')
         plt.show()
-
-
-def plotdata(filename):
-    global sv,rv,gv,ov
-
-    loaddata(filename)
-
-    plotavg(filename)
-
-
-
-
-
-# main
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description='Plot results')
-    parser.add_argument('file', type=str, help='File name with data')
-    #parser.add_argument('--reward', help='plot reward', action='store_true')
-    #parser.add_argument('--score', help='plot score', action='store_true')
-
-    args = parser.parse_args()
-
-    plotdata(args.file)
-
 

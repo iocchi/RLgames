@@ -52,15 +52,15 @@ class RewardAutoma(object):
         self.game = game
         
     def reset(self):
-        self.current_node = 0
-        self.last_node = self.current_node
+        self.RAnode = 0
+        self.last_node = self.RAnode
         self.past_colors = []
         self.consecutive_turns = 0 # number of consecutive turn actions
         self.countupdates = 0 # count state transitions (for the score)
-        if (self.current_node in self.visits):
-            self.visits[self.current_node] += 1
+        if (self.RAnode in self.visits):
+            self.visits[self.RAnode] += 1
         else:
-            self.visits[self.current_node] = 1
+            self.visits[self.RAnode] = 1
 
     def encode_tokenbip(self):
         c = 0
@@ -74,7 +74,7 @@ class RewardAutoma(object):
     def update(self, a=None): # last action executed
         reward = 0
         state_changed = False
-        self.last_node = self.current_node
+        self.last_node = self.RAnode
 
         # check consecutive turns in differential mode
         if (a == 0 or a == 1): # turn left/right
@@ -83,21 +83,21 @@ class RewardAutoma(object):
             self.consecutive_turns = 0
 
         if (self.consecutive_turns>=4):
-            self.current_node = self.RAFail  # FAIL
+            self.RAnode = self.RAFail  # FAIL
             reward += STATES['RAFail']   
 
         # check double bip
         for t in self.game.tokenbip:
             if self.game.tokenbip[t]>1:                
-                self.current_node = self.RAFail  # FAIL
+                self.RAnode = self.RAFail  # FAIL
                 reward += STATES['RAFail']
                 #print("  *** RA FAIL (two bips) *** ")
 
 
-        if (self.current_node != self.RAFail):
-            self.current_node = self.encode_tokenbip()
+        if (self.RAnode != self.RAFail):
+            self.RAnode = self.encode_tokenbip()
 
-            #print("  -- encode tokenbip: %d" %self.current_node)
+            #print("  -- encode tokenbip: %d" %self.RAnode)
             # Check rule
             # nvisitpercol
             c = np.zeros(self.ncolors)
@@ -105,7 +105,7 @@ class RewardAutoma(object):
             #print(self.game.colorbip)
             for i in range(len(COLORS)):
                 if (self.game.colorbip[COLORS[i]]>self.nvisitpercol):
-                    self.current_node = self.RAFail
+                    self.RAnode = self.RAFail
                     break
                 elif (self.game.colorbip[COLORS[i]]<self.nvisitpercol):
                     break
@@ -113,21 +113,21 @@ class RewardAutoma(object):
             #print("%d visits until color %d" %(self.nvisitpercol,kc))
 
             if (kc==self.ncolors-1): #  GOAL
-                self.current_node = self.RAGoal
+                self.RAnode = self.RAGoal
 
             # check bips in colors >= kc+2
-            if (self.current_node != self.RAFail and self.current_node != self.RAGoal):
+            if (self.RAnode != self.RAFail and self.RAnode != self.RAGoal):
                 for i in range(kc+2,len(COLORS)):
                     if (self.game.colorbip[COLORS[i]]>0):
                         #print("RA failure for color %r" %i)
-                        self.current_node = self.RAFail
+                        self.RAnode = self.RAFail
                         break
 
 
-            if (self.last_node != self.current_node):
+            if (self.last_node != self.RAnode):
                 state_changed = True
                 #print("  ++ changed state ++")
-                if (self.current_node == self.RAFail):
+                if (self.RAnode == self.RAFail):
                     reward += STATES['RAFail']
                 #elif (self.last_id_colvisited != kc): # new state in which color has been visited right amunt of time
                 #    self.last_id_colvisited = kc
@@ -135,25 +135,25 @@ class RewardAutoma(object):
                 else: # new state good for the goal
                     self.countupdates += 1
                     if self.reward_shaping_enabled:
-                        rs = self.reward_shape(self.last_node, self.current_node)
-                        #print(' -- added reward shape F(%d,a,%d) = %f ' %(self.last_node, self.current_node, rs))
+                        rs = self.reward_shape(self.last_node, self.RAnode)
+                        #print(' -- added reward shape F(%d,a,%d) = %f ' %(self.last_node, self.RAnode, rs))
                         reward += rs
                     else:
                         #reward += STATES['GoalStep']
                         reward += self.countupdates * STATES['GoalStep']
-                if (self.current_node == self.RAGoal): #  GOAL
+                if (self.RAnode == self.RAGoal): #  GOAL
                     reward += STATES['RAGoal']
                     #print("RAGoal")
 
         #print("  -- RA reward %d" %(reward))
 
         if (state_changed):
-            if (self.current_node in self.visits):
-                self.visits[self.current_node] += 1
+            if (self.RAnode in self.visits):
+                self.visits[self.RAnode] += 1
             else:
-                self.visits[self.current_node] = 1
+                self.visits[self.RAnode] = 1
 
-            if (self.current_node != self.RAFail):
+            if (self.RAnode != self.RAFail):
                 #print("Success for last_node ",self.last_node)
                 if (self.last_node in self.success):
                     self.success[self.last_node] += 1
@@ -162,14 +162,13 @@ class RewardAutoma(object):
         
         return (reward, state_changed)
 
-
     def current_successrate(self):
         s = 0.0
         v = 1.0
-        if (self.current_node in self.success):
-            s = float(self.success[self.current_node])
-        if (self.current_node in self.visits):
-            v = float(self.visits[self.current_node])
+        if (self.RAnode in self.success):
+            s = float(self.success[self.RAnode])
+        if (self.RAnode in self.visits):
+            v = float(self.visits[self.RAnode])
         #print("   -- success rate: ",s," / ",v)
         return s/v
 
@@ -240,6 +239,7 @@ class Sapientino(object):
             self.win_height += self.size_square * (self.rows-10)
 
         self.RA_exploration_enabled = False  # Use options to speed-up learning process
+        self.report_str = ''
 
         pygame.init()
         pygame.display.set_caption('Sapientino')
@@ -286,7 +286,7 @@ class Sapientino(object):
         try:
             self.agent.SA_failure = data[6]
         except:
-            pass
+            print('WARNING: Cannot load SA_failure data')
 
     def reset(self):
         
@@ -330,12 +330,12 @@ class Sapientino(object):
             x += (self.pos_th/90) * (self.rows * self.cols)
         if (self.colorsensor):
             x += self.encode_color() * (self.rows * self.cols * 4)
-        x += self.nstates * self.RA.current_node     
+        x += self.nstates * self.RA.RAnode     
         return x
 
 
     def goal_reached(self):
-        return self.RA.current_node==self.RA.RAGoal
+        return self.RA.RAnode==self.RA.RAGoal
 
 
     def update_color(self):
@@ -369,11 +369,11 @@ class Sapientino(object):
     def RA_exploration(self):
         if not self.RA_exploration_enabled:
             return
-        #print("RA state: ",self.RA.current_node)
+        #print("RA state: ",self.RA.RAnode)
         success_rate = max(min(self.RA.current_successrate(),0.9),0.1)
         #print("RA exploration policy: current state success rate ",success_rate)
         er = random.random()
-        self.agent.partialoptimal = (er<success_rate)
+        self.agent.option_enabled = (er<success_rate)
         #print("RA exploration policy: optimal ",self.agent.partialoptimal, "\n")
         
     def update(self, a):
@@ -490,7 +490,7 @@ class Sapientino(object):
             self.RA_exploration()
 
         # set score
-        RAnode = self.RA.current_node
+        RAnode = self.RA.RAnode
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
 
@@ -505,7 +505,7 @@ class Sapientino(object):
         if (self.numactions>(self.cols*self.rows)*10):
             self.current_reward += STATES['Dead']
             self.finished = True
-        if (self.RA.current_node==self.RA.RAFail):
+        if (self.RA.RAnode==self.RA.RAFail):
             self.finished = True
         if (white_bip):
             self.current_reward += STATES['Dead']
@@ -576,7 +576,7 @@ class Sapientino(object):
 
     def getreward(self):
         r = self.current_reward
-        if (self.current_reward>0 and self.RA.current_node==self.RA.RAFail):  # FAIL RA state
+        if (self.current_reward>0 and self.RA.RAnode==self.RA.RAFail):  # FAIL RA state
             r = 0
         self.cumreward += self.gamman * r
         self.gamman *= self.agent.gamma
@@ -620,22 +620,30 @@ class Sapientino(object):
 
         if (toprint):
             print(s)
+
+        RAnode = self.RA.RAnode
+        if (RAnode==self.RA.RAFail):
+            RAnode = self.RA.last_node
         
         self.cumreward100 += self.cumreward
         self.cumscore100 += self.score
         if (self.iteration%numiter==0):
             #self.doSave()
             pgoal = float(self.ngoalreached*100)/numiter
+            self.report_str = "%s %6d/%4d avg last 100: r: %.2f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100)/100, float(self.cumscore100)/100, pgoal)
             print('-----------------------------------------------------------------------')
-            print("%s %6d/%4d avg last 100: reward %.2f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100)/100, float(self.cumscore100)/100, pgoal))
+            print(self.report_str)
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0  
             self.cumscore100 = 0 
             self.ngoalreached = 0
 
         sys.stdout.flush()
-        
-        self.resfile.write("%d,%d,%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal,self.elapsedtime))
+
+        self.resfile.write("%d,%d,%d,%d,%d,%d,%d\n" % (self.iteration, self.elapsedtime, RAnode, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
+
+
+
         self.resfile.flush()
 
 

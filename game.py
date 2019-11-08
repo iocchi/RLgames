@@ -19,11 +19,19 @@ agent = None
 
 GAMES = {
     'SimpleGrid':  [ "importlib.import_module('SimpleGrid').SimpleGrid", None ],
+
     'BreakoutS':   [ "importlib.import_module('Breakout').BreakoutS", None ],
+    'BreakoutSO':   [ "importlib.import_module('Breakout').BreakoutS",
+                     "game.RA_exploration_enabled = True" ],
+
     'BreakoutFS':  [ "importlib.import_module('Breakout').BreakoutS", 
                      "game.fire_enabled = True" ],
     'BreakoutN':   [ "importlib.import_module('Breakout').BreakoutN", None ],
     'BreakoutSRA':   [ "importlib.import_module('BreakoutRA').BreakoutSRA", None ],
+    'BreakoutSRAO':   [ "importlib.import_module('BreakoutRA').BreakoutSRA", 
+                        "game.RA_exploration_enabled = True" ],
+
+
     'BreakoutSRAX':   [ "importlib.import_module('BreakoutRA').BreakoutSRAExt", None ],
     'BreakoutNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", None ],
     'BreakoutNDNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA",
@@ -48,6 +56,8 @@ GAMES = {
                        "game.nvisitpercol=3" ],  
     'Sapientino3D':   [ "importlib.import_module('Sapientino').Sapientino", 
                        "game.nvisitpercol=3\ngame.differential = True\n" ],  
+    'Sapientino3DO':   [ "importlib.import_module('Sapientino').Sapientino", 
+                       "game.nvisitpercol=3\ngame.differential = True\ngame.RA_exploration_enabled = True\n" ],  
 
 
     'Sapientino3C':   [ "importlib.import_module('Sapientino').Sapientino", 
@@ -108,8 +118,6 @@ def loadGameModule():
         game = eval(GAMES[args.game][0])(args.rows, args.cols, trainfilename)
         if GAMES[args.game][1] is not None:
             exec(GAMES[args.game][1])
-            print("%s %d" %(str(GAMES[args.game][0]), game.nvisitpercol))
-
 
         if True:
             pass
@@ -217,17 +225,24 @@ def writeinfo(trainfilename,game,agent,init=True):
         infofile.write("lambda:  %f\n\n" %(agent.lambdae))
         infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%.3f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
         #allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%f\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon,agent.alpha,agent.nstepsupdates,agent.lambdae))
-    else: #if optimalPolicyFound:
-        infofile.write("Optimal policy found.\n")
-        infofile.write("goal reached:     %d\n" %(game.iteration))
+    else:
+        infofile.write("iteration:        %d\n" %(game.iteration))
         infofile.write("goal score:       %d\n" %(game.score))
         infofile.write("goal reward:      %.2f\n" %(game.cumreward))
         infofile.write("goal n. actions:  %d\n" %(game.numactions))
         infofile.write("highest reward:   %.2f\n" %(game.hireward))
         infofile.write("highest score:    %d\n" %(game.hiscore))
-        infofile.write("elapsed time:     %d\n\n" %(game.elapsedtime))
+        infofile.write("elapsed time:     %d\n" %(game.elapsedtime))
 
-        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%.3f,%d,%d,%.2f,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward, game.numactions,game.hireward,game.hiscore,game.elapsedtime))
+        if optimalPolicyFound:
+            infofile.write("Optimal policy found.\n")
+
+        try:
+            infofile.write("\n"+game.report_str+"\n")
+        except:
+            pass
+
+        infofile.write("\n%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%.3f,%d,%d,%.2f,%d,%.2f,%d,%d\n\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward, game.numactions,game.hireward,game.hiscore,game.elapsedtime))
         allinfofile.write("%s,%s,%s,%d,%d,%s,%.3f,%.3f,%.3f,%d,%.3f,%d,%d,%.2f,%d,%.2f,%d,%d\n" %(strtime,trainfilename,args.game,args.rows,args.cols,agent.name,agent.gamma,agent.epsilon, agent.alpha,agent.nstepsupdates,agent.lambdae,game.iteration,game.score,game.cumreward, game.numactions,game.hireward,game.hiscore,game.elapsedtime))
     
     infofile.flush()
