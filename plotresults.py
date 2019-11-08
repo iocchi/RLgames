@@ -68,10 +68,12 @@ def showplots(xx,yy,yytop,yybot,yylabel,save):
         plt.fill_between(xx[i], yytop[i], yybot[i], facecolor=colors[i], alpha=0.25)
         plt.plot(xx[i],yy[i],colors[i],label=yylabel[i])
 
-    if save:
-        plt.savefig('fig/test.png')
-
     plt.legend()
+
+    if save is not None:
+        plt.savefig(save)
+        print('File saved: ',save)
+
     plt.show()
 
 
@@ -102,7 +104,7 @@ if __name__ == "__main__":
     #parser.add_argument('file', type=str, help='File name with data')
     #parser.add_argument('--reward', help='plot reward', action='store_true')
     #parser.add_argument('--score', help='plot score', action='store_true')
-    parser.add_argument('--save', help='save figure on file', action='store_true')
+    parser.add_argument('-save', type=str, help='save figure on specified file', default=None)
 
     parser.add_argument('-datafiles', nargs='+', help='[Required] Data files to plot', required=True)
 

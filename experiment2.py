@@ -59,7 +59,18 @@ idto = 1
 
 maxtime = 6000
 
+#doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+#doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+
+
+rows = 4
+cols = 5
+
+maxtime = 6000
+
 doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
 doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+
+
 
 
