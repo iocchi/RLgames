@@ -247,8 +247,19 @@ class RLAgent(object):
     # result of execution of action
     def notify(self, x, a, r, x2):
 
+        # DETERMINISTIC / VERY CONSERVATIVE CASE
+        # negative reward considered a failure, (x,a) added to SA_failure list
         if (r<0 and (x,a) not in self.SA_failure):
             self.SA_failure.append((x,a))   # new state-action failure
+        else:
+            # if x2 has all SA failures (x2,a2) for each a2
+            # then also (x,a) is a SA failure
+            saf = True
+            for a2 in range(0,self.nactions):
+                saf = saf and (x2,a2) in self.SA_failure
+            if saf:
+                self.SA_failure.append((x,a))
+    
 
         self.episode.append((x,a,r))
 

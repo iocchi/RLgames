@@ -42,7 +42,7 @@ def getplotdata(tm,data):
     n = len(data)
     d = int(n/100) # size of interval
 
-    for i in range(0,int(n/d)):
+    for i in range(0,int(n/d)+1):
         di = data[i*d:min(n,(i+1)*d)]
         ti = tm[i*d:min(n,(i+1)*d)]
         x.append(np.mean(ti))

@@ -34,11 +34,10 @@ def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alph
 
 
 agent = 'Sarsa'
-gamma = 0.99
+gamma = 0.999
 epsilon = 0.2
 lambdae = -1
-
-nstep = 200
+alpha = -1
 niter = -1
 stopongoal = False
 
@@ -47,29 +46,33 @@ stopongoal = False
 
 rows = 4
 cols = 4
-
-gamma = 0.999
 nstep = 200
-alpha = -1
+maxtime = 1200
+
+doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
-# range of experiments
-idfrom = 1
-idto = 1
-
-maxtime = 6000
-
-#doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
-#doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
-
+# Breakout 4x5
 
 rows = 4
 cols = 5
+nstep = 500
+maxtime = 2400
 
-maxtime = 6000
+doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
-doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
-doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, idfrom, idto) 
+
+# Breakout 4x6
+
+rows = 4
+cols = 6
+nstep = 500
+maxtime = 3600
+
+doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 
