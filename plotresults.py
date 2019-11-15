@@ -57,9 +57,9 @@ def showplots(xx,yy,yytop,yybot,yylabel,save):
 
     colors = ['r','b','g','yellow','cyan','magenta']
     
-    yymax = max(max(l) for l in yytop)
+    ytop = max(max(l) for l in yytop)
 
-    plt.ylim(ymin = 0, ymax = yymax*1.15)
+    plt.ylim(bottom = 0, top = ytop*1.15)
     plt.title("Average reward")
     plt.xlabel('Time')
     plt.ylabel('Avg Reward')
@@ -137,7 +137,7 @@ def plot1(fname,save):
         plt.savefig('fig/'+fname+'_r.png')
     plt.show()
 
-    plt.ylim(ymin = -0.2, ymax = 1.2)
+    plt.ylim(bottom = -0.2, top = 1.2)
     plt.plot(gv,'g.')
     plt.title(fname)
     plt.xlabel('Iteration')
@@ -186,7 +186,7 @@ def plotavg(fname, save):
 
 
     #if (ylim>0):
-    #    plt.ylim(ymin = 0, ymax = ylim)
+    #    plt.ylim(bottom = 0, top = ylim)
     plt.plot(xx,ss,'b')
     plt.title(fname+" - Average score")
     plt.xlabel('Iteration')
@@ -197,7 +197,7 @@ def plotavg(fname, save):
 
     rrmax = max(rrtop)
 
-    plt.ylim(ymin = 0, ymax = rrmax*1.05)
+    plt.ylim(bottom = 0, top = rrmax*1.05)
     plt.title(fname+" - Average reward")
     plt.fill_between(xx, rrtop, rrbot, facecolor='r', alpha=0.25)
     plt.plot(xx,rr,'r')
@@ -207,7 +207,7 @@ def plotavg(fname, save):
         plt.savefig('fig/'+fname+'_ar.png')
     plt.show()
 
-    #plt.ylim(ymin = -0.2, ymax = 1.2)
+    #plt.ylim(bottom = -0.2, top = 1.2)
     plt.title(fname+" - % goals reached")
     plt.plot(xx,gg,'g')
     plt.xlabel('Iteration')
@@ -218,7 +218,7 @@ def plotavg(fname, save):
 
     if False:
         plt.title(fname+" - Best policy score")
-        plt.ylim(ymin = 0, ymax = maxscore*1.05)
+        plt.ylim(bottom = 0, top = maxscore*1.05)
         plt.plot(xx,sd,'b')
         plt.xlabel('Iteration')
         plt.ylabel('Score')
@@ -227,7 +227,7 @@ def plotavg(fname, save):
 
         plt.title(fname+" - Best policy reward")
         #if (ylim>0):
-        #    plt.ylim(ymin = 0, ymax = ylim)
+        #    plt.ylim(bottom = 0, top = ylim)
         plt.plot(xx,rd,'r')
         plt.xlabel('Iteration')
         plt.ylabel('Reward')

@@ -32,9 +32,9 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':10000,       # goal of reward automa
-            'RAFail':0,         # fail of reward automa
-            'GoodBrick':10,      # good brick removed for next RA state
+            'RAGoal':1000,       # goal of reward automa
+            'RAFail':0,        # fail of reward automa
+            'GoodBrick':0,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
         }
 
@@ -93,7 +93,7 @@ class RewardAutoma(object):
                 self.countupdates += 1
                 self.last_node = self.current_node
                 self.current_node += 1
-                reward += self.STATES['RAGoal'] * self.countupdates
+                reward += self.STATES['RAGoal'] * self.countupdates / self.brick_cols
                 #print("  -- RA state transition to %d, " %(self.current_node))
                 if (self.current_node==self.RAGoal):
                     # print("  <<< RA GOAL >>>")
@@ -140,6 +140,12 @@ class RewardAutoma(object):
         #print "   -- success rate: ",s," / ",v
         return s/v
 
+    def print_successrate(self):
+        r = []
+        for i in range(len(self.success)):
+            r.append(float(self.success[i])/self.visits[i])
+        print('RA success: %s' %str(r))
+
 
 
 class BreakoutSRA(BreakoutS):
@@ -151,11 +157,11 @@ class BreakoutSRA(BreakoutS):
         self.STATES = {
             'Init':0,
             'Alive':0,
-            'Dead':0,
+            'Dead':-1,
             'PaddleNotMoving':0,
             'Scores':0,    # brick removed
-            'Hit':0,        # paddle hit
-            'Goal':0,     # level completed
+            'Hit':0,       # paddle hit
+            'Goal':0,      # level completed
         }
         self.RA_exploration_enabled = False  # Use options to speed-up learning process
         self.report_str = ''
@@ -230,7 +236,7 @@ class BreakoutSRA(BreakoutS):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d  %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d/%d  %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), len(self.agent.SA_failure), ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -252,6 +258,7 @@ class BreakoutSRA(BreakoutS):
             self.report_str = "%s %6d/%4d avg last 100: reward %.1f | RA %.2f | p goals %.1f %% <<<" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter)
             print('-----------------------------------------------------------------------')
             print(self.report_str)
+            self.RA.print_successrate()
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0
@@ -294,7 +301,7 @@ class BreakoutNRA(BreakoutN):
         self.STATES = {
             'Init':0,
             'Alive':0,
-            'Dead':0,
+            'Dead':-1,
             'PaddleNotMoving':0,
             'Scores':0,    # brick removed
             'Hit':0,       # paddle hit
@@ -351,8 +358,8 @@ class BreakoutNRA(BreakoutN):
         self.cumreward += self.gamman * r
         self.gamman *= self.agent.gamma
 
-        if (r<0):
-            print("Neg reward: %.1f" %r)
+        #if (r<0):
+        #    print("Neg reward: %.1f" %r)
         return r
 
 
@@ -368,7 +375,7 @@ class BreakoutNRA(BreakoutN):
         if (RAnode==self.RA.RAFail):
             RAnode = self.RA.last_node
             
-        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d  %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), ch)
+        s = 'Iter %6d, b_hit: %3d, p_hit: %3d, na: %4d, r: %5d, RA: %d, mem: %d/%d  %c' %(self.iteration, self.score, self.paddle_hit_count,self.numactions, self.cumreward, RAnode, len(self.agent.Q), len(self.agent.SA_failure), ch)
 
         if self.score > self.hiscore:
             self.hiscore = self.score
@@ -390,6 +397,7 @@ class BreakoutNRA(BreakoutN):
             #self.doSave()
             print('----------------------------------------------------------------------------------')
             print("%s %6d/%4d avg last 100: reward %.1f | RA %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100/100), float(self.cumscore100)/100, float(self.RA.goalreached*100)/numiter))
+            self.RA.print_successrate()
             print('----------------------------------------------------------------------------------')
             self.cumreward100 = 0
             self.cumscore100 = 0

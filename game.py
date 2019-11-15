@@ -27,13 +27,17 @@ GAMES = {
     'BreakoutFS':  [ "importlib.import_module('Breakout').BreakoutS", 
                      "game.fire_enabled = True" ],
     'BreakoutN':   [ "importlib.import_module('Breakout').BreakoutN", None ],
+
     'BreakoutSRA':   [ "importlib.import_module('BreakoutRA').BreakoutSRA", None ],
     'BreakoutSRAO':   [ "importlib.import_module('BreakoutRA').BreakoutSRA", 
                         "game.RA_exploration_enabled = True" ],
 
-
     'BreakoutSRAX':   [ "importlib.import_module('BreakoutRA').BreakoutSRAExt", None ],
+
     'BreakoutNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", None ],
+    'BreakoutNRAO':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", 
+                        "game.RA_exploration_enabled = True"  ],
+
     'BreakoutNDNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA",
                          "game.deterministic = False" ],
     'BreakoutFNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA",

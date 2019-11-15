@@ -67,13 +67,14 @@ class RLAgent(object):
 
 
     def savedata(self):
-         return [self.Q, self.Visits]
+        return [self.Q, self.Visits, self.SA_failure]
          
     def loaddata(self,data):
-         self.Q = data[0]
-         self.Visits = data[1]
+        self.Q = data[0]
+        self.Visits = data[1]
+        self.SA_failure = data[2]
          
-        
+
     def getQ(self, x, a):
         if (self.Qapproximation):
             xa = np.zeros((1,2))
@@ -169,15 +170,23 @@ class RLAgent(object):
         return a # math.sqrt(s)
 
     def getSumVisits(self, x):
-        return np.sum(self.Visits[x,:])
-
+        r = 0
+        for a in range(0,self.nactions): 
+            r += self.getVisits(x,a)
+        return r
 
     def choose_action(self, x):  # choose action from state x
 
         if (x is None):
             print('ERROR!!! Choose action from invalid state!!!')
 
-        if (self.epsilon < 0):
+        if (self.epsilon < -1):
+            maxIter = 100
+            s = self.getSumVisits(x)
+            p = min(float(s)/maxIter, 1.0)
+            epsilon = 0.9 * (1.0 - p) + 0.1
+            #print("  -- iter = %d  -- epsilon = %f" %(s,epsilon))
+        elif (self.epsilon < 0):
             maxIter = 10000
             s = self.iteration #getSumVisits(x)
             p = min(float(s)/maxIter, 1.0)

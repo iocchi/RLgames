@@ -13,6 +13,10 @@ def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alph
         basetrainfilename = basetrainfilename + '_g%04d' %(int(gamma*1000))
     if (epsilon>0):
         basetrainfilename = basetrainfilename + '_e%03d' %(int(epsilon*100))
+    elif (epsilon==-1):
+        basetrainfilename = basetrainfilename + '_eAi'
+    elif (epsilon==-2):
+        basetrainfilename = basetrainfilename + '_eAv'
     if (lambdae>0):
         basetrainfilename = basetrainfilename + '_l%03d' %(int(lambdae*100))
     if (alpha>0):
@@ -35,9 +39,9 @@ def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alph
 
 agent = 'Sarsa'
 gamma = 0.999
-epsilon = 0.2
-lambdae = -1
+epsilon = -2  # -1: auto on iterations, -2: auto on number of state visits
 alpha = -1
+lambdae = -1
 niter = -1
 stopongoal = False
 
@@ -47,10 +51,10 @@ stopongoal = False
 rows = 4
 cols = 4
 nstep = 200
-maxtime = 1200
+maxtime = 600
 
-doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 # Breakout 4x5
@@ -58,10 +62,10 @@ doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alph
 rows = 4
 cols = 5
 nstep = 500
-maxtime = 2400
+maxtime = 900
 
-doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 # Breakout 4x6
@@ -69,10 +73,10 @@ doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alph
 rows = 4
 cols = 6
 nstep = 500
-maxtime = 3600
+maxtime = 1200
 
-doExperiment('Breakout','SRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-doExperiment('Breakout','SRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 
