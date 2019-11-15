@@ -91,13 +91,13 @@ class RewardAutoma(object):
         if (self.current_node<self.brick_cols): # 0 ... brick_cols
             if self.left_right:
                 goal_column = self.current_node
-                cbegin = self.current_node+1
+                cbegin = goal_column + 1
                 cend = self.brick_cols
                 cinc = 1
             else:
                 goal_column = self.brick_cols - self.current_node - 1
-                cbegin = self.brick_cols-1
-                cend = self.current_node-1
+                cbegin = goal_column - 1
+                cend = -1
                 cinc = -1
 
             if f[goal_column]:
