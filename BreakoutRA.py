@@ -19,7 +19,7 @@ from Breakout import *
 
 class RewardAutoma(object):
 
-    def __init__(self, brick_cols=0): # brick_cols=0 -> RA disabled
+    def __init__(self, brick_cols=0, left_right=True): # brick_cols=0 -> RA disabled
         # RA states
         self.brick_cols = brick_cols
         if (self.brick_cols>0):
@@ -38,6 +38,7 @@ class RewardAutoma(object):
             'WrongBrick':0      # wrong brick removed for next RA state
         }
 
+        self.left_right = left_right
         self.goalreached = 0 # number of RA goals reached for statistics
         self.visits = {} # number of visits for each state
         self.success = {} # number of good transitions for each state
@@ -85,10 +86,21 @@ class RewardAutoma(object):
 
         f = np.zeros(self.brick_cols)
         for c in range(0,self.brick_cols):
-            f[c] = self.check_free_cols([c])
+            f[c] = self.check_free_cols([c])  # vector of free columns
 
         if (self.current_node<self.brick_cols): # 0 ... brick_cols
-            if f[self.current_node]:
+            if self.left_right:
+                goal_column = self.current_node
+                cbegin = self.current_node+1
+                cend = self.brick_cols
+                cinc = 1
+            else:
+                goal_column = self.brick_cols - self.current_node - 1
+                cbegin = self.brick_cols-1
+                cend = self.current_node-1
+                cinc = -1
+
+            if f[goal_column]:
                 state_changed = True
                 self.countupdates += 1
                 self.last_node = self.current_node
@@ -100,7 +112,7 @@ class RewardAutoma(object):
                     reward += self.STATES['RAGoal']
                     self.goalreached += 1
             else:
-                for c in range(self.current_node, self.brick_cols):
+                for c in range(cbegin, cend, cinc):
                     if f[c]:
                         self.last_node = self.current_node
                         self.current_node = self.RAFail  # FAIL

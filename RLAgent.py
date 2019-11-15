@@ -160,7 +160,6 @@ class RLAgent(object):
 
 
     def getAlphaVisitsInc(self, x, a):
-        self.incVisits(x,a)
         s = self.getVisits(x,a)
         try: #TODO debug here
             a = 1.0/float(s)
@@ -269,7 +268,7 @@ class RLAgent(object):
             if saf:
                 self.SA_failure.append((x,a))
     
-
+        self.incVisits(x,a)
         self.episode.append((x,a,r))
 
         if (self.lambdae>0):
