@@ -35,6 +35,9 @@ GAMES = {
     'BreakoutSRAX':   [ "importlib.import_module('BreakoutRA').BreakoutSRAExt", None ],
 
     'BreakoutNRA':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", None ],
+    'BreakoutNRARL':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", 
+                          "game.RA.left_right=False"  ],
+
     'BreakoutNRAO':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", 
                         "game.RA_exploration_enabled = True"  ],
     'BreakoutNRARLO':   [ "importlib.import_module('BreakoutRA').BreakoutNRA", 

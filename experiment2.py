@@ -51,10 +51,13 @@ stopongoal = False
 rows = 4
 cols = 4
 nstep = 200
-maxtime = 600
+maxtime = 2400
 
 doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+
+doExperiment('Breakout','NRARL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+doExperiment('Breakout','NRARLO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 # Breakout 4x5
@@ -62,10 +65,10 @@ doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alph
 rows = 4
 cols = 5
 nstep = 500
-maxtime = 900
+maxtime = 1200
 
-doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Breakout','NRARL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Breakout','NRARLO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 # Breakout 4x6
@@ -75,8 +78,8 @@ cols = 6
 nstep = 500
 maxtime = 1200
 
-doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Breakout','NRARL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+#doExperiment('Breakout','NRAORL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 
