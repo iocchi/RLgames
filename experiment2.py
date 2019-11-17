@@ -38,7 +38,7 @@ def doExperiment(game, gameext, rows, cols, agent, gamma, epsilon, lambdae, alph
 
 
 agent = 'Sarsa'
-gamma = 0.999
+gamma = 0.9999
 epsilon = -2  # -1: auto on iterations, -2: auto on number of state visits
 alpha = -1
 lambdae = -1
@@ -50,14 +50,22 @@ stopongoal = False
 
 rows = 4
 cols = 4
+
+nstep = 500
+maxtime = 3000
+
+doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3)
+doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+
 nstep = 200
-maxtime = 2400
+maxtime = 3000
 
 doExperiment('Breakout','NRA', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 doExperiment('Breakout','NRAO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
-doExperiment('Breakout','NRARL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
-doExperiment('Breakout','NRARLO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
+
+#doExperiment('Breakout','NRARL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 2, 2) 
+#doExperiment('Breakout','NRARLO', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
 
 # Breakout 4x5
@@ -81,6 +89,16 @@ maxtime = 1200
 #doExperiment('Breakout','NRARL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 #doExperiment('Breakout','NRAORL', rows, cols, agent, gamma, epsilon, lambdae, alpha, nstep, niter, maxtime, stopongoal, 1, 3) 
 
+# plot
 
+def plotall():
+    exp = ['B44NRA', 'B44NRARL']
+    for e in exp:
+      for i in range(3):
+        cmd = 'python3 plotresults.py -datafiles data/%s_S_g0999_eAv_n200_%02d data/%sO_S_g0999_eAv_n200_%02d' %(e,i,e,i)
+      os.system(cmd)    
+
+
+#plotall()
 
 

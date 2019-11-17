@@ -17,7 +17,7 @@ class RLAgent(object):
         self.lambdae = -1 # lambda value for eligibility traces (-1 no eligibility)
         self.optimal = False
         self.option_enabled = False # whether to exploit options
-        self.episode = []
+        self.episode = []  # list of (x,a,r) gathered during episode
         self.iteration = 0
         self.debug = False
         self.name = 'RL'
@@ -65,15 +65,22 @@ class RLAgent(object):
     def set_action_names(self, an):
         self.action_names = an
 
+    def setRandomSeed(self,seed):
+        random.seed(seed)
+        np.random.seed(seed)
 
     def savedata(self):
-        return [self.Q, self.Visits, self.SA_failure]
-         
+        return [self.Q, self.Visits, self.SA_failure,random.getstate(),np.random.get_state()]
+
+
     def loaddata(self,data):
         self.Q = data[0]
         self.Visits = data[1]
         self.SA_failure = data[2]
-         
+        if (len(data)>3):
+            print('Set random generator state from file.')
+            random.setstate(data[3])
+            np.random.set_state(data[4])       
 
     def getQ(self, x, a):
         if (self.Qapproximation):
@@ -281,7 +288,8 @@ class RLAgent(object):
             self.updateQ(x,a,r,x2)
         else:
             kn = len(self.episode) - self.nstepsupdates
-            self.updateQ_n(kn,x2) # update state-action n-steps back
+            if kn>=0:
+                self.updateQ_n(kn,x2) # update state-action n-steps back
 
 
     def notify_endofepisode(self, iter):
@@ -291,7 +299,7 @@ class RLAgent(object):
             while (kn < len(self.episode)):
                 self.updateQ_n(kn,None) # update state-action n-steps back
                 kn += 1
-        self.episode = []
+        self.episode = [] # list of (x,a,r) for this episode
         #print("reset e")
         self.etraces = {} # eligibility taces map
 

@@ -56,15 +56,15 @@ TASKS = {
 REWARD_STATES = {
     'Init':0,
     'Alive':0,
-    'Dead':0,
+    'Dead':-1,
     'Score':1000,
     'Hit':0,        
     'Forward':0,        
-    'Turn':0,        
+    'Turn':0,
     'BadGet':0,        
     'BadUse':0, 
-    'TaskProgress':100,
-    'TaskComplete':1000
+    'TaskProgress':10,
+    'TaskComplete':50
 }
 
 
@@ -84,9 +84,9 @@ class Minecraft(TaskExecutor):
     def doget(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "get: ",what
-            print "has: ",self.has
-            print "maxitem: ",self.maxitemsheld
+            print("get: ",what)
+            print("has: ",self.has)
+            print("maxitem: ",self.maxitemsheld)
         if (what==None):
             r = self.reward_states['BadGet']
         elif (len(self.has)==self.maxitemsheld):
@@ -100,7 +100,7 @@ class Minecraft(TaskExecutor):
     def douse(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "use: ",what
+            print("use: ",what)
         if (what==None):
             r = self.reward_states['BadUse']
         else:    
@@ -116,7 +116,7 @@ class Minecraft(TaskExecutor):
     def dousetool(self, what):
         tt = 'make_%s' %what
         if not self.isAuto:
-            print "use: ",what
+            print("use: ",what)
         if (not tt in self.taskscompleted):
             r = self.reward_states['BadUse']
         else:    
@@ -227,8 +227,6 @@ class MinecraftOLD(object):
     def reset(self):
         global TASKS
         
-        random.seed()
-        
         self.pos_x = 0
         self.pos_y = 0
         self.pos_th = 90
@@ -327,7 +325,7 @@ class MinecraftOLD(object):
     def doget(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "get: ",what
+            print("get: ",what)
         if (what==None):
             r = REWARD_STATES['BadGet']
         else:
@@ -337,7 +335,7 @@ class MinecraftOLD(object):
     def douse(self):
         what = self.itemat(self.pos_x, self.pos_y)
         if what!=None and not self.isAuto:
-            print "use: ",what
+            print("use: ",what)
         if (what==None):
             r = REWARD_STATES['BadUse']
         else:    
@@ -347,7 +345,7 @@ class MinecraftOLD(object):
     def dousetool(self, it):
         what = CRAFTEDTOOLS[it]
         if not self.isAuto:
-            print "use: ",what
+            print("use: ",what)
         if (not self.has[what]):
             r = REWARD_STATES['BadUse']
         else:    
@@ -412,7 +410,7 @@ class MinecraftOLD(object):
         success_rate = max(min(self.current_successrate(),0.9),0.1)
         #print "RA exploration policy: current state success rate ",success_rate
         er = random.random()
-        self.agent.partialoptimal = (er<success_rate)
+        self.agent.option_enabled = (er<success_rate)
         #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
 
         

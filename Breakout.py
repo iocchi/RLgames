@@ -147,6 +147,11 @@ class Breakout(object):
         self.agent.init(self.nstates, self.nactions)
         self.agent.set_action_names(self.action_names)
 
+
+    def setRandomSeed(self,seed):
+        random.seed(seed)
+        np.random.seed(seed)
+
     def savedata(self):
         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.agent.SA_failure]
          
@@ -156,7 +161,7 @@ class Breakout(object):
         self.hireward = data[2]
         self.elapsedtime = data[3]
         try:
-            self.agent.SA_failure = data[6]
+            self.agent.SA_failure = data[4]
         except:
             print('WARNING: Cannot load SA_failure data')
     
@@ -464,6 +469,7 @@ class Breakout(object):
         self.isPressed = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print('pygame quit event')
                 return False
 
             if event.type == pygame.KEYDOWN:

@@ -73,7 +73,7 @@ class TaskExecutor(object):
         self.offy = 100
         self.radius = 5
 
-        self.RA_exploration_enabled = False # experimental ...
+        self.RA_exploration_enabled = False # enable automatic options
         self.RA_visits = {} # number of visits for each RA state
         self.RA_success = {} # number of good transitions for each RA state
 
@@ -132,10 +132,11 @@ class TaskExecutor(object):
         self.agent.init(ns, self.nactions) # 1 for RA not used here
         self.agent.set_action_names(self.action_names)
 
+    def setRandomSeed(self,seed):
+        random.seed(seed)
+        np.random.seed(seed)
 
-    def reset(self):
-        random.seed()
-        
+    def reset(self):       
         self.pos_x = self.initial_pos_x
         self.pos_y = self.initial_pos_y
         self.pos_th = self.initial_pos_th
@@ -208,8 +209,8 @@ class TaskExecutor(object):
                 r += b * self.task_state[(t,i)]
                 b *= len(l)+1
                 i += 1
-#            print '    ---  encode task state  ',t , self.task_state[t]
-#        print '    ---  encode task state final: ', r
+#            print('    ---  encode task state  ',t , self.task_state[t])
+#        print('    ---  encode task state final: ', r)
         return r
         
     def getstate(self):
@@ -321,7 +322,7 @@ class TaskExecutor(object):
         success_rate = max(min(self.current_successrate(),0.9),0.1)
         #print "RA exploration policy: current state success rate ",success_rate
         er = random.random()
-        self.agent.partialoptimal = (er<success_rate)
+        self.agent.option_enabled = (er<success_rate)
         #print "RA exploration policy: optimal ",self.agent.partialoptimal, "\n"
 
         
@@ -556,7 +557,8 @@ class TaskExecutor(object):
             self.ngoalreached = 0
 
         sys.stdout.flush()
-        self.resfile.write("%d,%d,%d,%d,%d\n" % (self.score, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
+
+        self.resfile.write("%d,%d,%d,%d,%d,%d,%d\n" % (self.iteration, self.elapsedtime, self.score, self.cumreward, self.goal_reached(),self.numactions,self.agent.optimal))
         self.resfile.flush()
 
 
@@ -595,7 +597,7 @@ class TaskExecutor(object):
         if (self.agent.optimal):
             opt_label = self.myfont.render("Best", 100, pygame.color.THECOLORS['red'])
             self.screen.blit(opt_label, (self.win_width-80, 10))
-        elif (self.agent.partialoptimal):
+        elif (self.agent.option_enabled):
             opt_label = self.myfont.render("PB", 100, pygame.color.THECOLORS['red'])
             self.screen.blit(opt_label, (self.win_width-80, 10))
 

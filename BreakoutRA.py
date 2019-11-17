@@ -14,6 +14,7 @@ from math import fabs
 
 from Breakout import *
 
+np.set_printoptions(precision=3)
 
 # Reward automa
 
@@ -32,8 +33,9 @@ class RewardAutoma(object):
             self.RAFail = 2 # never reached
 
         self.STATES = {
-            'RAGoal':1000,       # goal of reward automa
-            'RAFail':0,        # fail of reward automa
+            'RAGoalStep':100,   # goal step of reward automa
+            'RAGoal':1000,      # goal of reward automa
+            'RAFail':0,         # fail of reward automa
             'GoodBrick':0,      # good brick removed for next RA state
             'WrongBrick':0      # wrong brick removed for next RA state
         }
@@ -178,8 +180,9 @@ class BreakoutSRA(BreakoutS):
         self.RA_exploration_enabled = False  # Use options to speed-up learning process
         self.report_str = ''
 
+
     def savedata(self):
-        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success, self.agent.SA_failure]
+        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success, self.agent.SA_failure, random.getstate(),np.random.get_state()]
 
          
     def loaddata(self,data):
@@ -189,10 +192,13 @@ class BreakoutSRA(BreakoutS):
         self.elapsedtime = data[3]
         self.RA.visits = data[4]
         self.RA.success = data[5]
-        try:
+        if (len(data)>6):
             self.agent.SA_failure = data[6]
-        except:
-            print('WARNING: Cannot load SA_failure data')
+        if (len(data)>7):
+            print('Set random generator state from file.')
+            random.setstate(data[7])
+            np.random.set_state(data[8])       
+
 
     def setStateActionSpace(self):
         super(BreakoutSRA, self).setStateActionSpace()
@@ -320,17 +326,24 @@ class BreakoutNRA(BreakoutN):
             'Goal':0,      # level completed
         }
 
+
     def savedata(self):
-         return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success]
+        return [self.iteration, self.hiscore, self.hireward, self.elapsedtime, self.RA.visits, self.RA.success, self.agent.SA_failure, random.getstate(),np.random.get_state()]
 
          
     def loaddata(self,data):
-         self.iteration = data[0]
-         self.hiscore = data[1]
-         self.hireward = data[2]
-         self.elapsedtime = data[3]
-         self.RA.visits = data[4]
-         self.RA.success = data[5]
+        self.iteration = data[0]
+        self.hiscore = data[1]
+        self.hireward = data[2]
+        self.elapsedtime = data[3]
+        self.RA.visits = data[4]
+        self.RA.success = data[5]
+        if (len(data)>6):
+            self.agent.SA_failure = data[6]
+        if (len(data)>7):
+            print('Set random generator state from file.')
+            random.setstate(data[7])
+            np.random.set_state(data[8])   
 
 
     def setStateActionSpace(self):
@@ -414,7 +427,6 @@ class BreakoutNRA(BreakoutN):
             self.cumreward100 = 0
             self.cumscore100 = 0
             self.RA.goalreached = 0
-            
 
         sys.stdout.flush()
         

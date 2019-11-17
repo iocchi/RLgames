@@ -173,13 +173,23 @@ class RewardAutoma(object):
         return s/v
 
 
-    # reward shaping function
+    def print_successrate(self):
+        r = []
+        for i in range(len(self.success)):
+            v = 0
+            if (i in self.success):
+                v = float(self.success[i])/self.visits[i]
+            r.append(v)
+        print('RA success: %s' %str(r))
+
+
+    # TODO reward shaping function
     def reward_shape(self, s, snext):
         egamma = math.pow(0.99, 10) # estimated discount to reach a new RA state
         return egamma * self.reward_phi(snext) - self.reward_phi(s)
 
 
-    # reward shaping function
+    # TODO reward shaping function
     def reward_phi(self, state):
         # state = current node (encoding of tokenbip)        
         return state * 100
@@ -270,6 +280,9 @@ class Sapientino(object):
         self.agent.init(ns, self.nactions) 
         self.agent.set_action_names(self.action_names)
       
+    def setRandomSeed(self,seed):
+        random.seed(seed)
+        np.random.seed(seed)
 
 
     def savedata(self):
@@ -600,7 +613,7 @@ class Sapientino(object):
             ch = '*'
             toprint = True
       
-        s = 'Iter %6d, sc: %3d, na: %4d, r: %8.2f, mem: %d %c' %(self.iteration, self.score,self.numactions, self.cumreward, len(self.agent.Q), ch)
+        s = 'Iter %6d, sc: %3d, na: %4d, r: %8.2f, mem: %d/%d %c' %(self.iteration, self.score,self.numactions, self.cumreward, len(self.agent.Q), len(self.agent.SA_failure), ch)
 
         if self.score > self.hiscore:
             if self.agent.optimal:
@@ -633,6 +646,7 @@ class Sapientino(object):
             self.report_str = "%s %6d/%4d avg last 100: r: %.2f | score %.2f | p goals %.1f %%" %(self.trainsessionname, self.iteration, self.elapsedtime, float(self.cumreward100)/100, float(self.cumscore100)/100, pgoal)
             print('-----------------------------------------------------------------------')
             print(self.report_str)
+            self.RA.print_successrate()
             print('-----------------------------------------------------------------------')
             self.cumreward100 = 0  
             self.cumscore100 = 0 
